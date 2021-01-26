@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext;
 
@@ -24,6 +25,7 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.ContentHandler;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
@@ -301,9 +303,54 @@ public class EcoreUtil2Test extends AbstractXtextTests {
 		assertNull(EcoreUtil2.getEReferenceFromExternalForm(EPackage.Registry.INSTANCE, brokenShortExternalFrom));
 	}
 
-	protected String makeInvalid(String externalForm) {
+	private String makeInvalid(String externalForm) {
 		// this used to be Strings.toFirstUpper but the spec does not impose case sensitivity constraints on the scheme
 		// so Ed decided to change that. In that sense, we now use another scheme instead of http:// which is xhttp://
 		return 'x' + externalForm;
 	}
+
+	@Test public void testPathFragment() {
+		EClass foo = EcoreFactory.eINSTANCE.createEClass();
+		foo.setName("foo");
+		EClass bar = EcoreFactory.eINSTANCE.createEClass();
+		foo.setName("bar");
+		EPackage p = EcoreFactory.eINSTANCE.createEPackage();
+		bar.setName("p");
+		p.getEClassifiers().add(foo);
+		p.getEClassifiers().add(bar);
+		
+		assertEquals("/-1", EcoreUtil2.getFragmentPath(foo));
+		assertEquals("/-1", EcoreUtil2.getFragmentPath(bar));
+		assertEquals("/-1", EcoreUtil2.getFragmentPath(p));
+		Resource resource = new ResourceImpl(URI.createURI("platform:/resource/res"));
+		resource.getContents().add(p);
+		assertEquals(URI.createURI("platform:/resource/res#//@eClassifiers.0"), EcoreUtil2.getFragmentPathURI(foo));
+		assertEquals(URI.createURI("platform:/resource/res#//@eClassifiers.1"), EcoreUtil2.getFragmentPathURI(bar));
+		assertEquals(URI.createURI("platform:/resource/res#/"), EcoreUtil2.getFragmentPathURI(p));
+		assertEquals(resource.getEObject("//@eClassifiers.0"), foo);
+		assertEquals(resource.getEObject("//@eClassifiers.1"), bar);
+		assertEquals(resource.getEObject("/"), p);
+	}
+	
+	@Test public void testIsAssignableFrom() {
+		EClass superCls = EcoreFactory.eINSTANCE.createEClass();
+		superCls.setName("MySuper");
+		superCls.getESuperTypes().add(EcorePackage.eINSTANCE.getEObject());
+
+		EClass subCls = EcoreFactory.eINSTANCE.createEClass();
+		subCls.setName("MySub");
+		subCls.getESuperTypes().add(superCls);
+		
+		assertFalse(EcoreUtil2.isAssignableFrom(null, null));
+		assertFalse(EcoreUtil2.isAssignableFrom(superCls, null));
+		assertFalse(EcoreUtil2.isAssignableFrom(null, superCls));
+		
+		assertTrue(EcoreUtil2.isAssignableFrom(superCls, superCls));
+		assertTrue(EcoreUtil2.isAssignableFrom(superCls, subCls));
+		assertFalse(EcoreUtil2.isAssignableFrom(subCls, superCls));
+		
+		assertTrue(EcoreUtil2.isAssignableFrom(EcorePackage.eINSTANCE.getEObject(), superCls));
+		assertTrue(EcoreUtil2.isAssignableFrom(EcorePackage.eINSTANCE.getEObject(), subCls));
+	}
+
 }

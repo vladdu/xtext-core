@@ -14,11 +14,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class KeywordsTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class KeywordsTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.keywords.KeywordsTestLanguage.Model");
@@ -30,7 +30,7 @@ public class KeywordsTestLanguageGrammarAccess extends AbstractGrammarElementFin
 		private final Assignment cThirdAssignment_2 = (Assignment)cAlternatives.eContents().get(2);
 		private final Keyword cThirdBarKeyword_2_0 = (Keyword)cThirdAssignment_2.eContents().get(0);
 		private final Assignment cForthAssignment_3 = (Assignment)cAlternatives.eContents().get(3);
-		private final Keyword cForthReverseSolidusKeyword_3_0 = (Keyword)cForthAssignment_3.eContents().get(0);
+		private final Keyword cForthBackslashKeyword_3_0 = (Keyword)cForthAssignment_3.eContents().get(0);
 		private final Assignment cFifthAssignment_4 = (Assignment)cAlternatives.eContents().get(4);
 		private final Keyword cFifthAKeyword_4_0 = (Keyword)cFifthAssignment_4.eContents().get(0);
 		private final Assignment cSixthAssignment_5 = (Assignment)cAlternatives.eContents().get(5);
@@ -41,12 +41,12 @@ public class KeywordsTestLanguageGrammarAccess extends AbstractGrammarElementFin
 		private final Keyword cEighthDKeyword_7_0 = (Keyword)cEighthAssignment_7.eContents().get(0);
 		
 		//Model:
-		//	first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?="'c'"
-		//	| eighth?='"d"';
+		//	first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?=
+		//	"'c'" | eighth?='"d"';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?="'c'" |
-		//eighth?='"d"'
+		//first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?="'c'"
+		//| eighth?='"d"'
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//first?="foo\\bar"
@@ -71,7 +71,7 @@ public class KeywordsTestLanguageGrammarAccess extends AbstractGrammarElementFin
 		public Assignment getForthAssignment_3() { return cForthAssignment_3; }
 		
 		//"\\"
-		public Keyword getForthReverseSolidusKeyword_3_0() { return cForthReverseSolidusKeyword_3_0; }
+		public Keyword getForthBackslashKeyword_3_0() { return cForthBackslashKeyword_3_0; }
 		
 		//fifth?="\"a\""
 		public Assignment getFifthAssignment_4() { return cFifthAssignment_4; }
@@ -141,8 +141,8 @@ public class KeywordsTestLanguageGrammarAccess extends AbstractGrammarElementFin
 
 	
 	//Model:
-	//	first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?="'c'"
-	//	| eighth?='"d"';
+	//	first?="foo\\bar" | second?="foo\\" | third?="\\bar" | forth?="\\" | fifth?="\"a\"" | sixth?='\'b\'' | seventh?=
+	//	"'c'" | eighth?='"d"';
 	public ModelElements getModelAccess() {
 		return pModel;
 	}

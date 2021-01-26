@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.valueconverter;
 
@@ -73,8 +74,6 @@ public class STRINGConverterTest extends AbstractXtextTests {
 		} catch(ValueConverterWithValueException e) {
 			assertEquals(" z", e.getValue());
 			assertTrue(e.hasRange());
-			assertEquals(2, e.getOffset());
-			assertEquals(2, e.getLength());
 		}
 	}
 	
@@ -88,7 +87,51 @@ public class STRINGConverterTest extends AbstractXtextTests {
 			assertFalse(e.hasRange());
 		}
 	}
-
+	
+	@Test public void testBrokenStringLiteral_06() throws Exception {
+		String s = "'\\'";
+		try {
+			valueConverter.toValue(s, null);
+			fail();
+		} catch(ValueConverterWithValueException e) {
+			assertEquals("'", e.getValue());
+			assertFalse(e.hasRange());
+		}
+	}
+	
+	@Test public void testBrokenStringLiteral_07() throws Exception {
+		String s = "\"\\\"";
+		try {
+			valueConverter.toValue(s, null);
+			fail();
+		} catch(ValueConverterWithValueException e) {
+			assertEquals("\"", e.getValue());
+			assertFalse(e.hasRange());
+		}
+	}
+	
+	@Test public void testBrokenStringLiteral_08() throws Exception {
+		String s = "'\\\"";
+		try {
+			valueConverter.toValue(s, null);
+			fail();
+		} catch(ValueConverterWithValueException e) {
+			assertEquals("\"", e.getValue());
+			assertFalse(e.hasRange());
+		}
+	}
+	
+	@Test public void testBrokenStringLiteral_09() throws Exception {
+		String s = "\"\\'";
+		try {
+			valueConverter.toValue(s, null);
+			fail();
+		} catch(ValueConverterWithValueException e) {
+			assertEquals("'", e.getValue());
+			assertFalse(e.hasRange());
+		}
+	}
+	
 	@Test public void testEscapeChars() throws Exception {
 		String s = "\"\\t\\n\\r\\f\\b\"";
 		String value = valueConverter.toValue(s, null);

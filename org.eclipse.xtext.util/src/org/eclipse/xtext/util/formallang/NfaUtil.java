@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2011, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.util.formallang;
 
@@ -598,20 +599,25 @@ public class NfaUtil {
 	 */
 	public <S> Map<S, Set<S>> findCycles(Nfa<S> nfa) {
 		Map<S, Set<S>> cycles = Maps.newLinkedHashMap();
-		findCycles(nfa, nfa.getStart(), (List<S> t) -> {
-			Set<S> cycle = Sets.newHashSet(t);
-			for (S cycleNode : t) {
-				// We have two cycles that are connected via at least
-				// one node. Treat them as one cycle.
-				Set<S> existingCycle = cycles.get(cycleNode);
-				if (existingCycle != null) {
-					cycle.addAll(existingCycle);
+		IAcceptor<List<S>> cycleAcceptor = new IAcceptor<List<S>>() {
+			@Override
+			public void accept(List<S> t) {
+				Set<S> cycle = Sets.newHashSet(t);
+				for (S cycleNode : t) {
+					// We have two cycles that are connected via at least
+					// one node. Treat them as one cycle.
+					Set<S> existingCycle = cycles.get(cycleNode);
+					if (existingCycle != null) {
+						cycle.addAll(existingCycle);
+					}
+				}
+				for (S n : cycle) {
+					cycles.put(n, cycle);
 				}
 			}
-			for (S n : cycle) {
-				cycles.put(n, cycle);
-			}
-		}, Maps.newHashMap(), Lists.newLinkedList());
+		};
+		
+		findCycles(nfa, nfa.getStart(), cycleAcceptor, Maps.<S, Integer>newHashMap(), Lists.<S>newLinkedList());
 		return cycles;
 	}
 	

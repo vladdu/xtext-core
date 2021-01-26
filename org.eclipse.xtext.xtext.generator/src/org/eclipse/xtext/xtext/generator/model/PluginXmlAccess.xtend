@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.model
 
@@ -11,15 +12,19 @@ import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend2.lib.StringConcatenationClient
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.util.internal.Log
 import org.eclipse.xtext.xtext.generator.CodeConfig
 import com.google.inject.Inject
 import org.eclipse.xtext.xtext.generator.IGuiceAwareGeneratorComponent
 import com.google.inject.Injector
+import org.apache.log4j.Logger
 
-@Log
+/**
+ * Configuration object for plugin.xml files for use in Eclipse.
+ */
 @Accessors
 class PluginXmlAccess extends TextFileAccess implements IGuiceAwareGeneratorComponent {
+	
+	static val Logger LOG = Logger.getLogger(PluginXmlAccess)
 	
 	@Inject CodeConfig codeConfig
 	

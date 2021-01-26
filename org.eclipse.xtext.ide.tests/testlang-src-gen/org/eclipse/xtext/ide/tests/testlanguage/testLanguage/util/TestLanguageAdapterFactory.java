@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.testLanguage.util;
 
@@ -85,6 +86,16 @@ public class TestLanguageAdapterFactory extends AdapterFactoryImpl
         return createModelAdapter();
       }
       @Override
+      public Adapter casePackageDeclaration(PackageDeclaration object)
+      {
+        return createPackageDeclarationAdapter();
+      }
+      @Override
+      public Adapter caseAbstractElement(AbstractElement object)
+      {
+        return createAbstractElementAdapter();
+      }
+      @Override
       public Adapter caseTypeDeclaration(TypeDeclaration object)
       {
         return createTypeDeclarationAdapter();
@@ -162,6 +173,36 @@ public class TestLanguageAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createModelAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link org.eclipse.xtext.ide.tests.testlanguage.testLanguage.PackageDeclaration <em>Package Declaration</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see org.eclipse.xtext.ide.tests.testlanguage.testLanguage.PackageDeclaration
+   * @generated
+   */
+  public Adapter createPackageDeclarationAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link org.eclipse.xtext.ide.tests.testlanguage.testLanguage.AbstractElement <em>Abstract Element</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see org.eclipse.xtext.ide.tests.testlanguage.testLanguage.AbstractElement
+   * @generated
+   */
+  public Adapter createAbstractElementAdapter()
   {
     return null;
   }

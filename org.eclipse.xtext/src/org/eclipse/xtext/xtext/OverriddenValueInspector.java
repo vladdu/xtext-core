@@ -1,14 +1,17 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.xtext.AbstractElement;
@@ -24,6 +27,7 @@ import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.validation.ValidationMessageAcceptor;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -39,16 +43,19 @@ public class OverriddenValueInspector extends XtextRuleInspector<Boolean, Parser
 	private Multimap<String, AbstractElement> assignedFeatures;
 	
 	/**
-	 * Remember all visited unassigned rule calls in case the grammar is broken, e.g. has
+	 * Remember all visited rules in case the grammar is broken, e.g. has
 	 * no assignments (yet).
 	 */
 	private Set<AbstractRule> permanentlyVisited;
 	
 	private Set<RuleCall> fragmentStack;
 	
+	private Map<AbstractRule, ImmutableMultimap<String, AbstractElement>> assignedFeaturesAtEnd;
+	
 	public OverriddenValueInspector(ValidationMessageAcceptor acceptor) {
 		super(acceptor);
 		assignedFeatures = newMultimap();
+		assignedFeaturesAtEnd = new HashMap<>();
 		permanentlyVisited = Sets.newHashSet();
 		fragmentStack = Sets.newHashSet();
 	}
@@ -72,6 +79,10 @@ public class OverriddenValueInspector extends XtextRuleInspector<Boolean, Parser
 	
 	@Override
 	protected Boolean doInspect(ParserRule rule) {
+		permanentlyVisited.clear();
+		fragmentStack.clear();
+		assignedFeatures.clear();
+		visitedRules.clear();
 		return doSwitch(rule.getAlternatives());
 	}
 	
@@ -159,9 +170,16 @@ public class OverriddenValueInspector extends XtextRuleInspector<Boolean, Parser
 		if (!addVisited(parserRule))
 			return Boolean.FALSE;
 		Multimap<String, AbstractElement> prevAssignedFeatures = assignedFeatures;
-		assignedFeatures = newMultimap();
-		doSwitch(parserRule.getAlternatives());
-		for (String feature : assignedFeatures.keySet())
+		
+		// Cannot use #computeIfAbsent since we will call this recursively and that causes ConcurrentModificationExceptions
+		ImmutableMultimap<String, AbstractElement> assignedInCalledRule = assignedFeaturesAtEnd.get(parserRule);
+		if (assignedInCalledRule == null) {
+			assignedFeatures = newMultimap();
+			doSwitch(parserRule.getAlternatives());
+			assignedInCalledRule = ImmutableMultimap.copyOf(assignedFeatures);
+			assignedFeaturesAtEnd.put(parserRule, assignedInCalledRule);
+		}
+		for (String feature : assignedInCalledRule.keySet())
 			prevAssignedFeatures.put(feature, object);
 		assignedFeatures = prevAssignedFeatures;
 		removeVisited(parserRule);

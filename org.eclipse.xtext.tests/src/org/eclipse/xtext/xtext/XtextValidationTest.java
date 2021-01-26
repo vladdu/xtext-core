@@ -1,14 +1,20 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
 import static com.google.common.collect.Maps.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,6 +31,7 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.URIConverter;
 import org.eclipse.emf.ecore.util.Diagnostician;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.eclipse.xtext.AbstractMetamodelDeclaration;
 import org.eclipse.xtext.AbstractRule;
@@ -38,6 +45,7 @@ import org.eclipse.xtext.GeneratedMetamodel;
 import org.eclipse.xtext.Grammar;
 import org.eclipse.xtext.Group;
 import org.eclipse.xtext.Keyword;
+import org.eclipse.xtext.NegatedToken;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.ReferencedMetamodel;
 import org.eclipse.xtext.RuleCall;
@@ -46,7 +54,9 @@ import org.eclipse.xtext.TypeRef;
 import org.eclipse.xtext.UnorderedGroup;
 import org.eclipse.xtext.XtextFactory;
 import org.eclipse.xtext.XtextStandaloneSetup;
+import org.eclipse.xtext.linking.lazy.LazyLinkingResource;
 import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.AbstractDeclarativeValidator.State;
@@ -56,26 +66,42 @@ import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
 import org.eclipse.xtext.validation.ValidationMessageAcceptor;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 /**
  * @author Sebastian Zarnekow - Initial contribution and API
  * @author Michael Clay
+ * @author Holger Schill
  */
 public class XtextValidationTest extends AbstractValidationMessageAcceptingTestCase {
 
 	private String lastMessage;
+	private URL xtextValidationTest_ecore;
 	
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 		with(XtextStandaloneSetup.class);
 		EValidator.Registry.INSTANCE.put(EcorePackage.eINSTANCE, EcoreValidator.INSTANCE);
+			File tempFile = File.createTempFile("XtextValidationTest", ".ecore");
+			tempFile.deleteOnExit();
+			Files.asCharSink(tempFile, StandardCharsets.UTF_8).write("<?xml version='1.0' encoding='UTF-8'?>" +
+					"<ecore:EPackage xmi:version='2.0' xmlns:xmi='http://www.omg.org/XMI'"+
+					"                xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'"+
+					"                xmlns:ecore='http://www.eclipse.org/emf/2002/Ecore'"+
+					"                name='XtextValidationBugs'"+
+					"                nsURI='http://XtextValidationBugs'"+
+					"                nsPrefix='XtextValidationBugs'>"+
+					"  <eClassifiers xsi:type='ecore:EClass' name='Bug322875'>"+
+					"    <eStructuralFeatures xsi:type='ecore:EReference' name='referencesETypeFromClasspathPackage' eType='ecore:EClass classpath:/org/eclipse/xtext/Xtext.ecore#//Grammar'/>"+
+					"  </eClassifiers>"+
+					"</ecore:EPackage>");
+			xtextValidationTest_ecore = tempFile.toURI().toURL();
 	}
 	
 	private void configureValidator(XtextValidator validator, ValidationMessageAcceptor messageAcceptor, EObject currentObject) {
@@ -148,6 +174,152 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		assertEquals(issues.toString(), 0, issues.size());
 	}
 	
+	@Test public void testExplicitOverride05() throws Exception {
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar\n" +
+				"import \"http://www.eclipse.org/emf/2002/Ecore\" as ecore" +
+				"@Override\n" +
+				"terminal ID: ('a'..'z'|'A'..'Z'|'_');");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("This grammar has no super grammar and therefore cannot override any rules.", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
+	
+	@Test public void testOverrideFinal() throws Exception {
+		XtextResourceSet rs = get(XtextResourceSet.class);
+		getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"@Final\n" + 
+				"RuleFinal:name=ID;\n" + 
+				"Rule: name=ID;","superGrammar.xtext", rs);
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar with org.xtext.Supergrammar\n" +
+				"generate bar \"http://org.xtext.Bar\"\n" + 
+				"RuleFinal: name=ID;",  "foo.xtext", rs);
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("This rule illegally overrides RuleFinal in org.xtext.Supergrammar which is final.", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
+	
+	@Test public void testOverrideFinal_1() throws Exception {
+		XtextResourceSet rs = get(XtextResourceSet.class);
+		getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"@Final\n" + 
+				"RuleFinal:name=ID;\n" + 
+				"Rule: name=ID;","superGrammar.xtext", rs);
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar with org.xtext.Supergrammar\n" +
+				"generate bar \"http://org.xtext.Bar\"\n" + 
+				"@Override Rule: name=ID;",  "foo.xtext", rs);
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 0, issues.size());
+	}
+	
+	@Test public void testOverrideDeprecated() throws Exception {
+		XtextResourceSet rs = get(XtextResourceSet.class);
+		getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"@Deprecated\n" + 
+				"RuleDeprecated: name=ID;\n" + 
+				"Rule: name=ID;","superGrammar.xtext", rs);
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar with org.xtext.Supergrammar\n" +
+				"generate bar \"http://org.xtext.Bar\"\n" + 
+				"@Override Rule: name=ID;",  "foo.xtext", rs);
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 0, issues.size());
+	}
+	
+	@Test public void testOverrideDeprecated_1() throws Exception {
+		XtextResourceSet rs = get(XtextResourceSet.class);
+		getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"@Deprecated\n" + 
+				"RuleDeprecated: name=ID;\n" + 
+				"Rule: name=ID;","superGrammar.xtext", rs);
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar with org.xtext.Supergrammar\n" +
+				"generate bar \"http://org.xtext.Bar\"\n" + 
+				"@Override RuleDeprecated: name=ID;",  "foo.xtext", rs);
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("This rule overrides RuleDeprecated in org.xtext.Supergrammar which is deprecated.", issues.get(0).getMessage());
+		assertEquals("diag.isWarning", diag.getSeverity(), Diagnostic.WARNING);
+	}
+	
+	@Test public void testCallDeprecatedRule() throws Exception {
+		XtextResource resource = getResourceFromString(
+				"grammar org.foo.Bar with org.eclipse.xtext.common.Terminals\n" +
+				"generate bar \"http://org.xtext.Bar\"\n" + 
+				"Model : rules+=RuleDeprecated*;\n" +
+				"@Deprecated\n" +
+				"RuleDeprecated: name=ID;");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("The called rule is marked as deprecated.", issues.get(0).getMessage());
+		assertEquals("diag.isWarning", diag.getSeverity(), Diagnostic.WARNING);
+	}
+	
+	@Test public void testTerminalAnnotation() throws Exception {
+		Resource resource = getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"Rule: name=ID;\n"+
+				"@Deprecated\n"+
+				"terminal TERMINAL: ID;");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("Rule cannot be deprecated!", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
+	
+	@Test public void testTerminalAnnotation_1() throws Exception {
+		Resource resource = getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"Rule: name=ID;\n"+
+				"@Exported\n"+
+				"terminal TERMINAL: ID;");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("Rule cannot be exported!", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
+	
+	@Test public void testEnumAnnotation() throws Exception {
+		Resource resource = getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"Rule: name=ID;\n"+
+				"@Deprecated\n"+
+				"enum MyEnum: FOO | BAR;");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("Rule cannot be deprecated!", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
+	
+	@Test public void testEnumAnnotation_1() throws Exception {
+		Resource resource = getResourceFromString("grammar org.xtext.Supergrammar with org.eclipse.xtext.common.Terminals\n" + 
+				"generate supergrammar \"http://org.xtext.supergrammar\"\n" + 
+				"Rule: name=ID;\n"+
+				"@Exported\n"+
+				"enum MyEnum: FOO | BAR;");
+		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
+		List<Diagnostic> issues = diag.getChildren();
+		assertEquals(issues.toString(), 1, issues.size());
+		assertEquals("Rule cannot be exported!", issues.get(0).getMessage());
+		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
+	}
 	
 	@Test public void testMissingArgument() throws Exception {
 		XtextResource resource = getResourceFromString(
@@ -339,7 +511,7 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		assertEquals(diag.getChildren().toString(), 4, diag.getChildren().size());
 		assertEquals("diag.isError", diag.getSeverity(), Diagnostic.ERROR);
 	}
-	
+
 	@Test
 	public void testBug322875_01() throws Exception {
 		String testGrammar = "grammar foo.Bar with org.eclipse.xtext.common.Terminals\n " +
@@ -349,6 +521,30 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		XtextResource resource = getResourceFromStringAndExpect(testGrammar,1);
 		assertFalse(resource.getErrors().toString(), resource.getErrors().isEmpty());
 		assertBug322875(resource);
+	}
+
+	@Override
+	protected Object getClasspathURIContext() {
+		return new ClassLoader(getClass().getClassLoader()) {
+			@Override
+			public URL getResource(String name) {
+				if ("org/eclipse/xtext/xtext/XtextValidationTest.ecore".equals(name)) {
+					return xtextValidationTest_ecore;
+				}
+				if ("org/eclipse/xtext/Xtext.ecore".equals(name)) {
+					URL resource = super.getResource(name);
+					if (resource == null) {
+						try {
+							return new File("../org.eclipse.xtext/org/eclipse/xtext/Xtext.ecore").toURI().toURL();
+						} catch (MalformedURLException e) {
+							throw new IllegalStateException("this should never happen");
+						}
+					}
+				}
+				URL resource = super.getResource(name);
+				return resource;
+			}
+		};
 	}
 
 	protected void assertBug322875(XtextResource resource) {
@@ -743,7 +939,6 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 				"grammar org.foo.Bar with org.eclipse.xtext.testlanguages.SimpleExpressionsTestLanguage\n" +
 				"import 'classpath:/org/eclipse/xtext/testlanguages/SimpleExpressionsTestLanguage.ecore' as mm\n" +
 				"Atom returns mm::Atom: name = ID;", 1);
-//		System.out.println(resource.getErrors());
 		assertEquals(resource.getErrors().toString(), 1, resource.getErrors().size());
 		assertTrue(resource.getWarnings().toString(), resource.getWarnings().isEmpty());
 
@@ -760,22 +955,6 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 				"grammar org.foo.Bar with org.eclipse.xtext.Xtext\n" +
 				"import 'http://www.eclipse.org/2008/Xtext' as xtext\n" +
 				"@Override\n" +
-				"ParserRule returns xtext::ParserRule: name = ID;");
-		assertTrue(resource.getErrors().toString(), resource.getErrors().isEmpty());
-		assertTrue(resource.getWarnings().toString(), resource.getWarnings().isEmpty());
-
-		Diagnostic diag = Diagnostician.INSTANCE.validate(resource.getContents().get(0));
-		assertNotNull("diag", diag);
-		assertEquals(diag.getSeverity(), Diagnostic.OK);
-		assertTrue(diag.getChildren().toString(), diag.getChildren().isEmpty());
-	}
-	
-	@Test
-	@Ignore("TODO this one should yield a warning, because two different instances of a package (ecore itself) might be referenced.")
-	public void testBug_280413_03() throws Exception {
-		XtextResource resource = getResourceFromString(
-				"grammar org.foo.Bar with org.eclipse.xtext.common.Terminals\n" +
-				"import 'classpath:/org/eclipse/xtext/Xtext.ecore' as xtext\n" +
 				"ParserRule returns xtext::ParserRule: name = ID;");
 		assertTrue(resource.getErrors().toString(), resource.getErrors().isEmpty());
 		assertTrue(resource.getWarnings().toString(), resource.getWarnings().isEmpty());
@@ -1740,6 +1919,55 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		messageAcceptor.validate();
 	}
 	
+	@Test public void testRuleCallAllowed_13_481700() throws Exception {
+		String grammarAsText =
+			"grammar test with org.eclipse.xtext.common.Terminals\n" +
+			"generate test 'http://test'\n" +
+			"Model: val1=Obj Data {SubModel};\n" + 
+			"Obj: {Obj};\n" + 
+			"Data: 'data';";
+		
+		Grammar grammar = (Grammar) getModel(grammarAsText);
+		ParserRule rule = (ParserRule) grammar.getRules().get(0);
+		RuleCall ruleCall = (RuleCall) ((Group) rule.getAlternatives()).getElements().get(1);
+		Action action = (Action) ((Group) rule.getAlternatives()).getElements().get(2);
+		XtextValidator validator = get(XtextValidator.class);
+		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(action, true, false);
+		validator.setMessageAcceptor(messageAcceptor);
+		validator.checkUnassignedRuleCallAllowed(ruleCall);
+		try {
+			validator.checkUnassignedActionAfterAssignment(action);
+			fail();
+		} catch(RuntimeException e) {
+			assertEquals("org.eclipse.xtext.validation.GuardException", e.getClass().getName());
+		}
+		messageAcceptor.validate();
+	}
+	
+	@Test public void testRuleCallAllowed_14_481700() throws Exception {
+		String grammarAsText =
+			"grammar test with org.eclipse.xtext.common.Terminals\n" +
+			"generate test 'http://test'\n" +
+			"Model: val1=Obj ID {SubModel};\n" + 
+			"Obj: {Obj};";
+		
+		Grammar grammar = (Grammar) getModel(grammarAsText);
+		ParserRule rule = (ParserRule) grammar.getRules().get(0);
+		RuleCall ruleCall = (RuleCall) ((Group) rule.getAlternatives()).getElements().get(1);
+		Action action = (Action) ((Group) rule.getAlternatives()).getElements().get(2);
+		XtextValidator validator = get(XtextValidator.class);
+		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(action, true, false);
+		validator.setMessageAcceptor(messageAcceptor);
+		validator.checkUnassignedRuleCallAllowed(ruleCall);
+		try {
+			validator.checkUnassignedActionAfterAssignment(action);
+			fail();
+		} catch(RuntimeException e) {
+			assertEquals("org.eclipse.xtext.validation.GuardException", e.getClass().getName());
+		}
+		messageAcceptor.validate();
+	}
+	
 	@Test public void testActionAllowed_01() throws Exception {
 		String grammarAsText =
 			"grammar test with org.eclipse.xtext.common.Terminals\n" +
@@ -1776,6 +2004,29 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(action, true, false);
 		validator.setMessageAcceptor(messageAcceptor);
 		validator.checkAssignedActionAfterAssignment(action);
+		messageAcceptor.validate();
+	}
+	
+	@Test public void testActionAllowed_03() throws Exception {
+		String grammarAsText =
+				"grammar test with org.eclipse.xtext.common.Terminals\n" +
+				"generate test 'http://test'\n" +
+				"import \"http://www.eclipse.org/emf/2002/Ecore\" as ecore\n" +
+				"Model: Data {Sub.sub=current};\n" + 
+				"Data returns ecore::EString: 'data';";
+	
+		Grammar grammar = (Grammar) getModel(grammarAsText);
+		ParserRule rule = (ParserRule) grammar.getRules().get(0);
+		Action action = (Action) ((Group) rule.getAlternatives()).getElements().get(1);
+		XtextValidator validator = get(XtextValidator.class);
+		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(action, true, false);
+		validator.setMessageAcceptor(messageAcceptor);
+		try {
+			validator.checkAssignedActionAfterAssignment(action);
+			fail();
+		} catch(RuntimeException e) {
+			assertEquals("org.eclipse.xtext.validation.GuardException", e.getClass().getName());
+		}
 		messageAcceptor.validate();
 	}
 	
@@ -1941,7 +2192,41 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 		validator.checkCrossReferenceNotInAlternatives(alternatives);
 		messageAcceptor.validate();
 	}
+
+	@Test public void testNegatedTokenNotEOF() throws Exception {
+		String grammarAsText =
+				"grammar test with org.eclipse.xtext.common.Terminals\n" +
+				"generate test 'http://test'\n" +
+				"A: foo=DUMMY;\n" +
+				"terminal DUMMY: !EOF;";
+		Grammar grammar = (Grammar) getModel(grammarAsText);
+		XtextValidator validator = get(XtextValidator.class);
+		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(null, true, false);
+		TerminalRule terminal = (TerminalRule) grammar.getRules().get(1);
+		NegatedToken token = (NegatedToken)terminal.getAlternatives();
+		messageAcceptor.expectedContext(token.getTerminal());
+		configureValidator(validator, messageAcceptor, token);
+		validator.checkNegatedTokenNotEOF(token);
+		messageAcceptor.validate();
+	}
 	
+	@Test public void testNegatedTokenNotEOF_2() throws Exception {
+		String grammarAsText =
+				"grammar test with org.eclipse.xtext.common.Terminals\n" +
+						"generate test 'http://test'\n" +
+						"A: foo=DUMMY;\n" +
+						"terminal DUMMY: !(EOF | ID);";
+		Grammar grammar = (Grammar) getModel(grammarAsText);
+		XtextValidator validator = get(XtextValidator.class);
+		ValidatingMessageAcceptor messageAcceptor = new ValidatingMessageAcceptor(null, true, false);
+		TerminalRule terminal = (TerminalRule) grammar.getRules().get(1);
+		NegatedToken token = (NegatedToken)terminal.getAlternatives();
+		messageAcceptor.expectedContext(((Alternatives)token.getTerminal()).getElements().get(0));
+		configureValidator(validator, messageAcceptor, token);
+		validator.checkNegatedTokenNotEOF(token);
+		messageAcceptor.validate();
+	}
+
 	public class ValidatingMessageAcceptor extends AbstractValidationMessageAcceptor {
 
 		private final Set<EObject> contexts;
@@ -1995,6 +2280,19 @@ public class XtextValidationTest extends AbstractValidationMessageAcceptingTestC
 	public void acceptError(String message, EObject object, EStructuralFeature feature, int index, String code, String... issueData) {
 		assertNull(lastMessage);
 		lastMessage = message;
+	}
+	
+	protected XtextResource getResourceFromString(String model, String uriString, XtextResourceSet rs) throws IOException {
+		rs.setClasspathURIContext(getClasspathURIContext());
+		XtextResource resource = (XtextResource) getResourceFactory().createResource(URI.createURI(uriString));
+		rs.getResources().add(resource);
+		resource.load(getAsStream(model), null);
+		if (resource instanceof LazyLinkingResource) {
+			((LazyLinkingResource) resource).resolveLazyCrossReferences(CancelIndicator.NullImpl);
+		} else {
+			EcoreUtil.resolveAll(resource);
+		}
+		return resource;
 	}
 
 }

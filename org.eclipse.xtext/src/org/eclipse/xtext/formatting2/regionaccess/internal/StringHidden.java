@@ -1,15 +1,17 @@
 /*******************************************************************************
  * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.regionaccess.internal;
 
 import java.util.List;
 
 import org.eclipse.xtext.AbstractRule;
+import org.eclipse.xtext.formatting2.regionaccess.HiddenRegionPartAssociation;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegion;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegionPart;
 
@@ -19,6 +21,7 @@ import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegionPart;
 public class StringHidden extends StringRegion implements IHiddenRegionPart {
 	private final AbstractHiddenRegion hiddenRegion;
 	private final AbstractRule rule;
+	private HiddenRegionPartAssociation association = null;
 
 	protected StringHidden(AbstractHiddenRegion hidden, AbstractRule rule, int offset, int lenght) {
 		super((StringBasedRegionAccess) hidden.getTextRegionAccess(), offset, lenght);
@@ -52,6 +55,18 @@ public class StringHidden extends StringRegion implements IHiddenRegionPart {
 		if (i > 0)
 			return parts.get(i);
 		return null;
+	}
+
+	protected void setAssociation(HiddenRegionPartAssociation association) {
+		this.association = association;
+	}
+
+	@Override
+	public HiddenRegionPartAssociation getAssociation() {
+		if (association == null) {
+			hiddenRegion.initAssociations();
+		}
+		return association;
 	}
 
 }

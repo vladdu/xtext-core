@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.testing.smoketest.internal;
 
@@ -28,6 +29,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Stage;
 import com.google.inject.util.Modules;
 
 /**
@@ -38,15 +40,22 @@ public class WrappingInjectorProvider implements IInjectorProvider, IRegistryCon
 
 	private final IInjectorProvider delegate;
 	private final Injector injector;
-	private final GlobalStateMemento stateBeforeInjectorCreation;
+	private GlobalStateMemento stateBeforeInjectorCreation;
 	private final GlobalStateMemento stateAfterInjectorCreation;
 
 	public WrappingInjectorProvider(IInjectorProvider delegate) {
 		this.delegate = delegate;
 		stateBeforeInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
 		this.injector = createInjector();
+		if (delegate instanceof IRegistryConfigurator) {
+			((IRegistryConfigurator) delegate).setupRegistry();
+		}
 		registerFactory(injector);
 		stateAfterInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
+		if (delegate instanceof IRegistryConfigurator) {
+			((IRegistryConfigurator) delegate).restoreRegistry();
+		}
+		stateBeforeInjectorCreation.restoreGlobalState();
 	}
 	
 	private void registerFactory(Injector injector) {
@@ -67,7 +76,7 @@ public class WrappingInjectorProvider implements IInjectorProvider, IRegistryCon
 			public void configure(Binder binder) {
 				for(Binding<?> binding: bindings.values()) {
 					Type typeLiteral = binding.getKey().getTypeLiteral().getType();
-					if (!Injector.class.equals(typeLiteral) && !Logger.class.equals(typeLiteral)) {
+					if (!Injector.class.equals(typeLiteral) && !Logger.class.equals(typeLiteral) && !Stage.class.equals(typeLiteral)) {
 						binding.applyTo(binder);
 					}
 				}
@@ -88,10 +97,12 @@ public class WrappingInjectorProvider implements IInjectorProvider, IRegistryCon
 	@Override
 	public void restoreRegistry() {
 		stateBeforeInjectorCreation.restoreGlobalState();
+		stateBeforeInjectorCreation = null;
 	}
 
 	@Override
 	public void setupRegistry() {
+		stateBeforeInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
 		stateAfterInjectorCreation.restoreGlobalState();
 	}
 

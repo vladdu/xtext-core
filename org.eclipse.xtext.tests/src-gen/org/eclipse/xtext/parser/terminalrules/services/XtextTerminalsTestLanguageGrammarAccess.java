@@ -17,11 +17,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class XtextTerminalsTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class GrammarElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.terminalrules.XtextTerminalsTestLanguage.Grammar");
@@ -67,7 +67,8 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		
 		//'grammar' name=GrammarID ('with' usedGrammars+=[Grammar|GrammarID] (',' usedGrammars+=[Grammar|GrammarID])*)?
 		//(definesHiddenTokens?='hidden' '(' (hiddenTokens+=[AbstractRule] (',' hiddenTokens+=[AbstractRule])*)? ')')?
-		//metamodelDeclarations+=AbstractMetamodelDeclaration* rules+=AbstractRule+
+		//metamodelDeclarations+=AbstractMetamodelDeclaration*
+		//rules+=AbstractRule+
 		public Group getGroup() { return cGroup; }
 		
 		//'grammar'
@@ -366,7 +367,9 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		@Override public ParserRule getRule() { return rule; }
 		
 		//name=ID ('returns' type=TypeRef)? (definesHiddenTokens?='hidden' '(' (hiddenTokens+=[AbstractRule] (','
-		//hiddenTokens+=[AbstractRule])*)? ')')? ':' alternatives=Alternatives ';'
+		//hiddenTokens+=[AbstractRule])*)? ')')? ':'
+		//alternatives=Alternatives
+		//';'
 		public Group getGroup() { return cGroup; }
 		
 		//name=ID
@@ -585,14 +588,15 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		private final Keyword cCardinalityAsteriskKeyword_1_0_1 = (Keyword)cCardinalityAlternatives_1_0.eContents().get(1);
 		private final Keyword cCardinalityPlusSignKeyword_1_0_2 = (Keyword)cCardinalityAlternatives_1_0.eContents().get(2);
 		
-		///* SuppressWarnings[potentialOverride] */ AbstractTokenWithCardinality AbstractElement:
+		///* SuppressWarnings[potentialOverride] */
+		//AbstractTokenWithCardinality AbstractElement:
 		//	(Assignment | AbstractTerminal) cardinality=('?' | '*' | '+')?;
 		@Override public ParserRule getRule() { return rule; }
 		
 		//(Assignment | AbstractTerminal) cardinality=('?' | '*' | '+')?
 		public Group getGroup() { return cGroup; }
 		
-		//Assignment | AbstractTerminal
+		//(Assignment | AbstractTerminal)
 		public Alternatives getAlternatives_0() { return cAlternatives_0; }
 		
 		//Assignment
@@ -978,7 +982,9 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		//	';';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'terminal' name=ID ('returns' type=TypeRef)? ':' alternatives=TerminalAlternatives ';'
+		//'terminal' name=ID ('returns' type=TypeRef)? ':'
+		//alternatives=TerminalAlternatives
+		//';'
 		public Group getGroup() { return cGroup; }
 		
 		//'terminal'
@@ -1094,7 +1100,8 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		private final Keyword cCardinalityAsteriskKeyword_1_0_1 = (Keyword)cCardinalityAlternatives_1_0.eContents().get(1);
 		private final Keyword cCardinalityPlusSignKeyword_1_0_2 = (Keyword)cCardinalityAlternatives_1_0.eContents().get(2);
 		
-		///* SuppressWarnings[potentialOverride] */ TerminalToken AbstractElement:
+		///* SuppressWarnings[potentialOverride] */
+		//TerminalToken AbstractElement:
 		//	TerminalTokenElement cardinality=('?' | '*' | '+')?;
 		@Override public ParserRule getRule() { return rule; }
 		
@@ -1313,7 +1320,9 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		//	';';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'enum' name=ID ('returns' type=TypeRef)? ':' alternatives=EnumLiterals ';'
+		//'enum' name=ID ('returns' type=TypeRef)? ':'
+		//alternatives=EnumLiterals
+		//';'
 		public Group getGroup() { return cGroup; }
 		
 		//'enum'
@@ -1668,7 +1677,8 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		return getAbstractTokenAccess().getRule();
 	}
 	
-	///* SuppressWarnings[potentialOverride] */ AbstractTokenWithCardinality AbstractElement:
+	///* SuppressWarnings[potentialOverride] */
+	//AbstractTokenWithCardinality AbstractElement:
 	//	(Assignment | AbstractTerminal) cardinality=('?' | '*' | '+')?;
 	public AbstractTokenWithCardinalityElements getAbstractTokenWithCardinalityAccess() {
 		return pAbstractTokenWithCardinality;
@@ -1820,7 +1830,8 @@ public class XtextTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		return getTerminalGroupAccess().getRule();
 	}
 	
-	///* SuppressWarnings[potentialOverride] */ TerminalToken AbstractElement:
+	///* SuppressWarnings[potentialOverride] */
+	//TerminalToken AbstractElement:
 	//	TerminalTokenElement cardinality=('?' | '*' | '+')?;
 	public TerminalTokenElements getTerminalTokenAccess() {
 		return pTerminalToken;

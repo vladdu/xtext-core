@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.grammarAccess
 
@@ -13,6 +14,7 @@ import java.util.HashSet
 import java.util.List
 import java.util.Map
 import java.util.Set
+import org.apache.log4j.Logger
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.EPackage
 import org.eclipse.emf.ecore.resource.ContentHandler
@@ -36,18 +38,19 @@ import org.eclipse.xtext.service.AbstractElementFinder.AbstractEnumRuleElementFi
 import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder
 import org.eclipse.xtext.service.GrammarProvider
 import org.eclipse.xtext.util.Wrapper
-import org.eclipse.xtext.util.internal.Log
 import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess
+import org.eclipse.xtext.xtext.generator.model.JavaFileAccess
 import org.eclipse.xtext.xtext.generator.model.annotations.SingletonClassAnnotation
 
 import static extension org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 
-@Log
 class GrammarAccessFragment2 extends AbstractXtextGeneratorFragment {
+	
+	static val Logger LOG = Logger.getLogger(GrammarAccessFragment2)
 	
 	@Inject FileAccessFactory fileAccessFactory
 	
@@ -174,6 +177,7 @@ class GrammarAccessFragment2 extends AbstractXtextGeneratorFragment {
 	
 	protected def doGenerateGrammarAccess() {
 		val javaFile = fileAccessFactory.createGeneratedJavaFile(grammar.grammarAccess)
+		javaFile.importNestedTypeThreshold = JavaFileAccess.DONT_IMPORT_NESTED_TYPES
 		javaFile.annotations += new SingletonClassAnnotation
 		javaFile.content = '''
 			public class «language.grammar.grammarAccess.simpleName» extends «AbstractGrammarElementFinder» {

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.ui.outline
 
@@ -62,7 +63,7 @@ class OutlineTreeProviderFragment2 extends AbstractStubGeneratingFragment {
 			/**
 			 * Customization of the default outline structure.
 			 *
-			 * See https://www.eclipse.org/Xtext/documentation/304_ide_concepts.html#outline
+			 * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#outline
 			 */
 			public class «grammar.outlineTreeProviderClass.simpleName» extends «
 				"org.eclipse.xtext.ui.editor.outline.impl.DefaultOutlineTreeProvider".typeRef» {
@@ -76,7 +77,7 @@ class OutlineTreeProviderFragment2 extends AbstractStubGeneratingFragment {
 			/**
 			 * Customization of the default outline structure.
 			 *
-			 * See https://www.eclipse.org/Xtext/documentation/304_ide_concepts.html#outline
+			 * See https://www.eclipse.org/Xtext/documentation/310_eclipse_support.html#outline
 			 */
 			class «grammar.outlineTreeProviderClass.simpleName» extends «
 				"org.eclipse.xtext.ui.editor.outline.impl.DefaultOutlineTreeProvider".typeRef» {

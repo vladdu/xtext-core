@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.parser.antlr;
@@ -11,7 +12,6 @@ package org.eclipse.xtext.parser.antlr;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,6 +54,7 @@ import org.eclipse.xtext.parser.ParseResult;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider.IParserErrorContext;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider.IUnorderedGroupErrorContext;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider.IValueConverterErrorContext;
+import org.eclipse.xtext.service.AllRulesCache;
 import org.eclipse.xtext.util.Strings;
 
 import com.google.common.collect.ImmutableList;
@@ -236,6 +237,10 @@ public abstract class AbstractInternalAntlrParser extends Parser {
 	 * @since 2.11
 	 */
 	protected Map<String, AbstractRule> createAllRules(Grammar grammar) {
+		AllRulesCache cache = AllRulesCache.findInEmfObject(grammar);
+		if (cache != null) {
+			return cache.getAllRules();
+		}
 		Map<String, AbstractRule> allRules = Maps.newHashMap();
 		for (AbstractRule rule: GrammarUtil.allRules(grammar)) {
 			if(rule instanceof TerminalRule)
@@ -339,11 +344,27 @@ public abstract class AbstractInternalAntlrParser extends Parser {
 	}
 	
 	protected void set(EObject _this, String feature, Object value, String lexerRule) {
-		set(_this, feature, value, lexerRule, currentNode);
+		if (value != null) {
+			set(_this, feature, value, lexerRule, currentNode);
+		}
+	}
+	
+	protected void set(EObject _this, String feature, boolean value, String lexerRule) {
+		if (value) {
+			set(_this, feature, value, lexerRule, currentNode);
+		}
 	}
 	
 	protected void setWithLastConsumed(EObject _this, String feature, Object value, String lexerRule) {
-		set(_this, feature, value, lexerRule, lastConsumedNode);
+		if (value != null) {
+			set(_this, feature, value, lexerRule, lastConsumedNode);
+		}
+	}
+	
+	protected void setWithLastConsumed(EObject _this, String feature, boolean value, String lexerRule) {
+		if (value) {
+			set(_this, feature, value, lexerRule, lastConsumedNode);
+		}
 	}
 
 	protected void add(EObject _this, String feature, Object value, String lexerRule, INode node) {
@@ -355,11 +376,27 @@ public abstract class AbstractInternalAntlrParser extends Parser {
 	}
 	
 	protected void add(EObject _this, String feature, Object value, String lexerRule) {
-		add(_this, feature, value, lexerRule, currentNode);
+		if (value != null) {
+			add(_this, feature, value, lexerRule, currentNode);
+		}
+	}
+	
+	protected void add(EObject _this, String feature, boolean value, String lexerRule) {
+		if (value) {
+			add(_this, feature, value, lexerRule, currentNode);
+		}
 	}
 	
 	protected void addWithLastConsumed(EObject _this, String feature, Object value, String lexerRule) {
-		add(_this, feature, value, lexerRule, lastConsumedNode);
+		if (value != null) {
+			add(_this, feature, value, lexerRule, lastConsumedNode);
+		}
+	}
+	
+	protected void addWithLastConsumed(EObject _this, String feature, boolean value, String lexerRule) {
+		if (value) {
+			add(_this, feature, value, lexerRule, lastConsumedNode);
+		}
 	}
 	
 	protected void appendError(INode node) {
@@ -629,10 +666,10 @@ public abstract class AbstractInternalAntlrParser extends Parser {
 	
 	// currentNode = currentNode.getParent();
     protected void afterParserOrEnumRuleCall() {
-	ICompositeNode newCurrent = nodeBuilder.compressAndReturnParent(currentNode);
-	if(currentNode == lastConsumedNode){
-		lastConsumedNode = newCurrent;
-	}
+		ICompositeNode newCurrent = nodeBuilder.compressAndReturnParent(currentNode);
+		if(currentNode == lastConsumedNode){
+			lastConsumedNode = newCurrent;
+		}
 		currentNode = newCurrent;
     }
 	

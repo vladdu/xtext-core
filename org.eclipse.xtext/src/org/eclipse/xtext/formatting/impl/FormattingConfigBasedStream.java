@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting.impl;
 
@@ -425,7 +426,7 @@ public class FormattingConfigBasedStream extends BaseTokenStream {
 		if (left != null)
 			result.addAll(cfg.getLocatorsForCommentTokensAfter(left));
 		if (right != null) {
-			List<ElementLocator> leadingElementLocators = cfg.getLocatorsForCommentTokensBefore(right);
+			List<ElementLocator> leadingElementLocators = Lists.newArrayList(cfg.getLocatorsForCommentTokensBefore(right));
 			for (Iterator<ElementLocator> i = result.iterator(); i.hasNext();) {
 				ElementLocator locator = i.next();
 				if (locator.getType() == LocatorType.BETWEEN && !leadingElementLocators.contains(locator))
@@ -493,9 +494,9 @@ public class FormattingConfigBasedStream extends BaseTokenStream {
 				&& hiddenTokenHelper.isWhitespace((AbstractRule) grammarElement);
 		if (isWhitespace || cfg.getWhitespaceRule() == grammarElement) {
 			if (preservedWS == null)
-				preservedWS = value;
+				preservedWS = harmonizeLineSeparator(value);
 			else
-				preservedWS += value;
+				preservedWS += harmonizeLineSeparator(value);
 		} else
 			addLineEntry(grammarElement, value, true);
 	}
@@ -503,5 +504,15 @@ public class FormattingConfigBasedStream extends BaseTokenStream {
 	@Override
 	public void writeSemantic(EObject grammarElement, String value) throws IOException {
 		addLineEntry(grammarElement, value, false);
+	}
+
+	/**
+	 * @since 2.22
+	 */
+	protected String harmonizeLineSeparator(String value) {
+		if (value != null) {
+			return value.replaceAll("\r?\n", getLineSeparator());
+		}
+		return null;
 	}
 }

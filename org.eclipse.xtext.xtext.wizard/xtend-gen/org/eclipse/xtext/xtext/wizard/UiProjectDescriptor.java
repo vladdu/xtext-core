@@ -1,9 +1,10 @@
 /**
  * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.wizard;
 
@@ -17,15 +18,6 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.eclipse.xtext.xbase.lib.ObjectExtensions;
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
-import org.eclipse.xtext.xtext.wizard.ExternalDependency;
-import org.eclipse.xtext.xtext.wizard.IdeProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.PomFile;
-import org.eclipse.xtext.xtext.wizard.ProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.RuntimeProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.TestProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.TestedProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.UiTestProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.WizardConfiguration;
 
 @SuppressWarnings("all")
 public class UiProjectDescriptor extends TestedProjectDescriptor {
@@ -44,15 +36,12 @@ public class UiProjectDescriptor extends TestedProjectDescriptor {
   
   @Override
   public Set<? extends ProjectDescriptor> getUpstreamProjects() {
-    WizardConfiguration _config = this.getConfig();
-    RuntimeProjectDescriptor _runtimeProject = _config.getRuntimeProject();
-    WizardConfiguration _config_1 = this.getConfig();
-    IdeProjectDescriptor _ideProject = _config_1.getIdeProject();
+    RuntimeProjectDescriptor _runtimeProject = this.getConfig().getRuntimeProject();
+    IdeProjectDescriptor _ideProject = this.getConfig().getIdeProject();
     final Function1<ProjectDescriptor, Boolean> _function = (ProjectDescriptor it) -> {
       return Boolean.valueOf(it.isEnabled());
     };
-    Iterable<? extends ProjectDescriptor> _filter = IterableExtensions.filter(Collections.<ProjectDescriptor>unmodifiableList(CollectionLiterals.<ProjectDescriptor>newArrayList(_runtimeProject, _ideProject)), _function);
-    return IterableExtensions.toSet(_filter);
+    return IterableExtensions.toSet(IterableExtensions.filter(Collections.<ProjectDescriptor>unmodifiableList(CollectionLiterals.<ProjectDescriptor>newArrayList(_runtimeProject, _ideProject)), _function));
   }
   
   @Override
@@ -108,14 +97,10 @@ public class UiProjectDescriptor extends TestedProjectDescriptor {
       };
       ExternalDependency _doubleArrow_1 = ObjectExtensions.<ExternalDependency>operator_doubleArrow(_externalDependency_1, _function_1);
       deps.add(_doubleArrow_1);
-      WizardConfiguration _config = this.getConfig();
-      IdeProjectDescriptor _ideProject = _config.getIdeProject();
-      boolean _isEnabled = _ideProject.isEnabled();
+      boolean _isEnabled = this.getConfig().getIdeProject().isEnabled();
       boolean _not = (!_isEnabled);
       if (_not) {
-        WizardConfiguration _config_1 = this.getConfig();
-        IdeProjectDescriptor _ideProject_1 = _config_1.getIdeProject();
-        Set<ExternalDependency> _externalDependencies_1 = _ideProject_1.getExternalDependencies();
+        Set<ExternalDependency> _externalDependencies_1 = this.getConfig().getIdeProject().getExternalDependencies();
         Iterables.<ExternalDependency>addAll(deps, _externalDependencies_1);
       }
       _xblockexpression = deps;

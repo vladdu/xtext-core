@@ -1,15 +1,17 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.validation;
 
 import java.util.Map;
 
 import org.eclipse.emf.common.util.DiagnosticChain;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EValidator;
 import org.eclipse.emf.ecore.util.Diagnostician;
@@ -34,9 +36,9 @@ public class CancelableDiagnostician extends Diagnostician {
 	}
 	
 	@Override
-	public boolean validate(EObject eObject, DiagnosticChain diagnostics, Map<Object, Object> context) {
+	public boolean validate(EClass eClass, EObject eObject, DiagnosticChain diagnostics, Map<Object, Object> context) {
 		checkCanceled(context);
-		return super.validate(eObject, diagnostics, context);
+		return super.validate(eClass, eObject, diagnostics, context);
 	}
 	
 	/**
@@ -62,12 +64,6 @@ public class CancelableDiagnostician extends Diagnostician {
 	 */
 	protected CancelIndicator getCancelIndicator(Map<Object, Object> context) {
 		return context != null ? (CancelIndicator) context.get(CANCEL_INDICATOR) : null;
-	}
-	
-	@Override
-	protected boolean doValidateContents(EObject eObject, DiagnosticChain diagnostics, Map<Object, Object> context) {
-		checkCanceled(context);
-		return super.doValidateContents(eObject, diagnostics, context);
 	}
 
 }

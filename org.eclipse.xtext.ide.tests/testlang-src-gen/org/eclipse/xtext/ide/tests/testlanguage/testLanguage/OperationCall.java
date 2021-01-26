@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.testLanguage;
 
@@ -33,10 +34,6 @@ public interface OperationCall extends EObject
   /**
    * Returns the value of the '<em><b>Operation</b></em>' reference.
    * <!-- begin-user-doc -->
-   * <p>
-   * If the meaning of the '<em>Operation</em>' reference isn't clear,
-   * there really should be more of a description here...
-   * </p>
    * <!-- end-user-doc -->
    * @return the value of the '<em>Operation</em>' reference.
    * @see #setOperation(Operation)
@@ -60,10 +57,6 @@ public interface OperationCall extends EObject
    * Returns the value of the '<em><b>Params</b></em>' attribute list.
    * The list contents are of type {@link java.lang.Integer}.
    * <!-- begin-user-doc -->
-   * <p>
-   * If the meaning of the '<em>Params</em>' attribute list isn't clear,
-   * there really should be more of a description here...
-   * </p>
    * <!-- end-user-doc -->
    * @return the value of the '<em>Params</em>' attribute list.
    * @see org.eclipse.xtext.ide.tests.testlanguage.testLanguage.TestLanguagePackage#getOperationCall_Params()

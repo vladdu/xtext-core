@@ -1,15 +1,16 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -49,11 +50,16 @@ import com.google.common.collect.Sets;
  */
 public abstract class FormattableDocument implements IFormattableDocument {
 
-	private final TextSegmentSet<ITextReplacer> replacers;
+	private TextSegmentSet<ITextReplacer> replacers = null;
 
 	protected FormattableDocument() {
 		super();
-		this.replacers = createTextReplacerSet();
+	}
+
+	protected TextSegmentSet<ITextReplacer> getReplacers() {
+		if (replacers == null)
+			replacers = createTextReplacerSet();
+		return replacers;
 	}
 
 	@Override
@@ -63,14 +69,13 @@ public abstract class FormattableDocument implements IFormattableDocument {
 			ITextSegment frameRegion = getRegion();
 			String replacerTitle = replacer.getClass().getSimpleName();
 			ITextSegment replacerRegion = replacer.getRegion();
-			@SuppressWarnings("unchecked")
 			RegionsOutsideFrameException exception = new RegionsOutsideFrameException(frameTitle, frameRegion,
 					Tuples.create(replacerTitle, replacerRegion));
 			getRequest().getExceptionHandler().accept(exception);
 			return;
 		}
 		try {
-			replacers.add(replacer, getFormatter().createTextReplacerMerger());
+			getReplacers().add(replacer, getFormatter().createTextReplacerMerger());
 		} catch (ConflictingRegionsException e) {
 			getRequest().getExceptionHandler().accept(e);
 		}
@@ -121,12 +126,9 @@ public abstract class FormattableDocument implements IFormattableDocument {
 		ITextReplacerContext context = previous.withDocument(this);
 		ITextReplacerContext wrappable = null;
 		Set<ITextReplacer> wrapped = Sets.newHashSet();
-		LinkedList<ITextReplacer> queue = new LinkedList<ITextReplacer>();
-		for (ITextReplacer replacer : replacers) {
-			queue.add(replacer);
-		}
-		while (!queue.isEmpty()) {
-			ITextReplacer replacer = queue.poll();
+		Iterator<ITextReplacer> replacers = getReplacers().iterator();
+		while (replacers.hasNext()) {
+			ITextReplacer replacer = replacers.next();
 			context = context.withReplacer(replacer);
 			if (wrappable != null && context.isWrapSincePrevious()) {
 				wrappable = null;
@@ -135,13 +137,10 @@ public abstract class FormattableDocument implements IFormattableDocument {
 				// TODO: raise report if replacer claims it can do autowrap but
 				// then doesn't
 				while (context != wrappable) {
-					ITextReplacer r = context.getReplacer();
-					if (r != null && replacers.get(r) == r) {
-						queue.addFirst(r);
-					}
 					context = context.getPreviousContext();
 				}
 				replacer = context.getReplacer();
+				replacers = getReplacers().iteratorAfter(replacer);
 				context.setAutowrap(true);
 				wrappable = null;
 			}
@@ -179,7 +178,7 @@ public abstract class FormattableDocument implements IFormattableDocument {
 									.apply(((HiddenRegionReplacer) input).getFormatting());
 						return input.getClass().getSimpleName();
 					}
-				});
+				}, getRequest().isEnableDebugTracing());
 	}
 
 	@Override
@@ -188,6 +187,8 @@ public abstract class FormattableDocument implements IFormattableDocument {
 		if (formatter.shouldFormat(obj, this)) {
 			try {
 				formatter.format(obj, this);
+			} catch (RegionTraceMissingException e) {
+				throw e;
 			} catch (Exception e) {
 				IAcceptor<Exception> handler = getRequest().getExceptionHandler();
 				handler.accept(e);
@@ -219,7 +220,7 @@ public abstract class FormattableDocument implements IFormattableDocument {
 	}
 
 	@Override
-	public <T1 extends ISemanticRegion, T2 extends ISemanticRegion> // 
+	public <T1 extends ISemanticRegion, T2 extends ISemanticRegion> //
 	Pair<T1, T2> interior(Pair<T1, T2> pair, Procedure1<? super IHiddenRegionFormatter> init) {
 		return interior(pair.getKey(), pair.getValue(), init);
 	}
@@ -240,7 +241,7 @@ public abstract class FormattableDocument implements IFormattableDocument {
 	}
 
 	@Override
-	public <T1 extends ISemanticRegion, T2 extends ISemanticRegion> // 
+	public <T1 extends ISemanticRegion, T2 extends ISemanticRegion> //
 	Pair<T1, T2> interior(T1 first, T2 second, Procedure1<? super IHiddenRegionFormatter> init) {
 		if (first != null && second != null) {
 			set(first.getNextHiddenRegion(), second.getPreviousHiddenRegion(), init);
@@ -255,13 +256,14 @@ public abstract class FormattableDocument implements IFormattableDocument {
 		int length = context.getReplacer().getRegion().getEndOffset() - offset;
 		if (length > wrappable.canAutowrap())
 			return false;
-		//		for (ITextReplacement rep : context.getReplacementsUntil(wrappable))
-		//			if (rep.getReplacementText().contains("\n"))
-		//				return true;
-		//		TextSegment region = new TextSegment(getTextRegionAccess(), offset, length);
-		//		String text = TextReplacements.apply(region, );
-		//		if (text.contains("\n"))
-		//			return true;
+		// for (ITextReplacement rep : context.getReplacementsUntil(wrappable))
+		// if (rep.getReplacementText().contains("\n"))
+		// return true;
+		// TextSegment region = new TextSegment(getTextRegionAccess(), offset,
+		// length);
+		// String text = TextReplacements.apply(region, );
+		// if (text.contains("\n"))
+		// return true;
 		return false;
 	}
 
@@ -336,7 +338,7 @@ public abstract class FormattableDocument implements IFormattableDocument {
 	public <T extends EObject> T surround(T owner, Procedure1<? super IHiddenRegionFormatter> beforeAndAfter) {
 		if (owner != null && !owner.eIsProxy()) {
 			IEObjectRegion region = getTextRegionAccess().regionForEObject(owner);
-			if (region == null) 
+			if (region == null)
 				return owner;
 			IHiddenRegion previous = region.getPreviousHiddenRegion();
 			IHiddenRegion next = region.getNextHiddenRegion();
@@ -350,7 +352,7 @@ public abstract class FormattableDocument implements IFormattableDocument {
 		TextRegionsToString toString = new TextRegionsToString();
 		toString.setFrame(this.getRegion());
 		toString.setTitle(getClass().getSimpleName() + " with ITextReplacers");
-		for (ITextReplacer repl : replacers)
+		for (ITextReplacer repl : getReplacers())
 			toString.add(repl.getRegion(), repl.getClass().getSimpleName() + ": " + repl.toString());
 		return toString.toString();
 	}

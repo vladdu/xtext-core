@@ -1,17 +1,20 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.validation;
 
 import java.util.Collection;
 
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EValidator;
 import org.eclipse.xtext.enumrules.EnumRulesTestLanguageStandaloneSetup;
 import org.eclipse.xtext.enumrules.enumRulesTestLanguage.EnumRulesTestLanguagePackage;
+import org.eclipse.xtext.enumrules.enums.EnumsPackage;
 import org.eclipse.xtext.validation.CompositeEValidator.EValidatorEqualitySupport;
 import org.junit.Test;
 
@@ -27,6 +30,8 @@ public class CompositeValidatorWithEObjectValidatorTest extends AbstractComposit
 		return new EnumRulesTestLanguageStandaloneSetup() {
 			@Override
 			public Injector createInjector() {
+				EnumsPackage enumsPack = EnumsPackage.eINSTANCE;
+				EPackage.Registry.INSTANCE.put(enumsPack.getNsURI(), enumsPack);
 				return Guice.createInjector(new org.eclipse.xtext.enumrules.EnumRulesTestLanguageRuntimeModule() {
 					
 					@Override

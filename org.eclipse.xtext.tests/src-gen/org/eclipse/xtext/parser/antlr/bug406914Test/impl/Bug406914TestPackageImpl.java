@@ -6,6 +6,7 @@ package org.eclipse.xtext.parser.antlr.bug406914Test.impl;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
@@ -57,7 +58,7 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
 
   /**
    * Creates, registers, and initializes the <b>Package</b> for this model, and for any others upon which it depends.
-   * 
+   *
    * <p>This method is used to initialize {@link Bug406914TestPackage#eINSTANCE} when that field is accessed.
    * Clients should not invoke it directly. Instead, they should simply access that field to obtain the package.
    * <!-- begin-user-doc -->
@@ -72,9 +73,13 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
     if (isInited) return (Bug406914TestPackage)EPackage.Registry.INSTANCE.getEPackage(Bug406914TestPackage.eNS_URI);
 
     // Obtain or create and register package
-    Bug406914TestPackageImpl theBug406914TestPackage = (Bug406914TestPackageImpl)(EPackage.Registry.INSTANCE.get(eNS_URI) instanceof Bug406914TestPackageImpl ? EPackage.Registry.INSTANCE.get(eNS_URI) : new Bug406914TestPackageImpl());
+    Object registeredBug406914TestPackage = EPackage.Registry.INSTANCE.get(eNS_URI);
+    Bug406914TestPackageImpl theBug406914TestPackage = registeredBug406914TestPackage instanceof Bug406914TestPackageImpl ? (Bug406914TestPackageImpl)registeredBug406914TestPackage : new Bug406914TestPackageImpl();
 
     isInited = true;
+
+    // Initialize simple dependencies
+    EcorePackage.eINSTANCE.eClass();
 
     // Create package meta-data objects
     theBug406914TestPackage.createPackageContents();
@@ -85,7 +90,6 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
     // Mark meta-data to indicate it can't be changed
     theBug406914TestPackage.freeze();
 
-  
     // Update the registry and return the package
     EPackage.Registry.INSTANCE.put(Bug406914TestPackage.eNS_URI, theBug406914TestPackage);
     return theBug406914TestPackage;
@@ -96,6 +100,7 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EClass getModel()
   {
     return modelEClass;
@@ -106,6 +111,7 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getModel_Name()
   {
     return (EAttribute)modelEClass.getEStructuralFeatures().get(0);
@@ -116,6 +122,7 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public Bug406914TestFactory getBug406914TestFactory()
   {
     return (Bug406914TestFactory)getEFactoryInstance();
@@ -169,6 +176,9 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
     setNsPrefix(eNS_PREFIX);
     setNsURI(eNS_URI);
 
+    // Obtain other dependent packages
+    EcorePackage theEcorePackage = (EcorePackage)EPackage.Registry.INSTANCE.getEPackage(EcorePackage.eNS_URI);
+
     // Create type parameters
 
     // Set bounds for type parameters
@@ -177,7 +187,7 @@ public class Bug406914TestPackageImpl extends EPackageImpl implements Bug406914T
 
     // Initialize classes and features; add operations and parameters
     initEClass(modelEClass, Model.class, "Model", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getModel_Name(), ecorePackage.getEString(), "name", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getModel_Name(), theEcorePackage.getEString(), "name", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Create resource
     createResource(eNS_URI);

@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug289059TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug289059TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.linking.Bug289059TestLanguage.Model");
@@ -40,7 +40,9 @@ public class Bug289059TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	reference=[Model]?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=ID enabled=UnassignedAction? reference=[Model]?
+		//name=ID
+		//enabled=UnassignedAction?
+		//reference=[Model]?
 		public Group getGroup() { return cGroup; }
 		
 		//name=ID

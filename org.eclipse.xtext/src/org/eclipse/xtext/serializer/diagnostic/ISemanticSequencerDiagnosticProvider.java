@@ -1,17 +1,20 @@
 /*******************************************************************************
  * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.serializer.diagnostic;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.xtext.serializer.ISerializationContext;
+import org.eclipse.xtext.serializer.analysis.IGrammarConstraintProvider;
 import org.eclipse.xtext.serializer.analysis.IGrammarConstraintProvider.IConstraint;
 import org.eclipse.xtext.serializer.analysis.ISemanticSequencerNfaProvider.ISemState;
+import org.eclipse.xtext.serializer.sequencer.BacktrackingSemanticSequencer;
 import org.eclipse.xtext.serializer.sequencer.BacktrackingSemanticSequencer.SerializableObject;
 import org.eclipse.xtext.util.formallang.Nfa;
 
@@ -38,7 +41,7 @@ public interface ISemanticSequencerDiagnosticProvider {
 	ISerializationDiagnostic createFeatureValueMissing(EObject semanticObject, EStructuralFeature feature);
 
 	/**
-	 * @deprecated use {@link #createBacktrackingFailedDiagnostic(SerializableObject, ISerializationContext, IConstraint)}
+	 * @deprecated use {@link #createBacktrackingFailedDiagnostic(BacktrackingSemanticSequencer.SerializableObject, ISerializationContext, IGrammarConstraintProvider.IConstraint)}
 	 */
 	@Deprecated
 	ISerializationDiagnostic createBacktrackingFailedDiagnostic(SerializableObject semanticObject, EObject context,

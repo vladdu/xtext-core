@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.regionaccess.internal;
 
@@ -14,11 +15,14 @@ import org.eclipse.xtext.formatting2.debug.TextRegionAccessToString;
 import org.eclipse.xtext.formatting2.regionaccess.IComment;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegion;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegionPart;
+import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegionPartAssociator;
 import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegion;
 import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegionFinder;
+import org.eclipse.xtext.formatting2.regionaccess.ISequentialRegion;
 import org.eclipse.xtext.formatting2.regionaccess.ITextRegionAccess;
 import org.eclipse.xtext.formatting2.regionaccess.ITextSegment;
 import org.eclipse.xtext.formatting2.regionaccess.IWhitespace;
+import org.eclipse.xtext.resource.IResourceServiceProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -44,30 +48,33 @@ public abstract class AbstractHiddenRegion extends AbstractTextSegment implement
 	protected List<ITextSegment> collectAlternatingSpaceAndComments(boolean includeComments) {
 		List<IHiddenRegionPart> parts = getParts();
 		if (parts.isEmpty()) {
-			return Collections.<ITextSegment> singletonList(this);
+			return Collections.<ITextSegment>singletonList(this);
 		} else {
-			ITextSegment last = null;
+			ITextSegment lastWhitespace = null;
 			List<ITextSegment> result = Lists.newArrayList();
 			for (IHiddenRegionPart part : parts) {
 				if (part instanceof IWhitespace) {
-					if (last == null || last instanceof IComment) {
+					if (lastWhitespace == null) {
 						result.add(part);
+						lastWhitespace = part;
 					} else {
-						int mergedLength = last.getLength() + part.getLength();
-						result.set(result.size() - 1, new TextSegment(access, last.getOffset(), mergedLength));
+						int mergedLength = lastWhitespace.getLength() + part.getLength();
+						lastWhitespace = new TextSegment(access, lastWhitespace.getOffset(), mergedLength);
+						result.set(result.size() - 1, lastWhitespace);
 					}
 				} else if (part instanceof IComment) {
-					if (last == null || last instanceof IComment) {
+					if (lastWhitespace == null) {
 						result.add(new TextSegment(access, part.getOffset(), 0));
+					} else {
+						lastWhitespace = null;
 					}
-					if (includeComments)
+					if (includeComments) {
 						result.add(part);
+					}
 				}
-				if (!result.isEmpty())
-					last = result.get(result.size() - 1);
 			}
-			if (last instanceof IComment) {
-				result.add(new TextSegment(access, last.getOffset() + last.getLength(), 0));
+			if (lastWhitespace == null) {
+				result.add(new TextSegment(access, getEndOffset(), 0));
 			}
 			return ImmutableList.copyOf(result);
 		}
@@ -106,6 +113,11 @@ public abstract class AbstractHiddenRegion extends AbstractTextSegment implement
 	}
 
 	@Override
+	public ISequentialRegion getNextSequentialRegion() {
+		return next;
+	}
+
+	@Override
 	public int getOffset() {
 		if (hiddens.isEmpty()) {
 			if (previous != null)
@@ -118,7 +130,7 @@ public abstract class AbstractHiddenRegion extends AbstractTextSegment implement
 
 	@Override
 	public List<IHiddenRegionPart> getParts() {
-		return ImmutableList.<IHiddenRegionPart> copyOf(hiddens);
+		return ImmutableList.<IHiddenRegionPart>copyOf(hiddens);
 	}
 
 	@Override
@@ -128,6 +140,11 @@ public abstract class AbstractHiddenRegion extends AbstractTextSegment implement
 
 	@Override
 	public ISemanticRegion getPreviousSemanticRegion() {
+		return previous;
+	}
+
+	@Override
+	public ISequentialRegion getPreviousSequentialRegion() {
 		return previous;
 	}
 
@@ -162,5 +179,19 @@ public abstract class AbstractHiddenRegion extends AbstractTextSegment implement
 	@Override
 	public ISemanticRegionFinder immediatelyPreceding() {
 		return new SemanticRegionMatcher(getPreviousSemanticRegion());
+	}
+
+	protected void initAssociations() {
+		IResourceServiceProvider provider = access.getResource().getResourceServiceProvider();
+		IHiddenRegionPartAssociator associator = provider.get(IHiddenRegionPartAssociator.class);
+		associator.associate(this, (part, status) -> {
+			if (part instanceof NodeHidden) {
+				((NodeHidden) part).setAssociation(status);
+			} else if (part instanceof StringHidden) {
+				((StringHidden) part).setAssociation(status);
+			} else {
+				throw new IllegalStateException();
+			}
+		});
 	}
 }

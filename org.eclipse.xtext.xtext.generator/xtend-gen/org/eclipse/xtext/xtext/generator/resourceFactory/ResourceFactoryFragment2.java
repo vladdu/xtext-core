@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2016 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.resourceFactory;
 
@@ -12,18 +13,14 @@ import java.util.List;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtend2.lib.StringConcatenationClient;
-import org.eclipse.xtext.Grammar;
 import org.eclipse.xtext.resource.IResourceFactory;
 import org.eclipse.xtext.resource.IResourceServiceProvider;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment;
-import org.eclipse.xtext.xtext.generator.IXtextGeneratorLanguage;
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming;
 import org.eclipse.xtext.xtext.generator.model.PluginXmlAccess;
-import org.eclipse.xtext.xtext.generator.model.StandaloneSetupAccess;
 import org.eclipse.xtext.xtext.generator.model.TypeReference;
 import org.eclipse.xtext.xtext.generator.model.project.IBundleProjectConfig;
-import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig;
 
 /**
  * Contributes the registration <code>org.eclipse.emf.ecore.extension_parser</code>
@@ -41,9 +38,7 @@ public class ResourceFactoryFragment2 extends AbstractXtextGeneratorFragment {
   
   @Override
   public void generate() {
-    IXtextGeneratorLanguage _language = this.getLanguage();
-    StandaloneSetupAccess _runtimeGenSetup = _language.getRuntimeGenSetup();
-    List<StringConcatenationClient> _registrations = _runtimeGenSetup.getRegistrations();
+    List<StringConcatenationClient> _registrations = this.getLanguage().getRuntimeGenSetup().getRegistrations();
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
@@ -59,8 +54,7 @@ public class ResourceFactoryFragment2 extends AbstractXtextGeneratorFragment {
         _builder.newLineIfNotEmpty();
         _builder.newLine();
         {
-          IXtextGeneratorLanguage _language = ResourceFactoryFragment2.this.getLanguage();
-          List<String> _fileExtensions = _language.getFileExtensions();
+          List<String> _fileExtensions = ResourceFactoryFragment2.this.getLanguage().getFileExtensions();
           for(final String fileExtension : _fileExtensions) {
             _builder.append(Resource.class);
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(\"");
@@ -77,24 +71,19 @@ public class ResourceFactoryFragment2 extends AbstractXtextGeneratorFragment {
       }
     };
     _registrations.add(_client);
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IBundleProjectConfig _eclipsePlugin = _projectConfig.getEclipsePlugin();
+    IBundleProjectConfig _eclipsePlugin = this.getProjectConfig().getEclipsePlugin();
     PluginXmlAccess _pluginXml = null;
     if (_eclipsePlugin!=null) {
       _pluginXml=_eclipsePlugin.getPluginXml();
     }
     boolean _tripleNotEquals = (_pluginXml != null);
     if (_tripleNotEquals) {
-      IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-      IBundleProjectConfig _eclipsePlugin_1 = _projectConfig_1.getEclipsePlugin();
-      PluginXmlAccess _pluginXml_1 = _eclipsePlugin_1.getPluginXml();
-      List<CharSequence> _entries = _pluginXml_1.getEntries();
+      List<CharSequence> _entries = this.getProjectConfig().getEclipsePlugin().getPluginXml().getEntries();
       StringConcatenation _builder = new StringConcatenation();
       _builder.append("<!-- adding resource factories -->");
       _builder.newLine();
       {
-        IXtextGeneratorLanguage _language_1 = this.getLanguage();
-        List<String> _fileExtensions = _language_1.getFileExtensions();
+        List<String> _fileExtensions = this.getLanguage().getFileExtensions();
         for(final String fileExtension : _fileExtensions) {
           _builder.append("<extension");
           _builder.newLine();
@@ -106,8 +95,7 @@ public class ResourceFactoryFragment2 extends AbstractXtextGeneratorFragment {
           _builder.newLine();
           _builder.append("\t\t");
           _builder.append("class=\"");
-          Grammar _grammar = this.getGrammar();
-          TypeReference _eclipsePluginExecutableExtensionFactory = this._xtextGeneratorNaming.getEclipsePluginExecutableExtensionFactory(_grammar);
+          TypeReference _eclipsePluginExecutableExtensionFactory = this._xtextGeneratorNaming.getEclipsePluginExecutableExtensionFactory(this.getGrammar());
           _builder.append(_eclipsePluginExecutableExtensionFactory, "\t\t");
           _builder.append(":org.eclipse.xtext.resource.IResourceFactory\"");
           _builder.newLineIfNotEmpty();
@@ -128,8 +116,7 @@ public class ResourceFactoryFragment2 extends AbstractXtextGeneratorFragment {
           _builder.newLine();
           _builder.append("\t\t");
           _builder.append("class=\"");
-          Grammar _grammar_1 = this.getGrammar();
-          TypeReference _eclipsePluginExecutableExtensionFactory_1 = this._xtextGeneratorNaming.getEclipsePluginExecutableExtensionFactory(_grammar_1);
+          TypeReference _eclipsePluginExecutableExtensionFactory_1 = this._xtextGeneratorNaming.getEclipsePluginExecutableExtensionFactory(this.getGrammar());
           _builder.append(_eclipsePluginExecutableExtensionFactory_1, "\t\t");
           _builder.append(":org.eclipse.xtext.ui.resource.IResourceUIServiceProvider\"");
           _builder.newLineIfNotEmpty();

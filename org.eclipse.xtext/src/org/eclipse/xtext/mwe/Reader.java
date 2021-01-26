@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.mwe;
 
@@ -49,11 +50,22 @@ import com.google.common.collect.Sets;
  * You might want to populate multiple workflow slots with model elements.
  * </p>
  * <p>
- * Below an example of a usage in the MWE XML syntax:
+ * Below are examples of a usage in the MWE2 DSL and MWE XML syntax:
  * </p>
  * <pre>
+ * component = org.eclipse.xtext.mwe.Reader {
+ *   useJavaClassPath = true
+ *   register = foo.bar.MyLanguageStandaloneSetup {}
+ *   load = {
+ *     slot = "types"
+ *     type = "Type"
+ *   }
+ *   validate = org.eclipse.xtext.mwe.Validator { stopOnError = false }
+ * }
+ * </pre>
+ * <pre>
  * &lt;component class="org.eclipse.xtext.mwe.Reader" useJavaClassPath="true"&gt;
- *   &lt;register class="foo.bar.MyLanguageSetandaloneSetup"/&gt;
+ *   &lt;register class="foo.bar.MyLanguageStandaloneSetup"/&gt;
  *   &lt;load slot="types" type="Type"/&gt;
  *   &lt;validate/&gt; 
  * &lt;/component&gt;

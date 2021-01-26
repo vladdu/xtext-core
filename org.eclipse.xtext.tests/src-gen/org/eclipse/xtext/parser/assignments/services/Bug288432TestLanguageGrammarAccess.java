@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug288432TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class BodyElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.assignments.Bug288432TestLanguage.Body");
@@ -48,10 +48,15 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	('(' parameter+=Parameter (',' parameter+=Parameter)* ')')?
 		//	'body'
 		//	content=(Content | ParameterRef) foo+=Foo+
+		//	/* SuppressWarnings[SpacesInKeyword] */
 		//	'end body';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//('(' parameter+=Parameter (',' parameter+=Parameter)* ')')? 'body' content=(Content | ParameterRef) foo+=Foo+ 'end body'
+		//('(' parameter+=Parameter (',' parameter+=Parameter)* ')')?
+		//'body'
+		//content=(Content | ParameterRef) foo+=Foo+
+		///* SuppressWarnings[SpacesInKeyword] */
+		//'end body'
 		public Group getGroup() { return cGroup; }
 		
 		//('(' parameter+=Parameter (',' parameter+=Parameter)* ')')?
@@ -102,6 +107,7 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//Foo
 		public RuleCall getFooFooParserRuleCall_3_0() { return cFooFooParserRuleCall_3_0; }
 		
+		///* SuppressWarnings[SpacesInKeyword] */
 		//'end body'
 		public Keyword getEndBodyKeyword_4() { return cEndBodyKeyword_4; }
 	}
@@ -128,10 +134,14 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final Keyword cEndContentKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		
 		//Content:
-		//	'content' MyElement 'end content';
+		//	'content' MyElement
+		//	/* SuppressWarnings[SpacesInKeyword] */
+		//	'end content';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'content' MyElement 'end content'
+		//'content' MyElement
+		///* SuppressWarnings[SpacesInKeyword] */
+		//'end content'
 		public Group getGroup() { return cGroup; }
 		
 		//'content'
@@ -140,6 +150,7 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//MyElement
 		public RuleCall getMyElementParserRuleCall_1() { return cMyElementParserRuleCall_1; }
 		
+		///* SuppressWarnings[SpacesInKeyword] */
 		//'end content'
 		public Keyword getEndContentKeyword_2() { return cEndContentKeyword_2; }
 	}
@@ -211,7 +222,8 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	value=[ParameterObject]?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=ID value=[ParameterObject]?
+		//name=ID
+		//value=[ParameterObject]?
 		public Group getGroup() { return cGroup; }
 		
 		//name=ID
@@ -324,6 +336,7 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 	//	('(' parameter+=Parameter (',' parameter+=Parameter)* ')')?
 	//	'body'
 	//	content=(Content | ParameterRef) foo+=Foo+
+	//	/* SuppressWarnings[SpacesInKeyword] */
 	//	'end body';
 	public BodyElements getBodyAccess() {
 		return pBody;
@@ -344,7 +357,9 @@ public class Bug288432TestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//Content:
-	//	'content' MyElement 'end content';
+	//	'content' MyElement
+	//	/* SuppressWarnings[SpacesInKeyword] */
+	//	'end content';
 	public ContentElements getContentAccess() {
 		return pContent;
 	}

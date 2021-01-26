@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator
 
@@ -21,6 +22,8 @@ import java.util.List
 import java.util.Map
 import java.util.Properties
 import org.apache.log4j.Logger
+import org.eclipse.emf.ecore.EPackage
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtend2.lib.StringConcatenationClient
 import org.eclipse.xtext.Constants
@@ -30,18 +33,22 @@ import org.eclipse.xtext.resource.impl.BinaryGrammarResourceFactoryImpl
 import org.eclipse.xtext.service.SingletonBinding
 import org.eclipse.xtext.util.Modules2
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory
+import org.eclipse.xtext.xtext.generator.model.GeneratedJavaFileAccess
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess
 import org.eclipse.xtext.xtext.generator.model.JavaFileAccess
 import org.eclipse.xtext.xtext.generator.model.TypeReference
 import org.eclipse.xtext.xtext.generator.model.annotations.SuppressWarningsAnnotation
+import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig
 
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 
 /**
- * @noreference
+ * Templates for generating the common language infrastructure.
  */
 @Singleton
 class XtextGeneratorTemplates {
+	
+	@Inject CodeConfig codeConfig
 
 	@Inject FileAccessFactory fileAccessFactory
 	
@@ -49,7 +56,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createRuntimeSetup(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(runtimeSetup,'''
 				/**
 				 * Initialization support for running Xtext languages without Equinox extension registry.
@@ -76,13 +83,18 @@ class XtextGeneratorTemplates {
 		}
 	}
 	
+	@Deprecated
+	private static def addBackwardsCompabibleImportsTo(IXtextGeneratorLanguage langConfig, GeneratedJavaFileAccess file) {
+		for (type : langConfig.runtimeGenSetup.imports) {
+			file.importType(type)
+		}
+	}
+	
 	def JavaFileAccess createRuntimeGenSetup(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
 		val file = fileAccessFactory.createGeneratedJavaFile(runtimeGenSetup)
 		// The following imports are added for backwards-compatibility
-		for (type : langConfig.runtimeGenSetup.imports) {
-			file.importType(type)
-		}
+		langConfig.addBackwardsCompabibleImportsTo(file);
 		
 		file.annotations += new SuppressWarningsAnnotation
 		file.content = '''
@@ -95,17 +107,17 @@ class XtextGeneratorTemplates {
 					«ENDFOR»
 					«IF langConfig.grammar.usedGrammars.isEmpty»
 						// register default ePackages
-						if (!«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("ecore"))
-							«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+						if (!«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("ecore"))
+							«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
 								"ecore", new «'org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl'.typeRef»());
-						if (!«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("xmi"))
-							«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+						if (!«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("xmi"))
+							«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
 								"xmi", new «'org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl'.typeRef»());
-						if (!«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("xtextbin"))
-							«'org.eclipse.emf.ecore.resource.Resource'.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+						if (!«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("xtextbin"))
+							«Resource.typeRef».Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
 								"xtextbin", new «BinaryGrammarResourceFactoryImpl»());
-						if (!«'org.eclipse.emf.ecore.EPackage'.typeRef».Registry.INSTANCE.containsKey(«XtextPackage».eNS_URI))
-							«'org.eclipse.emf.ecore.EPackage'.typeRef».Registry.INSTANCE.put(«XtextPackage».eNS_URI, «XtextPackage».eINSTANCE);
+						if (!«EPackage.typeRef».Registry.INSTANCE.containsKey(«XtextPackage».eNS_URI))
+							«EPackage.typeRef».Registry.INSTANCE.put(«XtextPackage».eNS_URI, «XtextPackage».eINSTANCE);
 					«ENDIF»
 			
 					«Injector» injector = createInjector();
@@ -168,7 +180,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createRuntimeModule(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(runtimeModule,'''
 				/**
 				 * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -232,7 +244,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createIdeModule(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(genericIdeModule,'''
 				/**
 				 * Use this class to register ide components.
@@ -278,7 +290,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createIdeSetup(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(genericIdeSetup,'''
 				/**
 				 * Initialization support for running Xtext languages as language servers.
@@ -311,7 +323,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createEclipsePluginModule(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(eclipsePluginModule,'''
 				/**
 				 * Use this class to register components to be used within the Eclipse IDE.
@@ -364,54 +376,9 @@ class XtextGeneratorTemplates {
 		return file
 	}
 	
-	def JavaFileAccess createIdeaModule(IXtextGeneratorLanguage langConfig) {
-		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
-			return fileAccessFactory.createXtendFile(ideaModule,'''
-				/**
-				 * Use this class to register components to be used within IntelliJ IDEA.
-				 */
-				class «ideaModule.simpleName» extends «ideaGenModule» {
-				}
-			''')
-		} else {
-			return fileAccessFactory.createJavaFile(ideaModule,'''
-				/**
-				 * Use this class to register components to be used within IntelliJ IDEA.
-				 */
-				public class «ideaModule.simpleName» extends «ideaGenModule» {
-				}
-			''')
-		}
-	}
-	
-	def JavaFileAccess createIdeaGenModule(IXtextGeneratorLanguage langConfig) {
-		val it = langConfig.grammar
-		val superClass = langConfig.ideaGenModule.superClass ?: ideaDefaultModule
-		val file = fileAccessFactory.createGeneratedJavaFile(ideaGenModule)
-		file.importNestedTypeThreshold = JavaFileAccess.DONT_IMPORT_NESTED_TYPES
-		
-		file.typeComment = '''
-			/**
-			 * Manual modifications go to {@link «ideaModule.simpleName»}.
-			 */
-		'''
-		file.annotations += new SuppressWarningsAnnotation
-		file.content = '''
-			public abstract class «ideaGenModule.simpleName» extends «superClass» {
-				
-				«FOR binding : langConfig.ideaGenModule.bindings»
-					«binding.createBindingMethod»
-					
-				«ENDFOR»
-			}
-		'''
-		return file
-	}
-	
 	def JavaFileAccess createWebModule(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(webModule,'''
 				/**
 				 * Use this class to register additional components to be used within the web application.
@@ -456,7 +423,7 @@ class XtextGeneratorTemplates {
 	
 	def JavaFileAccess createWebSetup(IXtextGeneratorLanguage langConfig) {
 		val it = langConfig.grammar
-		if (langConfig.generateXtendStubs) {
+		if (codeConfig.preferXtendStubs) {
 			return fileAccessFactory.createXtendFile(webSetup, '''
 				/**
 				 * Initialization support for running Xtext languages in web applications.
@@ -486,7 +453,6 @@ class XtextGeneratorTemplates {
 		}
 	}
 
-	
 	def JavaFileAccess createEclipsePluginExecutableExtensionFactory(IXtextGeneratorLanguage langConfig, IXtextGeneratorLanguage activatorLanguage) {
 		val grammar = langConfig.grammar
 		
@@ -502,20 +468,21 @@ class XtextGeneratorTemplates {
 			
 				@Override
 				protected «'org.osgi.framework.Bundle'.typeRef» getBundle() {
-					return «eclipsePluginActivator».getInstance().getBundle();
+					return «'org.osgi.framework.FrameworkUtil'.typeRef».getBundle(«eclipsePluginActivator».class);
 				}
 				
 				@Override
 				protected «Injector» getInjector() {
-					return «eclipsePluginActivator».getInstance().getInjector(«eclipsePluginActivator».«langConfig.grammar.name.toUpperCase.replaceAll('\\.', '_')»);
+					«eclipsePluginActivator» activator = «eclipsePluginActivator».getInstance();
+					return activator != null ? activator.getInjector(«eclipsePluginActivator».«langConfig.grammar.name.toUpperCase.replaceAll('\\.', '_')») : null;
 				}
-				
+			
 			}
 		'''
 		return file
 	}
 	
-	def JavaFileAccess createEclipsePluginActivator(List<? extends IXtextGeneratorLanguage> langConfigs) {
+	def JavaFileAccess createEclipsePluginActivator(IXtextProjectConfig projectConfig, List<? extends IXtextGeneratorLanguage> langConfigs) {
 		val activator = eclipsePluginActivator
 		val file = fileAccessFactory.createGeneratedJavaFile(activator)
 		
@@ -528,6 +495,7 @@ class XtextGeneratorTemplates {
 		file.content = '''
 			public class «activator.simpleName» extends «'org.eclipse.ui.plugin.AbstractUIPlugin'.typeRef» {
 			
+				public static final String PLUGIN_ID = "«projectConfig.eclipsePlugin.name»";
 				«FOR lang : langConfigs»
 					public static final String «lang.grammar.name.toUpperCase.replaceAll('\\.', '_')» = "«lang.grammar.name»";
 				«ENDFOR»
@@ -579,7 +547,7 @@ class XtextGeneratorTemplates {
 					}
 				}
 				
-				protected Module getRuntimeModule(String grammar) {
+				protected «Module» getRuntimeModule(String grammar) {
 					«FOR lang : langConfigs»
 						if («lang.grammar.name.toUpperCase.replaceAll('\\.', '_')».equals(grammar)) {
 							return new «getRuntimeModule(lang.grammar)»();
@@ -600,6 +568,7 @@ class XtextGeneratorTemplates {
 				protected «Module» getSharedStateModule() {
 					return new «'org.eclipse.xtext.ui.shared.SharedStateModule'.typeRef»();
 				}
+				
 				
 			}
 		'''

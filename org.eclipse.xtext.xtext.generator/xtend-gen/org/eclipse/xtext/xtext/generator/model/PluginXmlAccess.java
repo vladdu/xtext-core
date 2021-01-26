@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.model;
 
@@ -16,17 +17,19 @@ import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtend2.lib.StringConcatenationClient;
 import org.eclipse.xtext.generator.IFileSystemAccess2;
-import org.eclipse.xtext.util.internal.Log;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xtext.generator.CodeConfig;
 import org.eclipse.xtext.xtext.generator.IGuiceAwareGeneratorComponent;
-import org.eclipse.xtext.xtext.generator.model.TextFileAccess;
 
-@Log
+/**
+ * Configuration object for plugin.xml files for use in Eclipse.
+ */
 @Accessors
 @SuppressWarnings("all")
 public class PluginXmlAccess extends TextFileAccess implements IGuiceAwareGeneratorComponent {
+  private static final Logger LOG = Logger.getLogger(PluginXmlAccess.class);
+  
   @Inject
   private CodeConfig codeConfig;
   
@@ -106,8 +109,6 @@ public class PluginXmlAccess extends TextFileAccess implements IGuiceAwareGenera
   public void initialize(final Injector injector) {
     injector.injectMembers(this);
   }
-  
-  private final static Logger LOG = Logger.getLogger(PluginXmlAccess.class);
   
   @Pure
   public CodeConfig getCodeConfig() {

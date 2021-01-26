@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2018 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.naming;
 
@@ -18,6 +19,7 @@ import org.eclipse.emf.ecore.resource.impl.BinaryResourceImpl.EObjectOutputStrea
 import org.eclipse.xtext.util.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 
 /**
  * A datatype for dealing with qualified names.
@@ -36,6 +38,9 @@ public class QualifiedName implements Comparable<QualifiedName> {
 
 	private static final boolean USE_INTERNING = Boolean.getBoolean("xtext.qn.interning");
 
+	/**
+	 * The single existing empty QualifiedName.
+	 */
 	public static final QualifiedName EMPTY = new QualifiedName() {
 		@Override
 		public QualifiedName append(QualifiedName relativeQualifiedName) {
@@ -62,6 +67,38 @@ public class QualifiedName implements Comparable<QualifiedName> {
 			return "";
 		}
 	};
+	
+	/**
+	 * The Builder allows to create instances of QualifiedName in a slightly
+	 * more efficient way by pre-allocating the underlying data for a known
+	 * length.
+	 * 
+	 * Clients are supposed to create an instance of the builder with the predefined
+	 * length and call {@link #add(String)} for each segment sequentially. The final
+	 * {@link QualifiedName name} is obtained via {@link #build()}. 
+	 * 
+	 * @since 2.15
+	 */
+	public static final class Builder {
+		private final String[] segments;
+		private int next;
+
+		public Builder(int size) {
+			this.segments = new String[size];
+			this.next = 0;
+		}
+		
+		public void add(String segment) {
+			segments[next++] = intern(segment);
+		}
+		
+		public QualifiedName build() {
+			if (next != segments.length) {
+				throw new IllegalStateException("Unexpected number of segments");
+			}
+			return new QualifiedName(segments);
+		}
+	}
 
 	/**
 	 * Low-level factory method. Consider using a {@link IQualifiedNameConverter} instead.
@@ -452,8 +489,11 @@ public class QualifiedName implements Comparable<QualifiedName> {
 	}
 
 	protected boolean startsWith(QualifiedName prefix, boolean ignoreCase) {
-		if (prefix.getSegmentCount() > getSegmentCount())
+		Preconditions.checkArgument(prefix != null, "prefix must not be null");
+		
+		if (prefix.getSegmentCount() > getSegmentCount()) {
 			return false;
+		}
 		if (ignoreCase) {
 			for (int i = 0; i < prefix.getSegmentCount(); ++i) {
 				if (!this.getSegment(i).equalsIgnoreCase(prefix.getSegment(i)))

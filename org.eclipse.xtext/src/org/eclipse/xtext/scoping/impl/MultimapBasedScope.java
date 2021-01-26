@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.scoping.impl;
 
@@ -23,7 +24,7 @@ import com.google.common.collect.Multimap;
  * This implementation assumes, that the keys of the {@link Multimap} are the keys of the contained {@link org.eclipse.xtext.resource.EObjectDescription}s
  * as well as the name.
  * 
- * When looking up elements using {@link #getElements(QualifiedName)} this implementation looks up the the elements from the map, hence are much 
+ * When looking up elements using {@link #getElements(QualifiedName)} this implementation looks up the elements from the map, hence are much 
  * more efficient for many {@link IEObjectDescription}s.
  *   
  * @author Sven Efftinge - Initial contribution and API 

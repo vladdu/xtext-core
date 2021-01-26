@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -40,16 +41,27 @@ public class XtextValueConverters extends DefaultTerminalConverters {
 		return new AbstractNullSafeConverter<String>() {
 			@Override
 			protected String internalToValue(String string, INode node) throws ValueConverterException {
-				StringBuilder result = new StringBuilder();
-				for(ILeafNode leaf: node.getLeafNodes()) {
-					if (!leaf.isHidden()) {
-						if (leaf.getGrammarElement() instanceof Keyword)
-							result.append(leaf.getText());
-						else
-							result.append(ID().toValue(leaf.getText(), leaf));
+				if (node != null) {
+					StringBuilder result = new StringBuilder();
+					for (ILeafNode leaf : node.getLeafNodes()) {
+						if (!leaf.isHidden()) {
+							if (leaf.getGrammarElement() instanceof Keyword)
+								result.append(leaf.getText());
+							else
+								result.append(ID().toValue(leaf.getText(), leaf));
+						}
 					}
+					return result.toString();
+				} else {
+					String[] splitted = string.split("\\.");
+					StringBuilder result = new StringBuilder(string.length());
+					for (int i = 0; i < splitted.length; i++) {
+						if (i != 0)
+							result.append('.');
+						result.append(ID().toValue(splitted[i], null));
+					}
+					return result.toString();
 				}
-				return result.toString();
 			}
 
 			@Override
@@ -71,16 +83,27 @@ public class XtextValueConverters extends DefaultTerminalConverters {
 		return new AbstractNullSafeConverter<String>() {
 			@Override
 			protected String internalToValue(String string, INode node) throws ValueConverterException {
-				StringBuilder result = new StringBuilder();
-				for(ILeafNode leaf: node.getLeafNodes()) {
-					if (!leaf.isHidden()) {
-						if (leaf.getGrammarElement() instanceof Keyword)
-							result.append(".");
-						else
-							result.append(ID().toValue(leaf.getText(), leaf));
+				if (node != null) {
+					StringBuilder result = new StringBuilder();
+					for (ILeafNode leaf : node.getLeafNodes()) {
+						if (!leaf.isHidden()) {
+							if (leaf.getGrammarElement() instanceof Keyword)
+								result.append(".");
+							else
+								result.append(ID().toValue(leaf.getText(), leaf));
+						}
 					}
+					return result.toString();
+				} else {
+					String[] splitted = string.split("\\.");
+					StringBuilder result = new StringBuilder(string.length());
+					for (int i = 0; i < splitted.length; i++) {
+						if (i != 0)
+							result.append('.');
+						result.append(ID().toValue(splitted[i], null));
+					}
+					return result.toString();
 				}
-				return result.toString();
 			}
 
 			@Override

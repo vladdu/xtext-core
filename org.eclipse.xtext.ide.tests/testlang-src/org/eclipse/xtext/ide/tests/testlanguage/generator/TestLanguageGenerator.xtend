@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.generator
 
@@ -24,6 +25,10 @@ import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.Property
 class TestLanguageGenerator extends AbstractGenerator {
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+		if (fsa.getURI('').scheme == 'inmemory') {
+			// Suppress the generator when building in memory, see InMemoryWorkspaceTest
+			return
+		}
 		for (type : resource.allContents.filter(TypeDeclaration).toList) {
 			fsa.generateFile(type.name+".java", '''
 			public class «type.name» {

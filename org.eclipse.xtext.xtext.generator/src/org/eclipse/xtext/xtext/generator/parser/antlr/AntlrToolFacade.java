@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr;
 
@@ -103,7 +104,7 @@ public class AntlrToolFacade {
 					}
 				}
 			}
-			log.info("downloading file from '"+downloadURL+"' ...");
+			log.info("Downloading file from '"+downloadURL+"' ...");
 			BufferedInputStream in = new BufferedInputStream(new URL(downloadURL).openStream());
 			try {
 				FileOutputStream out = new FileOutputStream(file());
@@ -119,7 +120,7 @@ public class AntlrToolFacade {
 			} finally {
 				in.close();
 			}
-			log.info("finished downloading.");
+			log.info("Finished downloading.");
 		} catch (IOException e) {
 			System.err.println("Downloading ANTLR parser generator failed: " + e.getMessage());
 			System.err.println("Please install the feature 'Xtext Antlr SDK' manually using the external updatesite:");

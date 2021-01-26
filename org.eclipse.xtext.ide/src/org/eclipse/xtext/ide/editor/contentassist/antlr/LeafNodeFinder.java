@@ -1,11 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.ide.editor.contentassist.antlr;
+
+import java.util.Iterator;
 
 import org.eclipse.xtext.nodemodel.ICompositeNode;
 import org.eclipse.xtext.nodemodel.ILeafNode;
@@ -32,33 +35,54 @@ public class LeafNodeFinder {
 	}
 	
 	public ILeafNode caseCompositeNode(ICompositeNode object) {
-		if (leading) {
-			if (object.getTotalOffset() < offset && object.getTotalLength() + object.getTotalOffset() >= offset) {
-				for (INode node: object.getChildren()) {
-					ILeafNode result = searchIn(node);
-					if (result != null)
-						return result;
-				}
-			}
-		} else {
-			if (object.getTotalOffset() <= offset && object.getTotalLength() + object.getTotalOffset() > offset) {
-				for (INode node: object.getChildren()) {
-					ILeafNode result = searchIn(node);
-					if (result != null)
-						return result;
-				}
-			}
+		if (matchesSearchCriteria(object)) {
+			return searchInChildren(object);
 		}
 		return null;
 	}
 	
-	public ILeafNode caseLeafNode(ILeafNode object) {
+	/**
+	 * @since 2.13
+	 */
+	protected boolean matchesSearchCriteria(INode object) {
 		if (leading) {
-			if (object.getTotalOffset() < offset && object.getTotalLength() + object.getTotalOffset() >= offset)
-				return object;
+			if (object.getTotalOffset() < offset && object.getTotalLength() + object.getTotalOffset() >= offset) {
+				return true;
+			}
 		} else {
-			if (object.getTotalOffset() <= offset && object.getTotalLength() + object.getTotalOffset() > offset)
-				return object;
+			if (object.getTotalOffset() <= offset && object.getTotalLength() + object.getTotalOffset() > offset) {
+				return true;
+			}
+		}
+		return object.getTotalOffset() == offset && object.getTotalLength() == 0;
+	}
+	
+	/**
+	 * @since 2.13
+	 */
+	protected ILeafNode searchInChildren(ICompositeNode object) {
+		Iterator<ILeafNode> leafNodes = object.getLeafNodes().iterator();
+		ILeafNode result = null;
+		while(leafNodes.hasNext()) {
+			result = leafNodes.next();
+			if (matchesSearchCriteria(result)) {
+				break;
+			}
+		}
+		while(leafNodes.hasNext()) {
+			ILeafNode next = leafNodes.next();
+			if (matchesSearchCriteria(next)) {
+				result = next;
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
+	
+	public ILeafNode caseLeafNode(ILeafNode object) {
+		if (matchesSearchCriteria(object)) {
+			return object;
 		}
 		return null;
 	}

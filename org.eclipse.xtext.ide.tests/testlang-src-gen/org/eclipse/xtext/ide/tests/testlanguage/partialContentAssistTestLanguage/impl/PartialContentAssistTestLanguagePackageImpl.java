@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.partialContentAssistTestLanguage.impl;
 
@@ -11,6 +12,7 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
@@ -70,7 +72,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
 
   /**
    * Creates, registers, and initializes the <b>Package</b> for this model, and for any others upon which it depends.
-   * 
+   *
    * <p>This method is used to initialize {@link PartialContentAssistTestLanguagePackage#eINSTANCE} when that field is accessed.
    * Clients should not invoke it directly. Instead, they should simply access that field to obtain the package.
    * <!-- begin-user-doc -->
@@ -85,9 +87,13 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
     if (isInited) return (PartialContentAssistTestLanguagePackage)EPackage.Registry.INSTANCE.getEPackage(PartialContentAssistTestLanguagePackage.eNS_URI);
 
     // Obtain or create and register package
-    PartialContentAssistTestLanguagePackageImpl thePartialContentAssistTestLanguagePackage = (PartialContentAssistTestLanguagePackageImpl)(EPackage.Registry.INSTANCE.get(eNS_URI) instanceof PartialContentAssistTestLanguagePackageImpl ? EPackage.Registry.INSTANCE.get(eNS_URI) : new PartialContentAssistTestLanguagePackageImpl());
+    Object registeredPartialContentAssistTestLanguagePackage = EPackage.Registry.INSTANCE.get(eNS_URI);
+    PartialContentAssistTestLanguagePackageImpl thePartialContentAssistTestLanguagePackage = registeredPartialContentAssistTestLanguagePackage instanceof PartialContentAssistTestLanguagePackageImpl ? (PartialContentAssistTestLanguagePackageImpl)registeredPartialContentAssistTestLanguagePackage : new PartialContentAssistTestLanguagePackageImpl();
 
     isInited = true;
+
+    // Initialize simple dependencies
+    EcorePackage.eINSTANCE.eClass();
 
     // Create package meta-data objects
     thePartialContentAssistTestLanguagePackage.createPackageContents();
@@ -98,7 +104,6 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
     // Mark meta-data to indicate it can't be changed
     thePartialContentAssistTestLanguagePackage.freeze();
 
-  
     // Update the registry and return the package
     EPackage.Registry.INSTANCE.put(PartialContentAssistTestLanguagePackage.eNS_URI, thePartialContentAssistTestLanguagePackage);
     return thePartialContentAssistTestLanguagePackage;
@@ -109,6 +114,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EClass getTypeDeclaration()
   {
     return typeDeclarationEClass;
@@ -119,6 +125,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getTypeDeclaration_Name()
   {
     return (EAttribute)typeDeclarationEClass.getEStructuralFeatures().get(0);
@@ -129,6 +136,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EReference getTypeDeclaration_SuperType()
   {
     return (EReference)typeDeclarationEClass.getEStructuralFeatures().get(1);
@@ -139,6 +147,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EReference getTypeDeclaration_Properties()
   {
     return (EReference)typeDeclarationEClass.getEStructuralFeatures().get(2);
@@ -149,6 +158,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EClass getProperty()
   {
     return propertyEClass;
@@ -159,6 +169,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getProperty_Type()
   {
     return (EAttribute)propertyEClass.getEStructuralFeatures().get(0);
@@ -169,6 +180,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getProperty_Name()
   {
     return (EAttribute)propertyEClass.getEStructuralFeatures().get(1);
@@ -179,6 +191,7 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public PartialContentAssistTestLanguageFactory getPartialContentAssistTestLanguageFactory()
   {
     return (PartialContentAssistTestLanguageFactory)getEFactoryInstance();
@@ -238,6 +251,9 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
     setNsPrefix(eNS_PREFIX);
     setNsURI(eNS_URI);
 
+    // Obtain other dependent packages
+    EcorePackage theEcorePackage = (EcorePackage)EPackage.Registry.INSTANCE.getEPackage(EcorePackage.eNS_URI);
+
     // Create type parameters
 
     // Set bounds for type parameters
@@ -246,13 +262,13 @@ public class PartialContentAssistTestLanguagePackageImpl extends EPackageImpl im
 
     // Initialize classes and features; add operations and parameters
     initEClass(typeDeclarationEClass, TypeDeclaration.class, "TypeDeclaration", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getTypeDeclaration_Name(), ecorePackage.getEString(), "name", null, 0, 1, TypeDeclaration.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getTypeDeclaration_Name(), theEcorePackage.getEString(), "name", null, 0, 1, TypeDeclaration.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTypeDeclaration_SuperType(), this.getTypeDeclaration(), null, "superType", null, 0, 1, TypeDeclaration.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTypeDeclaration_Properties(), this.getProperty(), null, "properties", null, 0, -1, TypeDeclaration.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(propertyEClass, Property.class, "Property", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getProperty_Type(), ecorePackage.getEString(), "type", null, 0, 1, Property.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getProperty_Name(), ecorePackage.getEString(), "name", null, 0, 1, Property.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getProperty_Type(), theEcorePackage.getEString(), "type", null, 0, 1, Property.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getProperty_Name(), theEcorePackage.getEString(), "name", null, 0, 1, Property.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Create resource
     createResource(eNS_URI);

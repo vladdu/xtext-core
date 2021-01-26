@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.wizard;
 
@@ -16,29 +17,19 @@ import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.ObjectExtensions;
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
-import org.eclipse.xtext.xtext.wizard.BuildSystem;
-import org.eclipse.xtext.xtext.wizard.ExternalDependency;
-import org.eclipse.xtext.xtext.wizard.GradleBuildFile;
-import org.eclipse.xtext.xtext.wizard.LanguageDescriptor;
-import org.eclipse.xtext.xtext.wizard.Outlet;
-import org.eclipse.xtext.xtext.wizard.PomFile;
-import org.eclipse.xtext.xtext.wizard.ProjectDescriptor;
-import org.eclipse.xtext.xtext.wizard.Scope;
-import org.eclipse.xtext.xtext.wizard.SourceLayout;
-import org.eclipse.xtext.xtext.wizard.WizardConfiguration;
 
 @FinalFieldsConstructor
 @SuppressWarnings("all")
 public class WebProjectDescriptor extends ProjectDescriptor {
-  private final static String REQUIREJS_VERSION = "2.3.2";
+  private static final String REQUIREJS_VERSION = "2.3.6";
   
-  private final static String JQUERY_VERSION = "2.2.4";
+  private static final String JQUERY_VERSION = "3.5.1";
   
-  private final static String JETTY_VERSION = "9.3.8.v20160314";
+  private static final String JETTY_VERSION = "9.4.34.v20201102";
   
-  private final static String SLF4J_VERSION = "1.7.21";
+  private static final String SLF4J_VERSION = "1.7.21";
   
-  private final static String ACE_VERSION = "1.2.3";
+  private static final String ACE_VERSION = "1.3.3";
   
   @Override
   public Set<? extends ProjectDescriptor> getUpstreamProjects() {
@@ -57,15 +48,13 @@ public class WebProjectDescriptor extends ProjectDescriptor {
   
   @Override
   public boolean isPartOfGradleBuild() {
-    WizardConfiguration _config = this.getConfig();
-    BuildSystem _preferredBuildSystem = _config.getPreferredBuildSystem();
+    BuildSystem _preferredBuildSystem = this.getConfig().getPreferredBuildSystem();
     return Objects.equal(_preferredBuildSystem, BuildSystem.GRADLE);
   }
   
   @Override
   public boolean isPartOfMavenBuild() {
-    WizardConfiguration _config = this.getConfig();
-    BuildSystem _preferredBuildSystem = _config.getPreferredBuildSystem();
+    BuildSystem _preferredBuildSystem = this.getConfig().getPreferredBuildSystem();
     return Objects.equal(_preferredBuildSystem, BuildSystem.MAVEN);
   }
   
@@ -127,9 +116,7 @@ public class WebProjectDescriptor extends ProjectDescriptor {
       _builder_1.newLine();
       _builder_1.append("\t");
       _builder_1.append("main = \'");
-      WizardConfiguration _config = this.getConfig();
-      LanguageDescriptor _language = _config.getLanguage();
-      String _basePackage = _language.getBasePackage();
+      String _basePackage = this.getConfig().getLanguage().getBasePackage();
       _builder_1.append(_basePackage, "\t");
       _builder_1.append(".web.ServerLauncher\'");
       _builder_1.newLineIfNotEmpty();
@@ -158,8 +145,7 @@ public class WebProjectDescriptor extends ProjectDescriptor {
       _builder.append("<build>");
       _builder.newLine();
       {
-        WizardConfiguration _config = this.getConfig();
-        SourceLayout _sourceLayout = _config.getSourceLayout();
+        SourceLayout _sourceLayout = this.getConfig().getSourceLayout();
         boolean _equals = Objects.equal(_sourceLayout, SourceLayout.PLAIN);
         if (_equals) {
           _builder.append("\t");
@@ -229,7 +215,7 @@ public class WebProjectDescriptor extends ProjectDescriptor {
       _builder.append("<artifactId>maven-war-plugin</artifactId>");
       _builder.newLine();
       _builder.append("\t\t\t");
-      _builder.append("<version>2.6</version>");
+      _builder.append("<version>3.2.3</version>");
       _builder.newLine();
       _builder.append("\t\t\t");
       _builder.append("<configuration>");
@@ -259,8 +245,10 @@ public class WebProjectDescriptor extends ProjectDescriptor {
       _builder.append("<artifactId>jetty-maven-plugin</artifactId>");
       _builder.newLine();
       _builder.append("\t\t\t");
-      _builder.append("<version>9.2.13.v20150730</version>");
-      _builder.newLine();
+      _builder.append("<version>");
+      _builder.append(WebProjectDescriptor.JETTY_VERSION, "\t\t\t");
+      _builder.append("</version>");
+      _builder.newLineIfNotEmpty();
       _builder.append("\t\t\t");
       _builder.append("<configuration>");
       _builder.newLine();
@@ -286,7 +274,7 @@ public class WebProjectDescriptor extends ProjectDescriptor {
       _builder.append("<artifactId>build-helper-maven-plugin</artifactId>");
       _builder.newLine();
       _builder.append("\t\t\t");
-      _builder.append("<version>1.9.1</version>");
+      _builder.append("<version>3.0.0</version>");
       _builder.newLine();
       _builder.append("\t\t\t");
       _builder.append("<executions>");

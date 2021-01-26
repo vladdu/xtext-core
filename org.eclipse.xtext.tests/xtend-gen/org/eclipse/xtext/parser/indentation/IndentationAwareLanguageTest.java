@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.parser.indentation;
 
@@ -13,7 +14,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.nodemodel.ICompositeNode;
 import org.eclipse.xtext.nodemodel.impl.InvariantChecker;
-import org.eclipse.xtext.parser.IParseResult;
+import org.eclipse.xtext.parser.indentation.indentationAwareTestLanguage.ChildList;
+import org.eclipse.xtext.parser.indentation.indentationAwareTestLanguage.OtherTreeNode;
 import org.eclipse.xtext.parser.indentation.indentationAwareTestLanguage.Tree;
 import org.eclipse.xtext.parser.indentation.indentationAwareTestLanguage.TreeNode;
 import org.eclipse.xtext.parser.indentation.tests.IndentationAwareTestLanguageInjectorProvider;
@@ -37,7 +39,6 @@ import org.junit.runner.RunWith;
 @SuppressWarnings("all")
 public class IndentationAwareLanguageTest {
   @Inject
-  @Extension
   private ParseHelper<Tree> parseHelper;
   
   @Inject
@@ -48,103 +49,158 @@ public class IndentationAwareLanguageTest {
   @Extension
   private InvariantChecker invariantChecker;
   
-  @Test
-  public void testEmptyTree() {
+  public Tree parse(final CharSequence seq) {
     try {
-      final Tree tree = this.parseHelper.parse("");
-      Assert.assertNotNull(tree);
-      Assert.assertTrue(tree.getNodes().isEmpty());
+      return this.parseHelper.parse(seq.toString().replaceAll("\r\n", "\n"));
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
+  }
+  
+  @Test
+  public void testEmptyTree() {
+    final Tree tree = this.parse("");
+    Assert.assertNotNull(tree);
+    Assert.assertTrue(tree.getNodes().isEmpty());
   }
   
   @Test
   public void testSingleRootNode() {
-    try {
-      final Tree tree = this.parseHelper.parse("root");
-      Assert.assertNotNull(tree);
-      Assert.assertEquals(1, tree.getNodes().size());
-      Assert.assertEquals("root", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
-    } catch (Throwable _e) {
-      throw Exceptions.sneakyThrow(_e);
-    }
+    final Tree tree = this.parse("root");
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getNodes().size());
+    Assert.assertEquals("root", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
   }
   
   @Test
   public void testTwoRootNodes() {
-    try {
-      StringConcatenation _builder = new StringConcatenation();
-      _builder.append("first");
-      _builder.newLine();
-      _builder.append("second");
-      _builder.newLine();
-      final Tree tree = this.parseHelper.parse(_builder);
-      Assert.assertNotNull(tree);
-      Assert.assertEquals(2, tree.getNodes().size());
-      Assert.assertEquals("first", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
-      Assert.assertEquals("second", IterableExtensions.<TreeNode>last(tree.getNodes()).getName());
-    } catch (Throwable _e) {
-      throw Exceptions.sneakyThrow(_e);
-    }
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("first");
+    _builder.newLine();
+    _builder.append("second");
+    _builder.newLine();
+    final Tree tree = this.parse(_builder);
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(2, tree.getNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
+    Assert.assertEquals("second", IterableExtensions.<TreeNode>last(tree.getNodes()).getName());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_1() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("first");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.newLine();
+    _builder.append("second");
+    _builder.newLine();
+    final Tree tree = this.parse(_builder);
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(2, tree.getNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
+    Assert.assertEquals(0, IterableExtensions.<TreeNode>head(tree.getNodes()).getChildren().size());
+    Assert.assertEquals("second", IterableExtensions.<TreeNode>last(tree.getNodes()).getName());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_2() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("\"first\"");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.newLine();
+    _builder.append("\"second\"");
+    _builder.newLine();
+    final Tree tree = this.parse(_builder);
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(2, tree.getMoreNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getName());
+    Assert.assertNull(IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getChildList());
+    Assert.assertEquals("second", IterableExtensions.<OtherTreeNode>last(tree.getMoreNodes()).getName());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_3() {
+    final Tree tree = this.parse("first\n\t");
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
+    Assert.assertEquals(0, IterableExtensions.<TreeNode>head(tree.getNodes()).getChildren().size());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_4() {
+    final Tree tree = this.parse("\"first\"\n\t");
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getMoreNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getName());
+    Assert.assertNull(IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getChildList());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_5() {
+    final Tree tree = this.parse("first\n\t\tabc\n\t");
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
+    Assert.assertEquals(1, IterableExtensions.<TreeNode>head(tree.getNodes()).getChildren().size());
+  }
+  
+  @Test
+  public void testIgnoreEmptyLines_6() {
+    final Tree tree = this.parse("\"first\"\n\t\t\"abc\"\n\t");
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getMoreNodes().size());
+    Assert.assertEquals("first", IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getName());
+    Assert.assertNotNull(IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getChildList());
+    Assert.assertEquals(1, IterableExtensions.<OtherTreeNode>head(tree.getMoreNodes()).getChildList().getChildren().size());
   }
   
   @Test
   public void testParentChild() {
-    try {
-      StringConcatenation _builder = new StringConcatenation();
-      _builder.append("parent");
-      _builder.newLine();
-      _builder.append("\t");
-      _builder.append("child");
-      _builder.newLine();
-      final Tree tree = this.parseHelper.parse(_builder);
-      Assert.assertNotNull(tree);
-      Assert.assertEquals(1, tree.getNodes().size());
-      Assert.assertEquals("parent", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
-      Assert.assertEquals("child", IterableExtensions.<TreeNode>head(IterableExtensions.<TreeNode>head(tree.getNodes()).getChildren()).getName());
-      StringConcatenation _builder_1 = new StringConcatenation();
-      _builder_1.append("parent");
-      _builder_1.newLine();
-      _builder_1.append("\t");
-      _builder_1.append("child");
-      _builder_1.newLine();
-      String _string = _builder_1.toString();
-      String _asText = this.asText(tree);
-      Assert.assertEquals(_string, _asText);
-    } catch (Throwable _e) {
-      throw Exceptions.sneakyThrow(_e);
-    }
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("parent");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("child");
+    _builder.newLine();
+    final Tree tree = this.parse(_builder);
+    Assert.assertNotNull(tree);
+    Assert.assertEquals(1, tree.getNodes().size());
+    Assert.assertEquals("parent", IterableExtensions.<TreeNode>head(tree.getNodes()).getName());
+    Assert.assertEquals("child", IterableExtensions.<TreeNode>head(IterableExtensions.<TreeNode>head(tree.getNodes()).getChildren()).getName());
+    StringConcatenation _builder_1 = new StringConcatenation();
+    _builder_1.append("parent");
+    _builder_1.newLine();
+    _builder_1.append("\t");
+    _builder_1.append("child");
+    _builder_1.newLine();
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
   public void testParentChildren() {
-    try {
-      StringConcatenation _builder = new StringConcatenation();
-      _builder.append("parent");
-      _builder.newLine();
-      _builder.append("\t");
-      _builder.append("child");
-      _builder.newLine();
-      _builder.append("\t");
-      _builder.append("child");
-      _builder.newLine();
-      final Tree tree = this.parseHelper.parse(_builder);
-      StringConcatenation _builder_1 = new StringConcatenation();
-      _builder_1.append("parent");
-      _builder_1.newLine();
-      _builder_1.append("\t");
-      _builder_1.append("child");
-      _builder_1.newLine();
-      _builder_1.append("\t");
-      _builder_1.append("child");
-      _builder_1.newLine();
-      String _string = _builder_1.toString();
-      String _asText = this.asText(tree);
-      Assert.assertEquals(_string, _asText);
-    } catch (Throwable _e) {
-      throw Exceptions.sneakyThrow(_e);
-    }
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("parent");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("child");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("child");
+    _builder.newLine();
+    final Tree tree = this.parse(_builder);
+    StringConcatenation _builder_1 = new StringConcatenation();
+    _builder_1.append("parent");
+    _builder_1.newLine();
+    _builder_1.append("\t");
+    _builder_1.append("child");
+    _builder_1.newLine();
+    _builder_1.append("\t");
+    _builder_1.append("child");
+    _builder_1.newLine();
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
@@ -174,9 +230,7 @@ public class IndentationAwareLanguageTest {
     _builder_1.append("\t");
     _builder_1.append("d");
     _builder_1.newLine();
-    String _string = _builder_1.toString();
-    String _asText = this.asText(tree);
-    Assert.assertEquals(_string, _asText);
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
@@ -228,9 +282,7 @@ public class IndentationAwareLanguageTest {
     _builder_1.newLine();
     _builder_1.append("h");
     _builder_1.newLine();
-    String _string = _builder_1.toString();
-    String _asText = this.asText(tree);
-    Assert.assertEquals(_string, _asText);
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
@@ -258,9 +310,7 @@ public class IndentationAwareLanguageTest {
     _builder_1.newLine();
     _builder_1.append("d");
     _builder_1.newLine();
-    String _string = _builder_1.toString();
-    String _asText = this.asText(tree);
-    Assert.assertEquals(_string, _asText);
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
@@ -372,9 +422,7 @@ public class IndentationAwareLanguageTest {
     _builder_1.append("\t\t\t\t");
     _builder_1.append("level4_9");
     _builder_1.newLine();
-    String _string = _builder_1.toString();
-    String _asText = this.asText(tree);
-    Assert.assertEquals(_string, _asText);
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   @Test
@@ -410,24 +458,93 @@ public class IndentationAwareLanguageTest {
     _builder_1.append("\t");
     _builder_1.append("y");
     _builder_1.newLine();
-    String _string = _builder_1.toString();
-    String _asText = this.asText(tree);
-    Assert.assertEquals(_string, _asText);
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
+  }
+  
+  @Test
+  public void testTree_06() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("\"a\"");
+    _builder.newLine();
+    _builder.append("\"b\"");
+    _builder.newLine();
+    final Tree tree = this.parseAndValidate(_builder);
+    StringConcatenation _builder_1 = new StringConcatenation();
+    _builder_1.append("a");
+    _builder_1.newLine();
+    _builder_1.append("b");
+    _builder_1.newLine();
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
+  }
+  
+  @Test
+  public void testTree_07() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("\"a\"");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.newLine();
+    _builder.append("\"b\"");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.newLine();
+    final Tree tree = this.parseAndValidate(_builder);
+    StringConcatenation _builder_1 = new StringConcatenation();
+    _builder_1.append("a");
+    _builder_1.newLine();
+    _builder_1.append("b");
+    _builder_1.newLine();
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
+  }
+  
+  @Test
+  public void testTree_08() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("\"a\"");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("\"1\"");
+    _builder.newLine();
+    _builder.append("\t");
+    _builder.append("\"2\"");
+    _builder.newLine();
+    _builder.append("\"b\"");
+    _builder.newLine();
+    _builder.append("\t\t");
+    _builder.append("\"3\"");
+    _builder.newLine();
+    final Tree tree = this.parseAndValidate(_builder);
+    StringConcatenation _builder_1 = new StringConcatenation();
+    _builder_1.append("a");
+    _builder_1.newLine();
+    _builder_1.append("\t");
+    _builder_1.append(">");
+    _builder_1.newLine();
+    _builder_1.append("\t\t");
+    _builder_1.append("1");
+    _builder_1.newLine();
+    _builder_1.append("\t\t");
+    _builder_1.append("2");
+    _builder_1.newLine();
+    _builder_1.append("b");
+    _builder_1.newLine();
+    _builder_1.append("\t");
+    _builder_1.append(">");
+    _builder_1.newLine();
+    _builder_1.append("\t\t");
+    _builder_1.append("3");
+    _builder_1.newLine();
+    Assert.assertEquals(_builder_1.toString(), this.asText(tree));
   }
   
   private Tree parseAndValidate(final CharSequence s) {
-    try {
-      final Tree result = this.parseHelper.parse(s);
-      this.validationTestHelper.assertNoIssues(result);
-      Resource _eResource = result.eResource();
-      final XtextResource resource = ((XtextResource) _eResource);
-      IParseResult _parseResult = resource.getParseResult();
-      final ICompositeNode node = _parseResult.getRootNode();
-      this.invariantChecker.checkInvariant(node);
-      return result;
-    } catch (Throwable _e) {
-      throw Exceptions.sneakyThrow(_e);
-    }
+    final Tree result = this.parse(s);
+    this.validationTestHelper.assertNoIssues(result);
+    Resource _eResource = result.eResource();
+    final XtextResource resource = ((XtextResource) _eResource);
+    final ICompositeNode node = resource.getParseResult().getRootNode();
+    this.invariantChecker.checkInvariant(node);
+    return result;
   }
   
   private String asText(final Tree tree) {
@@ -437,6 +554,14 @@ public class IndentationAwareLanguageTest {
       for(final TreeNode node : _nodes) {
         StringConcatenation _asText = this.asText(node);
         _builder.append(_asText);
+        _builder.newLineIfNotEmpty();
+      }
+    }
+    {
+      EList<OtherTreeNode> _moreNodes = tree.getMoreNodes();
+      for(final OtherTreeNode node_1 : _moreNodes) {
+        StringConcatenation _asText_1 = this.asText(node_1);
+        _builder.append(_asText_1);
         _builder.newLineIfNotEmpty();
       }
     }
@@ -455,6 +580,33 @@ public class IndentationAwareLanguageTest {
         StringConcatenation _asText = this.asText(node);
         _builder.append(_asText, "\t");
         _builder.newLineIfNotEmpty();
+      }
+    }
+    return _builder;
+  }
+  
+  private StringConcatenation asText(final OtherTreeNode treeNode) {
+    StringConcatenation _builder = new StringConcatenation();
+    String _name = treeNode.getName();
+    _builder.append(_name);
+    _builder.newLineIfNotEmpty();
+    {
+      ChildList _childList = treeNode.getChildList();
+      boolean _tripleNotEquals = (_childList != null);
+      if (_tripleNotEquals) {
+        _builder.append("\t");
+        _builder.append(">");
+        _builder.newLine();
+        {
+          EList<OtherTreeNode> _children = treeNode.getChildList().getChildren();
+          for(final OtherTreeNode node : _children) {
+            _builder.append("\t");
+            _builder.append("\t");
+            StringConcatenation _asText = this.asText(node);
+            _builder.append(_asText, "\t\t");
+            _builder.newLineIfNotEmpty();
+          }
+        }
       }
     }
     return _builder;

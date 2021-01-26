@@ -12,16 +12,17 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElementFinder {
+public class ParametersTestLanguageExGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ParserRuleParametersElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.parameters.ParametersTestLanguageEx.ParserRuleParameters");
 		private final RuleCall cParserRuleParametersParserRuleCall = (RuleCall)rule.eContents().get(1);
 		
+		//@Override
 		//ParserRuleParameters:
 		//	super::ParserRuleParameters;
 		@Override public ParserRule getRule() { return rule; }
@@ -33,7 +34,8 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.parameters.ParametersTestLanguageEx.Scenario1");
 		private final RuleCall cScenario1ParserRuleCall = (RuleCall)rule.eContents().get(1);
 		
-		//Scenario1 <Param Scenario:
+		//@Override
+		//Scenario1 <ParamScenario:
 		//	super::Scenario1<Param>;
 		@Override public ParserRule getRule() { return rule; }
 		
@@ -93,6 +95,7 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 	}
 
 	
+	//@Override
 	//ParserRuleParameters:
 	//	super::ParserRuleParameters;
 	public ParserRuleParametersElements getParserRuleParametersAccess() {
@@ -103,7 +106,8 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		return getParserRuleParametersAccess().getRule();
 	}
 	
-	//Scenario1 <Param Scenario:
+	//@Override
+	//Scenario1 <ParamScenario:
 	//	super::Scenario1<Param>;
 	public Scenario1Elements getScenario1Access() {
 		return pScenario1;
@@ -128,9 +132,9 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		return getParametersTestLanguageParserRuleParametersAccess().getRule();
 	}
 	
-	//Scenario1 <Param Scenario:
+	//Scenario1 <ParamScenario:
 	//	<Param> first=ID
-	//	| <!Param> second=ID;
+	//	| <! Param> second=ID;
 	public ParametersTestLanguageGrammarAccess.Scenario1Elements getParametersTestLanguageScenario1Access() {
 		return gaParametersTestLanguage.getScenario1Access();
 	}
@@ -139,7 +143,7 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		return getParametersTestLanguageScenario1Access().getRule();
 	}
 	
-	//Scenario2 <AllowKeyword Scenario:
+	//Scenario2 <AllowKeywordScenario:
 	//	first=IdOrKeyword<AllowKeyword>;
 	public ParametersTestLanguageGrammarAccess.Scenario2Elements getScenario2Access() {
 		return gaParametersTestLanguage.getScenario2Access();
@@ -149,8 +153,8 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		return getScenario2Access().getRule();
 	}
 	
-	//Scenario3 <AllowKeyword Scenario:
-	//	=> first=IdOrKeyword<AllowKeyword> | second='keyword';
+	//Scenario3 <AllowKeywordScenario:
+	//	=>first=IdOrKeyword<AllowKeyword> | second='keyword';
 	public ParametersTestLanguageGrammarAccess.Scenario3Elements getScenario3Access() {
 		return gaParametersTestLanguage.getScenario3Access();
 	}
@@ -159,8 +163,8 @@ public class ParametersTestLanguageExGrammarAccess extends AbstractGrammarElemen
 		return getScenario3Access().getRule();
 	}
 	
-	//Scenario4 <AllowKeyword Scenario:
-	//	=> second=IdOrKeyword<AllowKeyword> 'keyword';
+	//Scenario4 <AllowKeywordScenario:
+	//	=>second=IdOrKeyword<AllowKeyword> 'keyword';
 	public ParametersTestLanguageGrammarAccess.Scenario4Elements getScenario4Access() {
 		return gaParametersTestLanguage.getScenario4Access();
 	}

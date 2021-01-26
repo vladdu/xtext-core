@@ -4,6 +4,7 @@ import org.eclipse.xtext.xtext.generator.*
 import org.eclipse.xtext.xtext.generator.model.project.*
 
 var rootPath = ".."
+var eclipsePath = "${rootPath}/../xtext-eclipse/org.eclipse.xtext.testlanguages.ui"
 
 Workflow {
 
@@ -20,20 +21,17 @@ Workflow {
 
 				eclipsePlugin = {
 					enabled = true
-					root = "${rootPath}/../xtext-eclipse/org.eclipse.xtext.testlanguages.ui"	
+					root = eclipsePath	
 				}
 				eclipsePluginTest = {
 					enabled = true
-					root = "${rootPath}/../xtext-eclipse/org.eclipse.xtext.testlanguages.ui"	
-				}
-				ideaPlugin = {
-					enabled = false
-					root = "${rootPath}/../xtext-intellij/org.eclipse.xtext.testlanguages.idea"	
+					root = eclipsePath	
 				}
 				
 				createEclipseMetaData = true
 			}
 			code = {
+				encoding = 'ISO-8859-1'
 				lineDelimiter = "\n"
 				preferXtendStubs = false
 			}
@@ -44,5 +42,7 @@ Workflow {
 		language = @backtracking.ExBeeLangTestLanguage {}
 		language = @noJdt.NoJdtTestLanguage {}
 		language = @xtextgrammar.XtextGrammarTestLanguage {}
+		language = @fileAware.FileAwareTestLanguage {}
+		language = @nestedRefs.NestedRefsTestLanguage {}
 	}
 }

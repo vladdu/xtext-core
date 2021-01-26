@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class TransientValuesTestGrammarAccess extends AbstractGrammarElementFinder {
+public class TransientValuesTestGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class RootElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.transientvalues.TransientValuesTest.Root");
@@ -42,7 +42,7 @@ public class TransientValuesTestGrammarAccess extends AbstractGrammarElementFind
 		//"test"
 		public Keyword getTestKeyword_0() { return cTestKeyword_0; }
 		
-		//TestRequired | TestOptional | TestList
+		//(TestRequired | TestOptional | TestList)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//TestRequired

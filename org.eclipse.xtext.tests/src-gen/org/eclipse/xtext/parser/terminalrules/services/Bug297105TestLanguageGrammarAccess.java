@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug297105TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug297105TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.terminalrules.Bug297105TestLanguage.Model");
@@ -161,7 +161,7 @@ public class Bug297105TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//'.'
 		public Keyword getFullStopKeyword_1() { return cFullStopKeyword_1; }
 		
-		//EXT_INT | INT
+		//(EXT_INT | INT)
 		public Alternatives getAlternatives_2() { return cAlternatives_2; }
 		
 		//EXT_INT

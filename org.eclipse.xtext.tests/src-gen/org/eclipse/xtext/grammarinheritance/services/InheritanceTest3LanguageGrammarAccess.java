@@ -17,16 +17,17 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class InheritanceTest3LanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.grammarinheritance.InheritanceTest3Language.Model");
 		private final RuleCall cModelParserRuleCall = (RuleCall)rule.eContents().get(1);
 		
+		//@Override
 		//Model:
 		//	super::Model;
 		@Override public ParserRule getRule() { return rule; }
@@ -54,6 +55,7 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 		private final Assignment cNameAssignment_3_2 = (Assignment)cGroup_3.eContents().get(2);
 		private final RuleCall cNameSTRINGTerminalRuleCall_3_2_0 = (RuleCall)cNameAssignment_3_2.eContents().get(0);
 		
+		//@Override
 		//Element:
 		//	super::Element
 		//	| {Element} "element" name=super::ID
@@ -61,8 +63,10 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 		//	| {Element} "element" name=super::STRING;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//super::Element | {Element} "element" name=super::ID | {Element} "element" name=Terminals::ID | {Element} "element"
-		//name=super::STRING
+		//super::Element
+		//| {Element} "element" name=super::ID
+		//| {Element} "element" name=Terminals::ID
+		//| {Element} "element" name=super::STRING
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//super::Element
@@ -176,6 +180,7 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 	}
 
 	
+	//@Override
 	//Model:
 	//	super::Model;
 	public ModelElements getModelAccess() {
@@ -186,6 +191,7 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 		return getModelAccess().getRule();
 	}
 	
+	//@Override
 	//Element:
 	//	super::Element
 	//	| {Element} "element" name=super::ID
@@ -199,12 +205,14 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 		return getElementAccess().getRule();
 	}
 	
+	//@Override
 	//terminal ID:
 	//	'id';
 	public TerminalRule getIDRule() {
 		return tID;
 	}
 	
+	//@Override
 	//Model:
 	//	"model" name=super::ID "{"
 	//	elements+=super::Element*
@@ -227,6 +235,7 @@ public class InheritanceTest3LanguageGrammarAccess extends AbstractGrammarElemen
 		return getInheritanceTestLanguageElementAccess().getRule();
 	}
 	
+	//@Override
 	//terminal ID:
 	//	'a'..'z'+;
 	public TerminalRule getInheritanceTestLanguageIDRule() {

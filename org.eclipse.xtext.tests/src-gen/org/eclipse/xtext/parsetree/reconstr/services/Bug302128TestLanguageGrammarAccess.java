@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug302128TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug302128TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.reconstr.Bug302128TestLanguage.Model");
@@ -87,7 +87,7 @@ public class Bug302128TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//(('.' | '-') ID)*
 		public Group getGroup_1() { return cGroup_1; }
 		
-		//'.' | '-'
+		//('.' | '-')
 		public Alternatives getAlternatives_1_0() { return cAlternatives_1_0; }
 		
 		//'.'
@@ -186,6 +186,7 @@ public class Bug302128TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		return tValue;
 	}
 	
+	//@Override
 	//terminal SL_COMMENT:
 	//	'#' !('\n' | '\r')* ('\r'? '\n')?;
 	public TerminalRule getSL_COMMENTRule() {

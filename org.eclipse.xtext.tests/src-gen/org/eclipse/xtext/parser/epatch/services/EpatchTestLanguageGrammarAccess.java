@@ -18,11 +18,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class EpatchTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class EPatchElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.epatch.EpatchTestLanguage.EPatch");
@@ -311,8 +311,10 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//	"}";
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"resource" name=ID "{" "left" ("uri" leftUri=STRING | leftRoot=CreatedObject) ";" "right" ("uri" rightUri=STRING |
-		//rightRoot=CreatedObject) ";" "}"
+		//"resource" name=ID "{"
+		//"left" ("uri" leftUri=STRING | leftRoot=CreatedObject) ";"
+		//"right" ("uri" rightUri=STRING | rightRoot=CreatedObject) ";"
+		//"}"
 		public Group getGroup() { return cGroup; }
 		
 		//"resource"
@@ -330,7 +332,7 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//"left"
 		public Keyword getLeftKeyword_3() { return cLeftKeyword_3; }
 		
-		//"uri" leftUri=STRING | leftRoot=CreatedObject
+		//("uri" leftUri=STRING | leftRoot=CreatedObject)
 		public Alternatives getAlternatives_4() { return cAlternatives_4; }
 		
 		//"uri" leftUri=STRING
@@ -357,7 +359,7 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//"right"
 		public Keyword getRightKeyword_6() { return cRightKeyword_6; }
 		
-		//"uri" rightUri=STRING | rightRoot=CreatedObject
+		//("uri" rightUri=STRING | rightRoot=CreatedObject)
 		public Alternatives getAlternatives_7() { return cAlternatives_7; }
 		
 		//"uri" rightUri=STRING
@@ -453,9 +455,10 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//	"}")?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"object" name=ID? (leftRes=[NamedResource] leftFrag=FRAGMENT | "left" leftRes=[NamedResource] leftFrag=FRAGMENT "right"
-		//rightRes=[NamedResource] rightFrag=FRAGMENT) ("{" (assignments+=BiSingleAssignment | assignments+=BiListAssignment)+
-		//("left" leftMig=Migration)? ("right" rightMig=Migration)? "}")?
+		//"object" name=ID? (leftRes=[NamedResource] leftFrag=FRAGMENT | "left" leftRes=[NamedResource] leftFrag=FRAGMENT
+		//"right" rightRes=[NamedResource] rightFrag=FRAGMENT) ("{" (assignments+=BiSingleAssignment |
+		//assignments+=BiListAssignment)+ ("left" leftMig=Migration)? ("right" rightMig=Migration)?
+		//"}")?
 		public Group getGroup() { return cGroup; }
 		
 		//"object"
@@ -467,8 +470,8 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//ID
 		public RuleCall getNameIDTerminalRuleCall_1_0() { return cNameIDTerminalRuleCall_1_0; }
 		
-		//leftRes=[NamedResource] leftFrag=FRAGMENT | "left" leftRes=[NamedResource] leftFrag=FRAGMENT "right"
-		//rightRes=[NamedResource] rightFrag=FRAGMENT
+		//(leftRes=[NamedResource] leftFrag=FRAGMENT | "left" leftRes=[NamedResource] leftFrag=FRAGMENT "right"
+		//rightRes=[NamedResource] rightFrag=FRAGMENT)
 		public Alternatives getAlternatives_2() { return cAlternatives_2; }
 		
 		//leftRes=[NamedResource] leftFrag=FRAGMENT
@@ -529,7 +532,8 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		public RuleCall getRightFragFRAGMENTTerminalRuleCall_2_1_5_0() { return cRightFragFRAGMENTTerminalRuleCall_2_1_5_0; }
 		
 		//("{" (assignments+=BiSingleAssignment | assignments+=BiListAssignment)+ ("left" leftMig=Migration)? ("right"
-		//rightMig=Migration)? "}")?
+		//rightMig=Migration)?
+		//"}")?
 		public Group getGroup_3() { return cGroup_3; }
 		
 		//"{"
@@ -1005,8 +1009,8 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//":"
 		public Keyword getColonKeyword_1() { return cColonKeyword_1; }
 		
-		//"[" refIndex=INT "]" | value=STRING | refObject=[NamedObject] ("." refFeature=ID ("[" refIndex=INT "]")?)? |
-		//newObject=CreatedObject | ^import=[Import] impFrag=FRAGMENT
+		//("[" refIndex=INT "]" | value=STRING | refObject=[NamedObject] ("." refFeature=ID ("[" refIndex=INT "]")?)? |
+		//newObject=CreatedObject | ^import=[Import] impFrag=FRAGMENT)
 		public Alternatives getAlternatives_2() { return cAlternatives_2; }
 		
 		//"[" refIndex=INT "]"
@@ -1232,10 +1236,11 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		@Override public ParserRule getRule() { return rule; }
 		
 		//(ObjectNew | ObjectCopy) name=ID? ("{" (assignments+=MonoSingleAssignment | assignments+=MonoListAssignment)+
-		//leftMig=Migration? "}")?
+		//leftMig=Migration?
+		//"}")?
 		public Group getGroup() { return cGroup; }
 		
-		//ObjectNew | ObjectCopy
+		//(ObjectNew | ObjectCopy)
 		public Alternatives getAlternatives_0() { return cAlternatives_0; }
 		
 		//ObjectNew
@@ -1250,7 +1255,9 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//ID
 		public RuleCall getNameIDTerminalRuleCall_1_0() { return cNameIDTerminalRuleCall_1_0; }
 		
-		//("{" (assignments+=MonoSingleAssignment | assignments+=MonoListAssignment)+ leftMig=Migration? "}")?
+		//("{" (assignments+=MonoSingleAssignment | assignments+=MonoListAssignment)+
+		//leftMig=Migration?
+		//"}")?
 		public Group getGroup_2() { return cGroup_2; }
 		
 		//"{"
@@ -1374,7 +1381,8 @@ public class EpatchTestLanguageGrammarAccess extends AbstractGrammarElementFinde
 		//	"migrate" first=Executable? ("as" asOp=Executable | "each" eachOp=Executable)? ";";
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{Migration} "migrate" first=Executable? ("as" asOp=Executable | "each" eachOp=Executable)? ";"
+		//{Migration}
+		//"migrate" first=Executable? ("as" asOp=Executable | "each" eachOp=Executable)? ";"
 		public Group getGroup() { return cGroup; }
 		
 		//{Migration}

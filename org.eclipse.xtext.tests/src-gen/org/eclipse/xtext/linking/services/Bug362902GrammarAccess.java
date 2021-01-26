@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug362902GrammarAccess extends AbstractGrammarElementFinder {
+public class Bug362902GrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.linking.Bug362902.Model");
@@ -37,7 +37,8 @@ public class Bug362902GrammarAccess extends AbstractGrammarElementFinder {
 		//	'favourite' favourite=[Greeting|MyId];
 		@Override public ParserRule getRule() { return rule; }
 		
-		//greetings+=Greeting* 'favourite' favourite=[Greeting|MyId]
+		//greetings+=Greeting*
+		//'favourite' favourite=[Greeting|MyId]
 		public Group getGroup() { return cGroup; }
 		
 		//greetings+=Greeting*

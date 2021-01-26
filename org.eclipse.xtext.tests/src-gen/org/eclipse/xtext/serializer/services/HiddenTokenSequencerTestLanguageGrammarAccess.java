@@ -15,11 +15,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class HiddenTokenSequencerTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class HiddenTokenSequencerTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.HiddenTokenSequencerTestLanguage.Model");
@@ -44,13 +44,16 @@ public class HiddenTokenSequencerTestLanguageGrammarAccess extends AbstractGramm
 		private final RuleCall cEntitiesEntityParserRuleCall_1_0 = (RuleCall)cEntitiesAssignment_1.eContents().get(0);
 		private final Keyword cEndKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		
-		///* SuppressWarnings[noInstantiation] */ DomainModel:
+		///* SuppressWarnings[noInstantiation] */
+		//DomainModel:
 		//	'entities'
 		//	entities+=Entity*
 		//	'end';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'entities' entities+=Entity* 'end'
+		//'entities'
+		//entities+=Entity*
+		//'end'
 		public Group getGroup() { return cGroup; }
 		
 		//'entities'
@@ -78,7 +81,8 @@ public class HiddenTokenSequencerTestLanguageGrammarAccess extends AbstractGramm
 		//	description=STRING;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=ID description=STRING
+		//name=ID
+		//description=STRING
 		public Group getGroup() { return cGroup; }
 		
 		//name=ID
@@ -150,7 +154,8 @@ public class HiddenTokenSequencerTestLanguageGrammarAccess extends AbstractGramm
 		return getModelAccess().getRule();
 	}
 	
-	///* SuppressWarnings[noInstantiation] */ DomainModel:
+	///* SuppressWarnings[noInstantiation] */
+	//DomainModel:
 	//	'entities'
 	//	entities+=Entity*
 	//	'end';

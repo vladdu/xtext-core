@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.util;
 
@@ -54,6 +55,42 @@ public class ReplaceRegion {
 	
 	public void applyTo(StringBuilder builder) {
 		builder.replace(offset, getEndOffset(), text);
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if (this == object)
+			return true;
+		if (object == null)
+			return false;
+		if (getClass() != object.getClass())
+			return false;
+
+		ReplaceRegion other = (ReplaceRegion) object;
+		if (this.offset != other.offset) {
+			return false;
+		}
+		if (this.length != other.length) {
+			return false;
+		}
+		if (this.text == null) {
+			if (other.text != null) {
+				return false;
+			}
+		} else if (!this.text.equals(other.text)) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + offset;
+		result = prime * result + length;
+		result = prime * result + ((text == null) ? 0 : text.hashCode());
+		return result;
 	}
 	
 	@Override

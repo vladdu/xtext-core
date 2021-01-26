@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.serializer
 
@@ -14,6 +15,7 @@ import com.google.inject.Inject
 import java.util.List
 import java.util.Map
 import java.util.Set
+import org.apache.log4j.Logger
 import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EPackage
@@ -55,7 +57,6 @@ import org.eclipse.xtext.serializer.sequencer.ISemanticSequencer
 import org.eclipse.xtext.serializer.sequencer.ISyntacticSequencer
 import org.eclipse.xtext.serializer.sequencer.ITransientValueService
 import org.eclipse.xtext.util.Strings
-import org.eclipse.xtext.util.internal.Log
 import org.eclipse.xtext.xtext.generator.AbstractStubGeneratingFragment
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming
 import org.eclipse.xtext.xtext.generator.grammarAccess.GrammarAccessExtensions
@@ -69,7 +70,9 @@ import static extension org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
 
-@Log class SerializerFragment2 extends AbstractStubGeneratingFragment {
+class SerializerFragment2 extends AbstractStubGeneratingFragment {
+	
+	static val Logger LOG = Logger.getLogger(SerializerFragment2)
 	
 	private static def <K, V> Map<K, V> toMap(Iterable<Pair<K, V>> items) {
 		val result = newLinkedHashMap
@@ -135,7 +138,7 @@ import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
 		
 		if (projectConfig.runtime.manifest !== null) {
 			projectConfig.runtime.manifest.exportedPackages += grammar.serializerBasePackage
-			projectConfig.runtime.manifest.requiredBundles += 'org.eclipse.xtext.xbase.lib'
+			projectConfig.runtime.manifest.requiredBundles += 'org.eclipse.xtext.xbase.lib;bundle-version="'+projectConfig.runtime.xbaseLibVersionLowerBound+'"'
 		}
 		
 		generateAbstractSemanticSequencer()
@@ -499,14 +502,20 @@ import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
 		return ass === null || ass.isBooleanAssignment
 	}
 
-	private def String defaultValue(AbstractElement ele, Set<AbstractElement> visited) {
+	private def String defaultValue(AbstractElement ele, AbstractRule rule, Set<AbstractElement> visited) {
 		switch (ele) {
 			case !visited.add(ele): ""
 			case ele.isOptionalCardinality(): ""
-			Alternatives: ele.elements.head.defaultValue(visited)
-			Group: ele.elements.map[defaultValue(visited)].join
+			Alternatives: ele.elements.head.defaultValue(rule, visited)
+			Group: 
+				if (rule instanceof TerminalRule) {
+					ele.elements.map[defaultValue(rule, visited)].filter[!isNullOrEmpty].join()
+				} else {
+					ele.elements.map[defaultValue(rule, visited)].filter[!isNullOrEmpty].join(" ")
+				}
+			
 			Keyword: ele.value
-			RuleCall: ele.rule.alternatives.defaultValue(visited)
+			RuleCall: ele.rule.alternatives.defaultValue(ele.rule, visited)
 			default: ''
 		}
 	}
@@ -549,7 +558,7 @@ import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
 			protected String «rule.unassignedCalledTokenRuleName»(«EObject» semanticObject, «RuleCall» ruleCall, «INode» node) {
 				if (node != null)
 					return getTokenText(node);
-				return "«Strings.convertToJavaString(rule.alternatives.defaultValue(newHashSet))»";
+				return "«Strings.convertToJavaString(rule.alternatives.defaultValue(rule, newHashSet))»";
 			}
 		'''
 	}

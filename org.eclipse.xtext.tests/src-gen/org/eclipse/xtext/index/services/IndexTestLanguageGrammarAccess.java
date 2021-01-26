@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class IndexTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class IndexTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class FileElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.index.IndexTestLanguage.File");
@@ -123,7 +123,9 @@ public class IndexTestLanguageGrammarAccess extends AbstractGrammarElementFinder
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=QualifiedName '{' elements+=Element* '}'
+		//name=QualifiedName '{'
+		//elements+=Element*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//name=QualifiedName
@@ -203,7 +205,9 @@ public class IndexTestLanguageGrammarAccess extends AbstractGrammarElementFinder
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'entity' name=ID '{' properties+=Property* '}'
+		//'entity' name=ID '{'
+		//properties+=Property*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'entity'

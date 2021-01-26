@@ -71,6 +71,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
       case UnassignedtextPackage.MULTI_RULE: return createMultiRule();
       case UnassignedtextPackage.DATATYPE_RULE: return createDatatypeRule();
       case UnassignedtextPackage.COMMON_TERMINALS_RULE: return createCommonTerminalsRule();
+      case UnassignedtextPackage.GROUP_RULE: return createGroupRule();
       default:
         throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
     }
@@ -81,6 +82,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public Model createModel()
   {
     ModelImpl model = new ModelImpl();
@@ -92,6 +94,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public CaseInsensitiveKeywordRule createCaseInsensitiveKeywordRule()
   {
     CaseInsensitiveKeywordRuleImpl caseInsensitiveKeywordRule = new CaseInsensitiveKeywordRuleImpl();
@@ -103,6 +106,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public PluralRule createPluralRule()
   {
     PluralRuleImpl pluralRule = new PluralRuleImpl();
@@ -114,6 +118,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public MultiRule createMultiRule()
   {
     MultiRuleImpl multiRule = new MultiRuleImpl();
@@ -125,6 +130,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public DatatypeRule createDatatypeRule()
   {
     DatatypeRuleImpl datatypeRule = new DatatypeRuleImpl();
@@ -136,6 +142,7 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public CommonTerminalsRule createCommonTerminalsRule()
   {
     CommonTerminalsRuleImpl commonTerminalsRule = new CommonTerminalsRuleImpl();
@@ -147,6 +154,19 @@ public class UnassignedtextFactoryImpl extends EFactoryImpl implements Unassigne
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
+  public GroupRule createGroupRule()
+  {
+    GroupRuleImpl groupRule = new GroupRuleImpl();
+    return groupRule;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public UnassignedtextPackage getUnassignedtextPackage()
   {
     return (UnassignedtextPackage)getEPackage();

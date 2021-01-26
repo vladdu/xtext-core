@@ -15,11 +15,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class EcoreTerminalsTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class EcoreTerminalsTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.terminalrules.EcoreTerminalsTestLanguage.Model");
@@ -43,7 +43,9 @@ public class EcoreTerminalsTestLanguageGrammarAccess extends AbstractGrammarElem
 		//	| 'date' dateValues+=EDATE)*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//('int' intValues+=EINT | 'double' doubleValues+=EDOUBLE | 'date' dateValues+=EDATE)*
+		//('int' intValues+=EINT
+		//| 'double' doubleValues+=EDOUBLE
+		//| 'date' dateValues+=EDATE)*
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//'int' intValues+=EINT

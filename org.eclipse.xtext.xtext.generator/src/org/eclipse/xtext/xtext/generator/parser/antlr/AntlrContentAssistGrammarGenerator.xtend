@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2016 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr
 
@@ -23,6 +24,7 @@ import org.eclipse.xtext.UnorderedGroup
 
 import static extension org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.parser.antlr.AntlrGrammarGenUtil.*
+import org.eclipse.xtext.Keyword
 
 class AntlrContentAssistGrammarGenerator extends AbstractAntlrGrammarWithActionsGenerator {
 	@Inject
@@ -374,6 +376,14 @@ class AntlrContentAssistGrammarGenerator extends AbstractAntlrGrammarWithActions
 		(
 			{ before(grammarAccess.«originalElement.grammarElementAccess»); }
 			«rule.crossrefEbnf(it, ref, supportActions)»
+			{ after(grammarAccess.«originalElement.grammarElementAccess»); }
+		)
+	'''
+	
+	protected dispatch override crossrefEbnf(Keyword it, CrossReference ref, boolean supportActions) '''
+		(
+			{ before(grammarAccess.«originalElement.grammarElementAccess»); }
+			«super._crossrefEbnf(it, ref, supportActions)»
 			{ after(grammarAccess.«originalElement.grammarElementAccess»); }
 		)
 	'''

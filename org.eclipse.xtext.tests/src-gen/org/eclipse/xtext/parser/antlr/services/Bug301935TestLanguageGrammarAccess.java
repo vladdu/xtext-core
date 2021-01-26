@@ -14,11 +14,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug301935TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug301935TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.antlr.Bug301935TestLanguage.Model");
@@ -38,7 +38,8 @@ public class Bug301935TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	value2=ID WS;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=ID WS value=ID NL value2=ID WS
+		//name=ID WS value=ID NL
+		//value2=ID WS
 		public Group getGroup() { return cGroup; }
 		
 		//name=ID
@@ -87,7 +88,7 @@ public class Bug301935TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//WS*
 		public RuleCall getWSTerminalRuleCall_0() { return cWSTerminalRuleCall_0; }
 		
-		//'\r'? '\n'
+		//('\r'? '\n')
 		public Group getGroup_1() { return cGroup_1; }
 		
 		//'\r'?

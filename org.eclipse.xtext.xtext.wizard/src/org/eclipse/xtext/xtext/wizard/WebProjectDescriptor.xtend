@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.wizard
 
@@ -14,12 +15,12 @@ import static org.eclipse.xtext.xtext.wizard.ExternalDependency.*
 @FinalFieldsConstructor
 class WebProjectDescriptor extends ProjectDescriptor {
 	
-	static val REQUIREJS_VERSION = '2.3.2'
+	static val REQUIREJS_VERSION = '2.3.6'
 //	static val REQUIREJS_TEXT_VERSION = '2.0.15'
-	static val JQUERY_VERSION = '2.2.4'
-	static val JETTY_VERSION = '9.3.8.v20160314'
+	static val JQUERY_VERSION = '3.5.1'
+	static val JETTY_VERSION = '9.4.34.v20201102'
 	static val SLF4J_VERSION = '1.7.21'
-	static val ACE_VERSION = '1.2.3'
+	static val ACE_VERSION = '1.3.3'
 	
 	override getUpstreamProjects() {
 		newLinkedHashSet(config.runtimeProject, config.ideProject)
@@ -101,7 +102,7 @@ class WebProjectDescriptor extends ProjectDescriptor {
 						</plugin>
 						<plugin>
 							<artifactId>maven-war-plugin</artifactId>
-							<version>2.6</version>
+							<version>3.2.3</version>
 							<configuration>
 								<warSourceDirectory>«Outlet.WEBAPP.sourceFolder»</warSourceDirectory>
 								<failOnMissingWebXml>false</failOnMissingWebXml>
@@ -110,7 +111,7 @@ class WebProjectDescriptor extends ProjectDescriptor {
 						<plugin>
 							<groupId>org.eclipse.jetty</groupId>
 							<artifactId>jetty-maven-plugin</artifactId>
-							<version>9.2.13.v20150730</version>
+							<version>«JETTY_VERSION»</version>
 							<configuration>
 								<webAppSourceDirectory>«Outlet.WEBAPP.sourceFolder»</webAppSourceDirectory>
 							</configuration>
@@ -118,7 +119,7 @@ class WebProjectDescriptor extends ProjectDescriptor {
 						<plugin>
 							<groupId>org.codehaus.mojo</groupId>
 							<artifactId>build-helper-maven-plugin</artifactId>
-							<version>1.9.1</version>
+							<version>3.0.0</version>
 							<executions>
 								<execution>
 									<id>add-source</id>

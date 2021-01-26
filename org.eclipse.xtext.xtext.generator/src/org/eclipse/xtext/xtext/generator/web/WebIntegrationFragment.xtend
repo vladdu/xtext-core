@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.web
 
@@ -42,15 +43,15 @@ import static extension org.eclipse.xtext.xtext.generator.web.RegexpExtensions.*
  */
 class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
 	
-	public static enum Framework {
+	static enum Framework {
 		ORION, ACE, CODEMIRROR
 	}
 	
-	static val REQUIREJS_VERSION = '2.3.2'
+	static val REQUIREJS_VERSION = '2.3.6'
 	static val REQUIREJS_TEXT_VERSION = '2.0.15'
-	static val JQUERY_VERSION = '2.2.4'
-	static val ACE_VERSION = '1.2.3'
-	static val CODEMIRROR_VERSION = '5.13.2'
+	static val JQUERY_VERSION = '3.5.1'
+	static val ACE_VERSION = '1.3.3'
+	static val CODEMIRROR_VERSION = '5.41.0'
 	
 	@Inject FileAccessFactory fileAccessFactory
 	@Inject CodeConfig codeConfig
@@ -674,78 +675,169 @@ class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
 	}
 	
 	protected def void generateServerLauncher() {
-		fileAccessFactory.createXtendFile(grammar.serverLauncherClass, '''
-			/**
-			 * This program starts an HTTP server for testing the web integration of your DSL.
-			 * Just execute it and point a web browser to http://localhost:8080/
-			 */
-			class «grammar.serverLauncherClass.simpleName» {
-				def static void main(String[] args) {
-					val server = new «'org.eclipse.jetty.server.Server'.typeRef»(new «'java.net.InetSocketAddress'.typeRef»('localhost', 8080))
-					server.handler = new «'org.eclipse.jetty.webapp.WebAppContext'.typeRef» => [
-						resourceBase = '«projectConfig.web.assets.path.replace(projectConfig.web.root.path + "/", "")»'
-						welcomeFiles = #["index.html"]
-						contextPath = "/"
-						configurations = #[
-							new «'org.eclipse.jetty.annotations.AnnotationConfiguration'.typeRef»,
-							new «'org.eclipse.jetty.webapp.WebXmlConfiguration'.typeRef»,
-							new «'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef»,
-							new «'org.eclipse.jetty.webapp.MetaInfConfiguration'.typeRef»
+		if (codeConfig.isPreferXtendStubs) {
+			fileAccessFactory.createXtendFile(grammar.serverLauncherClass, '''
+				/**
+				 * This program starts an HTTP server for testing the web integration of your DSL.
+				 * Just execute it and point a web browser to http://localhost:8080/
+				 */
+				class «grammar.serverLauncherClass.simpleName» {
+					def static void main(String[] args) {
+						val server = new «'org.eclipse.jetty.server.Server'.typeRef»(new «'java.net.InetSocketAddress'.typeRef»('localhost', 8080))
+						server.handler = new «'org.eclipse.jetty.webapp.WebAppContext'.typeRef» => [
+							resourceBase = '«projectConfig.web.assets.path.replace(projectConfig.web.root.path + "/", "")»'
+							welcomeFiles = #["index.html"]
+							contextPath = "/"
+							configurations = #[
+								new «'org.eclipse.jetty.annotations.AnnotationConfiguration'.typeRef»,
+								new «'org.eclipse.jetty.webapp.WebXmlConfiguration'.typeRef»,
+								new «'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef»,
+								new «'org.eclipse.jetty.webapp.MetaInfConfiguration'.typeRef»
+							]
+							setAttribute(«'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef».CONTAINER_JAR_PATTERN, '.*/«projectConfig.web.name.replace('.', '\\\\.')»/.*,.*\\.jar')
+							setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false")
 						]
-						setAttribute(«'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef».CONTAINER_JAR_PATTERN, '.*/«projectConfig.web.name.replace('.', '\\\\.')»/.*,.*\\.jar')
-						setInitParameter("org.mortbay.jetty.servlet.Default.useFileMappedBuffer", "false")
-					]
-					val log = new «'org.eclipse.jetty.util.log.Slf4jLog'.typeRef»(«grammar.serverLauncherClass.simpleName».name)
-					try {
-						server.start
-						log.info('Server started ' + server.getURI + '...')
-						new Thread[
-							log.info('Press enter to stop the server...')
-							val key = System.in.read
-							if (key != -1) {
-								server.stop
-							} else {
-								log.warn('Console input is not available. In order to stop the server, you need to cancel process manually.')
-							}
-						].start
-						server.join
-					} catch (Exception exception) {
-						log.warn(exception.message)
-						System.exit(1)
+						val log = new «'org.eclipse.jetty.util.log.Slf4jLog'.typeRef»(«grammar.serverLauncherClass.simpleName».name)
+						try {
+							server.start
+							log.info('Server started ' + server.getURI + '...')
+							new Thread[
+								log.info('Press enter to stop the server...')
+								val key = System.in.read
+								if (key != -1) {
+									server.stop
+								} else {
+									log.warn('Console input is not available. In order to stop the server, you need to cancel process manually.')
+								}
+							].start
+							server.join
+						} catch (Exception exception) {
+							log.warn(exception.message)
+							System.exit(1)
+						}
 					}
 				}
-			}
-		''').writeTo(projectConfig.web.src)
+			''').writeTo(projectConfig.web.src)
+		} else {
+			fileAccessFactory.createJavaFile(grammar.serverLauncherClass, '''
+				/**
+				 * This program starts an HTTP server for testing the web integration of your DSL.
+				 * Just execute it and point a web browser to http://localhost:8080/
+				 */
+				public class «grammar.serverLauncherClass.simpleName» {
+					public static void main(String[] args) {
+						«'org.eclipse.jetty.server.Server'.typeRef» server = new «'org.eclipse.jetty.server.Server'.typeRef»(new «'java.net.InetSocketAddress'.typeRef»("localhost", 8080));
+						«'org.eclipse.jetty.webapp.WebAppContext'.typeRef» ctx = new «'org.eclipse.jetty.webapp.WebAppContext'.typeRef»();
+						ctx.setResourceBase("WebRoot");
+						ctx.setWelcomeFiles(new String[] {"index.html"});
+						ctx.setContextPath("/");
+						ctx.setConfigurations(new «'org.eclipse.jetty.webapp.Configuration'.typeRef»[] {
+							new «'org.eclipse.jetty.annotations.AnnotationConfiguration'.typeRef»(),
+							new «'org.eclipse.jetty.webapp.WebXmlConfiguration'.typeRef»(),
+							new «'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef»(),
+							new «'org.eclipse.jetty.webapp.MetaInfConfiguration'.typeRef»()
+						});
+						ctx.setAttribute(«'org.eclipse.jetty.webapp.WebInfConfiguration'.typeRef».CONTAINER_JAR_PATTERN,
+							".*/«projectConfig.web.name.replace('.', '\\\\.')»/.*,.*\\.jar");
+						ctx.setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false");
+						server.setHandler(ctx);
+						«'org.eclipse.jetty.util.log.Slf4jLog'.typeRef» log = new «'org.eclipse.jetty.util.log.Slf4jLog'.typeRef»(«grammar.serverLauncherClass.simpleName».class.getName());
+						try {
+							server.start();
+							log.info("Server started " + server.getURI() + "...");
+							new Thread() {
+				
+								public void run() {
+									try {
+										log.info("Press enter to stop the server...");
+										int key = System.in.read();
+										if (key != -1) {
+											server.stop();
+										} else {
+											log.warn(
+													"Console input is not available. In order to stop the server, you need to cancel process manually.");
+										}
+									} catch (Exception e) {
+										log.warn(e);
+									}
+								}
+				
+							}.start();
+							server.join();
+						} catch (Exception exception) {
+							log.warn(exception.getMessage());
+							System.exit(1);
+						}
+					}
+				}
+			''').writeTo(projectConfig.web.src)
+		}
+		
 	}
 	
 	protected def void generateServlet() {
-		fileAccessFactory.createXtendFile(grammar.servletClass, '''
-			/**
-			 * Deploy this class into a servlet container to enable DSL-specific services.
-			 */
-			«IF useServlet3Api»
-				@«new TypeReference("javax.servlet.annotation.WebServlet")»(name = 'XtextServices', urlPatterns = '/xtext-service/*')
-			«ENDIF»
-			class «grammar.servletClass.simpleName» extends «'org.eclipse.xtext.web.servlet.XtextServlet'.typeRef» {
-				
-				«DisposableRegistry» disposableRegistry
-				
-				override init() {
-					super.init()
-					val injector = new «grammar.webSetup»().createInjectorAndDoEMFRegistration()
-					disposableRegistry = injector.getInstance(«DisposableRegistry»)
-				}
-				
-				override destroy() {
-					if (disposableRegistry != null) {
-						disposableRegistry.dispose()
-						disposableRegistry = null
+		if (codeConfig.isPreferXtendStubs) {
+			fileAccessFactory.createXtendFile(grammar.servletClass, '''
+				/**
+				 * Deploy this class into a servlet container to enable DSL-specific services.
+				 */
+				«IF useServlet3Api»
+					@«new TypeReference("javax.servlet.annotation.WebServlet")»(name = 'XtextServices', urlPatterns = '/xtext-service/*')
+				«ENDIF»
+				class «grammar.servletClass.simpleName» extends «'org.eclipse.xtext.web.servlet.XtextServlet'.typeRef» {
+					
+					static final long serialVersionUID = 1L
+					
+					«DisposableRegistry» disposableRegistry
+					
+					override init() {
+						super.init()
+						val injector = new «grammar.webSetup»().createInjectorAndDoEMFRegistration()
+						disposableRegistry = injector.getInstance(«DisposableRegistry»)
 					}
-					super.destroy()
+					
+					override destroy() {
+						if (disposableRegistry !== null) {
+							disposableRegistry.dispose()
+							disposableRegistry = null
+						}
+						super.destroy()
+					}
+					
 				}
-				
-			}
-		''').writeTo(projectConfig.web.src)
+			''').writeTo(projectConfig.web.src)
+			
+		} else {
+			fileAccessFactory.createJavaFile(grammar.servletClass, '''
+				/**
+				 * Deploy this class into a servlet container to enable DSL-specific services.
+				 */
+				«IF useServlet3Api»
+					@«new TypeReference("javax.servlet.annotation.WebServlet")»(name = "XtextServices", urlPatterns = "/xtext-service/*")
+				«ENDIF»
+				public class «grammar.servletClass.simpleName» extends «'org.eclipse.xtext.web.servlet.XtextServlet'.typeRef» {
+					
+					private static final long serialVersionUID = 1L;
+					
+					«DisposableRegistry» disposableRegistry;
+					
+					public void init() throws «'javax.servlet.ServletException'.typeRef» {
+						super.init();
+						«'com.google.inject.Injector'.typeRef» injector = new «grammar.webSetup»().createInjectorAndDoEMFRegistration();
+						this.disposableRegistry = injector.getInstance(«DisposableRegistry».class);
+					}
+					
+					public void destroy() {
+						if (disposableRegistry != null) {
+							disposableRegistry.dispose();
+							disposableRegistry = null;
+						}
+						super.destroy();
+					}
+					
+				}
+			''').writeTo(projectConfig.web.src)
+		}
 	}
 	
 	protected def void generateWebXml() {

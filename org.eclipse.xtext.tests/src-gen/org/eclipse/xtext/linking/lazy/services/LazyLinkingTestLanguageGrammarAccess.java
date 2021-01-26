@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class LazyLinkingTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class LazyLinkingTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.linking.lazy.LazyLinkingTestLanguage.Model");
@@ -71,7 +71,8 @@ public class LazyLinkingTestLanguageGrammarAccess extends AbstractGrammarElement
 		///* 
 		// * SuppressWarnings[BidirectionalReference]
 		// * SuppressWarnings[potentialOverride]
-		// */ Type:
+		// */
+		//Type:
 		//	'type' name=ID ('extends' ^extends=[Type] '.' parentId=[Property])? ('for' parentId=[Property] 'in' ^extends=[Type])?
 		//	'{'
 		//	properties+=Property*
@@ -80,7 +81,10 @@ public class LazyLinkingTestLanguageGrammarAccess extends AbstractGrammarElement
 		@Override public ParserRule getRule() { return rule; }
 		
 		//'type' name=ID ('extends' ^extends=[Type] '.' parentId=[Property])? ('for' parentId=[Property] 'in' ^extends=[Type])?
-		//'{' properties+=Property* unresolvedProxyProperty+=UnresolvedProxyProperty* '}'
+		//'{'
+		//properties+=Property*
+		//unresolvedProxyProperty+=UnresolvedProxyProperty*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'type'
@@ -300,7 +304,8 @@ public class LazyLinkingTestLanguageGrammarAccess extends AbstractGrammarElement
 	///* 
 	// * SuppressWarnings[BidirectionalReference]
 	// * SuppressWarnings[potentialOverride]
-	// */ Type:
+	// */
+	//Type:
 	//	'type' name=ID ('extends' ^extends=[Type] '.' parentId=[Property])? ('for' parentId=[Property] 'in' ^extends=[Type])?
 	//	'{'
 	//	properties+=Property*

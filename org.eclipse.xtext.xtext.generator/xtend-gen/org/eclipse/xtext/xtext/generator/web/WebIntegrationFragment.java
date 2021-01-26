@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.web;
 
@@ -18,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.emf.mwe2.runtime.Mandatory;
 import org.eclipse.xtend.lib.annotations.AccessorType;
@@ -38,20 +38,14 @@ import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.StringExtensions;
 import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment;
 import org.eclipse.xtext.xtext.generator.CodeConfig;
-import org.eclipse.xtext.xtext.generator.IXtextGeneratorLanguage;
 import org.eclipse.xtext.xtext.generator.Issues;
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming;
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory;
-import org.eclipse.xtext.xtext.generator.model.IXtextGeneratorFileSystemAccess;
 import org.eclipse.xtext.xtext.generator.model.TextFileAccess;
 import org.eclipse.xtext.xtext.generator.model.TypeReference;
-import org.eclipse.xtext.xtext.generator.model.XtendFileAccess;
-import org.eclipse.xtext.xtext.generator.model.project.IWebProjectConfig;
-import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig;
 import org.eclipse.xtext.xtext.generator.util.BooleanGeneratorOption;
 import org.eclipse.xtext.xtext.generator.util.GeneratorOption;
 import org.eclipse.xtext.xtext.generator.util.GrammarUtil2;
-import org.eclipse.xtext.xtext.generator.web.RegexpExtensions;
 import org.eclipse.xtext.xtext.generator.xbase.XbaseUsageDetector;
 
 /**
@@ -67,15 +61,15 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
     CODEMIRROR;
   }
   
-  private final static String REQUIREJS_VERSION = "2.3.2";
+  private static final String REQUIREJS_VERSION = "2.3.6";
   
-  private final static String REQUIREJS_TEXT_VERSION = "2.0.15";
+  private static final String REQUIREJS_TEXT_VERSION = "2.0.15";
   
-  private final static String JQUERY_VERSION = "2.2.4";
+  private static final String JQUERY_VERSION = "3.5.1";
   
-  private final static String ACE_VERSION = "1.2.3";
+  private static final String ACE_VERSION = "1.3.3";
   
-  private final static String CODEMIRROR_VERSION = "5.13.2";
+  private static final String CODEMIRROR_VERSION = "5.41.0";
   
   @Inject
   private FileAccessFactory fileAccessFactory;
@@ -143,9 +137,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
    */
   @Mandatory
   public void setFramework(final String frameworkName) {
-    String _upperCase = frameworkName.toUpperCase();
-    WebIntegrationFragment.Framework _valueOf = WebIntegrationFragment.Framework.valueOf(_upperCase);
-    this.framework.set(_valueOf);
+    this.framework.set(WebIntegrationFragment.Framework.valueOf(frameworkName.toUpperCase()));
   }
   
   /**
@@ -275,11 +267,11 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
   @Override
   public void generate() {
     if (((this.highlightingModuleName != null) && this.highlightingModuleName.endsWith(".js"))) {
-      this.highlightingModuleName = this.highlightingModuleName.substring(0, (this.highlightingModuleName.length() - 3));
+      int _length = this.highlightingModuleName.length();
+      int _minus = (_length - 3);
+      this.highlightingModuleName = this.highlightingModuleName.substring(0, _minus);
     }
-    IXtextGeneratorLanguage _language = this.getLanguage();
-    List<String> _fileExtensions = _language.getFileExtensions();
-    final String langId = IterableExtensions.<String>head(_fileExtensions);
+    final String langId = IterableExtensions.<String>head(this.getLanguage().getFileExtensions());
     String _elvis = null;
     if (this.highlightingModuleName != null) {
       _elvis = this.highlightingModuleName;
@@ -324,7 +316,8 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
     }
   }
   
-  private final static String DELIMITERS_PATTERN = new Function0<String>() {
+  private static final String DELIMITERS_PATTERN = new Function0<String>() {
+    @Override
     public String apply() {
       StringConcatenation _builder = new StringConcatenation();
       _builder.append("[\\\\s.:;,!?+\\\\-*/&|<>()[\\\\]{}]");
@@ -333,27 +326,23 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
   }.apply();
   
   protected void generateJsHighlighting(final String langId) {
-    Grammar _grammar = this.getGrammar();
-    final Set<String> allKeywords = GrammarUtil.getAllKeywords(_grammar);
+    final Set<String> allKeywords = GrammarUtil.getAllKeywords(this.getGrammar());
     final ArrayList<String> wordKeywords = CollectionLiterals.<String>newArrayList();
     final ArrayList<String> nonWordKeywords = CollectionLiterals.<String>newArrayList();
     final Pattern keywordsFilterPattern = Pattern.compile(this.keywordsFilter);
     final Pattern wordKeywordPattern = Pattern.compile("\\w(.*\\w)?");
     final Function1<String, Boolean> _function = (String it) -> {
-      Matcher _matcher = keywordsFilterPattern.matcher(it);
-      return Boolean.valueOf(_matcher.matches());
+      return Boolean.valueOf(keywordsFilterPattern.matcher(it).matches());
     };
-    Iterable<String> _filter = IterableExtensions.<String>filter(allKeywords, _function);
     final Consumer<String> _function_1 = (String it) -> {
-      Matcher _matcher = wordKeywordPattern.matcher(it);
-      boolean _matches = _matcher.matches();
+      boolean _matches = wordKeywordPattern.matcher(it).matches();
       if (_matches) {
         wordKeywords.add(it);
       } else {
         nonWordKeywords.add(it);
       }
     };
-    _filter.forEach(_function_1);
+    IterableExtensions.<String>filter(allKeywords, _function).forEach(_function_1);
     Collections.<String>sort(wordKeywords);
     Collections.<String>sort(nonWordKeywords);
     final TextFileAccess jsFile = this.fileAccessFactory.createTextFile();
@@ -689,10 +678,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
           break;
       }
     }
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _assets = _web.getAssets();
-    jsFile.writeTo(_assets);
+    jsFile.writeTo(this.getProjectConfig().getWeb().getAssets());
   }
   
   protected CharSequence generateKeywords(final List<String> wordKeywords, final List<String> nonWordKeywords) {
@@ -775,10 +761,8 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
   }
   
   protected Collection<String> createOrionPatterns(final String langId, final Set<String> keywords) {
-    Grammar _grammar = this.getGrammar();
-    final boolean inheritsTerminals = GrammarUtil2.inherits(_grammar, GrammarUtil2.TERMINALS);
-    Grammar _grammar_1 = this.getGrammar();
-    final boolean inheritsXbase = this._xbaseUsageDetector.inheritsXbase(_grammar_1);
+    final boolean inheritsTerminals = GrammarUtil2.inherits(this.getGrammar(), GrammarUtil2.TERMINALS);
+    final boolean inheritsXbase = this._xbaseUsageDetector.inheritsXbase(this.getGrammar());
     final ArrayList<String> patterns = new ArrayList<String>();
     if ((this.enabledPatterns.contains("comment_singleLine") || ((inheritsTerminals || inheritsXbase) && (!this.suppressedPatterns.contains("comment_singleLine"))))) {
       patterns.add("{include: \"orion.c-like#comment_singleLine\"}");
@@ -824,10 +808,8 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
   }
   
   protected Multimap<String, String> createCodeMirrorPatterns(final String langId, final Set<String> keywords) {
-    Grammar _grammar = this.getGrammar();
-    final boolean inheritsTerminals = GrammarUtil2.inherits(_grammar, GrammarUtil2.TERMINALS);
-    Grammar _grammar_1 = this.getGrammar();
-    final boolean inheritsXbase = this._xbaseUsageDetector.inheritsXbase(_grammar_1);
+    final boolean inheritsTerminals = GrammarUtil2.inherits(this.getGrammar(), GrammarUtil2.TERMINALS);
+    final boolean inheritsXbase = this._xbaseUsageDetector.inheritsXbase(this.getGrammar());
     final LinkedHashMultimap<String, String> patterns = LinkedHashMultimap.<String, String>create();
     final boolean hasSingleLineComment = (this.enabledPatterns.contains("comment_singleLine") || ((inheritsTerminals || inheritsXbase) && (!this.suppressedPatterns.contains("comment_singleLine"))));
     if (hasSingleLineComment) {
@@ -928,10 +910,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
   }
   
   protected void generateIndexDoc(final String hlModName) {
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _assets = _web.getAssets();
-    boolean _isFile = _assets.isFile("index.html");
+    boolean _isFile = this.getProjectConfig().getWeb().getAssets().isFile("index.html");
     if (_isFile) {
       return;
     }
@@ -1306,8 +1285,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
         _builder.newLine();
         _builder.append("\t\t");
         _builder.append("<h1>Example ");
-        Grammar _grammar = WebIntegrationFragment.this.getGrammar();
-        String _simpleName = GrammarUtil.getSimpleName(_grammar);
+        String _simpleName = GrammarUtil.getSimpleName(WebIntegrationFragment.this.getGrammar());
         _builder.append(_simpleName, "\t\t");
         _builder.append(" Web Editor</h1>");
         _builder.newLineIfNotEmpty();
@@ -1319,9 +1297,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
         _builder.newLine();
         _builder.append("\t\t");
         _builder.append("<div id=\"xtext-editor\" data-editor-xtext-lang=\"");
-        IXtextGeneratorLanguage _language = WebIntegrationFragment.this.getLanguage();
-        List<String> _fileExtensions = _language.getFileExtensions();
-        String _head = IterableExtensions.<String>head(_fileExtensions);
+        String _head = IterableExtensions.<String>head(WebIntegrationFragment.this.getLanguage().getFileExtensions());
         _builder.append(_head, "\t\t");
         _builder.append("\"></div>");
         _builder.newLineIfNotEmpty();
@@ -1338,17 +1314,11 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
       }
     };
     indexFile.setContent(_client);
-    IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-    IWebProjectConfig _web_1 = _projectConfig_1.getWeb();
-    IXtextGeneratorFileSystemAccess _assets_1 = _web_1.getAssets();
-    indexFile.writeTo(_assets_1);
+    indexFile.writeTo(this.getProjectConfig().getWeb().getAssets());
   }
   
   protected void generateStyleSheet() {
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _assets = _web.getAssets();
-    boolean _isFile = _assets.isFile("style.css");
+    boolean _isFile = this.getProjectConfig().getWeb().getAssets().isFile("style.css");
     if (_isFile) {
       return;
     }
@@ -1545,301 +1515,574 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
       }
     };
     styleFile.setContent(_client);
-    IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-    IWebProjectConfig _web_1 = _projectConfig_1.getWeb();
-    IXtextGeneratorFileSystemAccess _assets_1 = _web_1.getAssets();
-    styleFile.writeTo(_assets_1);
+    styleFile.writeTo(this.getProjectConfig().getWeb().getAssets());
   }
   
   protected void generateServerLauncher() {
-    Grammar _grammar = this.getGrammar();
-    TypeReference _serverLauncherClass = this.getServerLauncherClass(_grammar);
-    StringConcatenationClient _client = new StringConcatenationClient() {
-      @Override
-      protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-        _builder.append("/**");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("* This program starts an HTTP server for testing the web integration of your DSL.");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("* Just execute it and point a web browser to http://localhost:8080/");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("*/");
-        _builder.newLine();
-        _builder.append("class ");
-        Grammar _grammar = WebIntegrationFragment.this.getGrammar();
-        TypeReference _serverLauncherClass = WebIntegrationFragment.this.getServerLauncherClass(_grammar);
-        String _simpleName = _serverLauncherClass.getSimpleName();
-        _builder.append(_simpleName);
-        _builder.append(" {");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t");
-        _builder.append("def static void main(String[] args) {");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("val server = new ");
-        TypeReference _typeRef = TypeReference.typeRef("org.eclipse.jetty.server.Server");
-        _builder.append(_typeRef, "\t\t");
-        _builder.append("(new ");
-        TypeReference _typeRef_1 = TypeReference.typeRef("java.net.InetSocketAddress");
-        _builder.append(_typeRef_1, "\t\t");
-        _builder.append("(\'localhost\', 8080))");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t");
-        _builder.append("server.handler = new ");
-        TypeReference _typeRef_2 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebAppContext");
-        _builder.append(_typeRef_2, "\t\t");
-        _builder.append(" => [");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t");
-        _builder.append("resourceBase = \'");
-        IXtextProjectConfig _projectConfig = WebIntegrationFragment.this.getProjectConfig();
-        IWebProjectConfig _web = _projectConfig.getWeb();
-        IXtextGeneratorFileSystemAccess _assets = _web.getAssets();
-        String _path = _assets.getPath();
-        IXtextProjectConfig _projectConfig_1 = WebIntegrationFragment.this.getProjectConfig();
-        IWebProjectConfig _web_1 = _projectConfig_1.getWeb();
-        IXtextGeneratorFileSystemAccess _root = _web_1.getRoot();
-        String _path_1 = _root.getPath();
-        String _plus = (_path_1 + "/");
-        String _replace = _path.replace(_plus, "");
-        _builder.append(_replace, "\t\t\t");
-        _builder.append("\'");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t");
-        _builder.append("welcomeFiles = #[\"index.html\"]");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("contextPath = \"/\"");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("configurations = #[");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("new ");
-        TypeReference _typeRef_3 = TypeReference.typeRef("org.eclipse.jetty.annotations.AnnotationConfiguration");
-        _builder.append(_typeRef_3, "\t\t\t\t");
-        _builder.append(",");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t\t");
-        _builder.append("new ");
-        TypeReference _typeRef_4 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebXmlConfiguration");
-        _builder.append(_typeRef_4, "\t\t\t\t");
-        _builder.append(",");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t\t");
-        _builder.append("new ");
-        TypeReference _typeRef_5 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
-        _builder.append(_typeRef_5, "\t\t\t\t");
-        _builder.append(",");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t\t");
-        _builder.append("new ");
-        TypeReference _typeRef_6 = TypeReference.typeRef("org.eclipse.jetty.webapp.MetaInfConfiguration");
-        _builder.append(_typeRef_6, "\t\t\t\t");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t");
-        _builder.append("]");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("setAttribute(");
-        TypeReference _typeRef_7 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
-        _builder.append(_typeRef_7, "\t\t\t");
-        _builder.append(".CONTAINER_JAR_PATTERN, \'.*/");
-        IXtextProjectConfig _projectConfig_2 = WebIntegrationFragment.this.getProjectConfig();
-        IWebProjectConfig _web_2 = _projectConfig_2.getWeb();
-        String _name = _web_2.getName();
-        String _replace_1 = _name.replace(".", "\\\\.");
-        _builder.append(_replace_1, "\t\t\t");
-        _builder.append("/.*,.*\\\\.jar\')");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t\t");
-        _builder.append("setInitParameter(\"org.mortbay.jetty.servlet.Default.useFileMappedBuffer\", \"false\")");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("]");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("val log = new ");
-        TypeReference _typeRef_8 = TypeReference.typeRef("org.eclipse.jetty.util.log.Slf4jLog");
-        _builder.append(_typeRef_8, "\t\t");
-        _builder.append("(");
-        Grammar _grammar_1 = WebIntegrationFragment.this.getGrammar();
-        TypeReference _serverLauncherClass_1 = WebIntegrationFragment.this.getServerLauncherClass(_grammar_1);
-        String _simpleName_1 = _serverLauncherClass_1.getSimpleName();
-        _builder.append(_simpleName_1, "\t\t");
-        _builder.append(".name)");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t");
-        _builder.append("try {");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("server.start");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("log.info(\'Server started \' + server.getURI + \'...\')");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("new Thread[");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("log.info(\'Press enter to stop the server...\')");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("val key = System.in.read");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("if (key != -1) {");
-        _builder.newLine();
-        _builder.append("\t\t\t\t\t");
-        _builder.append("server.stop");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("} else {");
-        _builder.newLine();
-        _builder.append("\t\t\t\t\t");
-        _builder.append("log.warn(\'Console input is not available. In order to stop the server, you need to cancel process manually.\')");
-        _builder.newLine();
-        _builder.append("\t\t\t\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("].start");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("server.join");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("} catch (Exception exception) {");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("log.warn(exception.message)");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("System.exit(1)");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("}");
-        _builder.newLine();
-      }
-    };
-    XtendFileAccess _createXtendFile = this.fileAccessFactory.createXtendFile(_serverLauncherClass, _client);
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _src = _web.getSrc();
-    _createXtendFile.writeTo(_src);
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
+      TypeReference _serverLauncherClass = this.getServerLauncherClass(this.getGrammar());
+      StringConcatenationClient _client = new StringConcatenationClient() {
+        @Override
+        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
+          _builder.append("/**");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* This program starts an HTTP server for testing the web integration of your DSL.");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* Just execute it and point a web browser to http://localhost:8080/");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("*/");
+          _builder.newLine();
+          _builder.append("class ");
+          String _simpleName = WebIntegrationFragment.this.getServerLauncherClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName);
+          _builder.append(" {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.append("def static void main(String[] args) {");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("val server = new ");
+          TypeReference _typeRef = TypeReference.typeRef("org.eclipse.jetty.server.Server");
+          _builder.append(_typeRef, "\t\t");
+          _builder.append("(new ");
+          TypeReference _typeRef_1 = TypeReference.typeRef("java.net.InetSocketAddress");
+          _builder.append(_typeRef_1, "\t\t");
+          _builder.append("(\'localhost\', 8080))");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("server.handler = new ");
+          TypeReference _typeRef_2 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebAppContext");
+          _builder.append(_typeRef_2, "\t\t");
+          _builder.append(" => [");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("resourceBase = \'");
+          String _path = WebIntegrationFragment.this.getProjectConfig().getWeb().getAssets().getPath();
+          String _path_1 = WebIntegrationFragment.this.getProjectConfig().getWeb().getRoot().getPath();
+          String _plus = (_path_1 + "/");
+          String _replace = _path.replace(_plus, "");
+          _builder.append(_replace, "\t\t\t");
+          _builder.append("\'");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("welcomeFiles = #[\"index.html\"]");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("contextPath = \"/\"");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("configurations = #[");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_3 = TypeReference.typeRef("org.eclipse.jetty.annotations.AnnotationConfiguration");
+          _builder.append(_typeRef_3, "\t\t\t\t");
+          _builder.append(",");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_4 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebXmlConfiguration");
+          _builder.append(_typeRef_4, "\t\t\t\t");
+          _builder.append(",");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_5 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
+          _builder.append(_typeRef_5, "\t\t\t\t");
+          _builder.append(",");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_6 = TypeReference.typeRef("org.eclipse.jetty.webapp.MetaInfConfiguration");
+          _builder.append(_typeRef_6, "\t\t\t\t");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("]");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("setAttribute(");
+          TypeReference _typeRef_7 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
+          _builder.append(_typeRef_7, "\t\t\t");
+          _builder.append(".CONTAINER_JAR_PATTERN, \'.*/");
+          String _replace_1 = WebIntegrationFragment.this.getProjectConfig().getWeb().getName().replace(".", "\\\\.");
+          _builder.append(_replace_1, "\t\t\t");
+          _builder.append("/.*,.*\\\\.jar\')");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("setInitParameter(\"org.eclipse.jetty.servlet.Default.useFileMappedBuffer\", \"false\")");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("]");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("val log = new ");
+          TypeReference _typeRef_8 = TypeReference.typeRef("org.eclipse.jetty.util.log.Slf4jLog");
+          _builder.append(_typeRef_8, "\t\t");
+          _builder.append("(");
+          String _simpleName_1 = WebIntegrationFragment.this.getServerLauncherClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName_1, "\t\t");
+          _builder.append(".name)");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("try {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("server.start");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("log.info(\'Server started \' + server.getURI + \'...\')");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("new Thread[");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("log.info(\'Press enter to stop the server...\')");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("val key = System.in.read");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("if (key != -1) {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t");
+          _builder.append("server.stop");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("} else {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t");
+          _builder.append("log.warn(\'Console input is not available. In order to stop the server, you need to cancel process manually.\')");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("].start");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("server.join");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("} catch (Exception exception) {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("log.warn(exception.message)");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("System.exit(1)");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("}");
+          _builder.newLine();
+        }
+      };
+      this.fileAccessFactory.createXtendFile(_serverLauncherClass, _client).writeTo(this.getProjectConfig().getWeb().getSrc());
+    } else {
+      TypeReference _serverLauncherClass_1 = this.getServerLauncherClass(this.getGrammar());
+      StringConcatenationClient _client_1 = new StringConcatenationClient() {
+        @Override
+        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
+          _builder.append("/**");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* This program starts an HTTP server for testing the web integration of your DSL.");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* Just execute it and point a web browser to http://localhost:8080/");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("*/");
+          _builder.newLine();
+          _builder.append("public class ");
+          String _simpleName = WebIntegrationFragment.this.getServerLauncherClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName);
+          _builder.append(" {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.append("public static void main(String[] args) {");
+          _builder.newLine();
+          _builder.append("\t\t");
+          TypeReference _typeRef = TypeReference.typeRef("org.eclipse.jetty.server.Server");
+          _builder.append(_typeRef, "\t\t");
+          _builder.append(" server = new ");
+          TypeReference _typeRef_1 = TypeReference.typeRef("org.eclipse.jetty.server.Server");
+          _builder.append(_typeRef_1, "\t\t");
+          _builder.append("(new ");
+          TypeReference _typeRef_2 = TypeReference.typeRef("java.net.InetSocketAddress");
+          _builder.append(_typeRef_2, "\t\t");
+          _builder.append("(\"localhost\", 8080));");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          TypeReference _typeRef_3 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebAppContext");
+          _builder.append(_typeRef_3, "\t\t");
+          _builder.append(" ctx = new ");
+          TypeReference _typeRef_4 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebAppContext");
+          _builder.append(_typeRef_4, "\t\t");
+          _builder.append("();");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("ctx.setResourceBase(\"WebRoot\");");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("ctx.setWelcomeFiles(new String[] {\"index.html\"});");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("ctx.setContextPath(\"/\");");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("ctx.setConfigurations(new ");
+          TypeReference _typeRef_5 = TypeReference.typeRef("org.eclipse.jetty.webapp.Configuration");
+          _builder.append(_typeRef_5, "\t\t");
+          _builder.append("[] {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_6 = TypeReference.typeRef("org.eclipse.jetty.annotations.AnnotationConfiguration");
+          _builder.append(_typeRef_6, "\t\t\t");
+          _builder.append("(),");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_7 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebXmlConfiguration");
+          _builder.append(_typeRef_7, "\t\t\t");
+          _builder.append("(),");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_8 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
+          _builder.append(_typeRef_8, "\t\t\t");
+          _builder.append("(),");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("new ");
+          TypeReference _typeRef_9 = TypeReference.typeRef("org.eclipse.jetty.webapp.MetaInfConfiguration");
+          _builder.append(_typeRef_9, "\t\t\t");
+          _builder.append("()");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("});");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("ctx.setAttribute(");
+          TypeReference _typeRef_10 = TypeReference.typeRef("org.eclipse.jetty.webapp.WebInfConfiguration");
+          _builder.append(_typeRef_10, "\t\t");
+          _builder.append(".CONTAINER_JAR_PATTERN,");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t\t");
+          _builder.append("\".*/");
+          String _replace = WebIntegrationFragment.this.getProjectConfig().getWeb().getName().replace(".", "\\\\.");
+          _builder.append(_replace, "\t\t\t");
+          _builder.append("/.*,.*\\\\.jar\");");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("ctx.setInitParameter(\"org.eclipse.jetty.servlet.Default.useFileMappedBuffer\", \"false\");");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("server.setHandler(ctx);");
+          _builder.newLine();
+          _builder.append("\t\t");
+          TypeReference _typeRef_11 = TypeReference.typeRef("org.eclipse.jetty.util.log.Slf4jLog");
+          _builder.append(_typeRef_11, "\t\t");
+          _builder.append(" log = new ");
+          TypeReference _typeRef_12 = TypeReference.typeRef("org.eclipse.jetty.util.log.Slf4jLog");
+          _builder.append(_typeRef_12, "\t\t");
+          _builder.append("(");
+          String _simpleName_1 = WebIntegrationFragment.this.getServerLauncherClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName_1, "\t\t");
+          _builder.append(".class.getName());");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("try {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("server.start();");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("log.info(\"Server started \" + server.getURI() + \"...\");");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("new Thread() {");
+          _builder.newLine();
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("public void run() {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t");
+          _builder.append("try {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("log.info(\"Press enter to stop the server...\");");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("int key = System.in.read();");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("if (key != -1) {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t\t");
+          _builder.append("server.stop();");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("} else {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t\t");
+          _builder.append("log.warn(");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t\t\t\t");
+          _builder.append("\"Console input is not available. In order to stop the server, you need to cancel process manually.\");");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t");
+          _builder.append("} catch (Exception e) {");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t\t");
+          _builder.append("log.warn(e);");
+          _builder.newLine();
+          _builder.append("\t\t\t\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t\t\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("}.start();");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("server.join();");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("} catch (Exception exception) {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("log.warn(exception.getMessage());");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("System.exit(1);");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("}");
+          _builder.newLine();
+        }
+      };
+      this.fileAccessFactory.createJavaFile(_serverLauncherClass_1, _client_1).writeTo(this.getProjectConfig().getWeb().getSrc());
+    }
   }
   
   protected void generateServlet() {
-    Grammar _grammar = this.getGrammar();
-    TypeReference _servletClass = this.getServletClass(_grammar);
-    StringConcatenationClient _client = new StringConcatenationClient() {
-      @Override
-      protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-        _builder.append("/**");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("* Deploy this class into a servlet container to enable DSL-specific services.");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("*/");
-        _builder.newLine();
-        {
-          if (WebIntegrationFragment.this.useServlet3Api) {
-            _builder.append("@");
-            TypeReference _typeReference = new TypeReference("javax.servlet.annotation.WebServlet");
-            _builder.append(_typeReference);
-            _builder.append("(name = \'XtextServices\', urlPatterns = \'/xtext-service/*\')");
-            _builder.newLineIfNotEmpty();
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
+      TypeReference _servletClass = this.getServletClass(this.getGrammar());
+      StringConcatenationClient _client = new StringConcatenationClient() {
+        @Override
+        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
+          _builder.append("/**");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* Deploy this class into a servlet container to enable DSL-specific services.");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("*/");
+          _builder.newLine();
+          {
+            if (WebIntegrationFragment.this.useServlet3Api) {
+              _builder.append("@");
+              TypeReference _typeReference = new TypeReference("javax.servlet.annotation.WebServlet");
+              _builder.append(_typeReference);
+              _builder.append("(name = \'XtextServices\', urlPatterns = \'/xtext-service/*\')");
+              _builder.newLineIfNotEmpty();
+            }
           }
+          _builder.append("class ");
+          String _simpleName = WebIntegrationFragment.this.getServletClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName);
+          _builder.append(" extends ");
+          TypeReference _typeRef = TypeReference.typeRef("org.eclipse.xtext.web.servlet.XtextServlet");
+          _builder.append(_typeRef);
+          _builder.append(" {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("static final long serialVersionUID = 1L");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append(DisposableRegistry.class, "\t");
+          _builder.append(" disposableRegistry");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("override init() {");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("super.init()");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("val injector = new ");
+          TypeReference _webSetup = WebIntegrationFragment.this._xtextGeneratorNaming.getWebSetup(WebIntegrationFragment.this.getGrammar());
+          _builder.append(_webSetup, "\t\t");
+          _builder.append("().createInjectorAndDoEMFRegistration()");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("disposableRegistry = injector.getInstance(");
+          _builder.append(DisposableRegistry.class, "\t\t");
+          _builder.append(")");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("override destroy() {");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("if (disposableRegistry !== null) {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("disposableRegistry.dispose()");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("disposableRegistry = null");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("super.destroy()");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("}");
+          _builder.newLine();
         }
-        _builder.append("class ");
-        Grammar _grammar = WebIntegrationFragment.this.getGrammar();
-        TypeReference _servletClass = WebIntegrationFragment.this.getServletClass(_grammar);
-        String _simpleName = _servletClass.getSimpleName();
-        _builder.append(_simpleName);
-        _builder.append(" extends ");
-        TypeReference _typeRef = TypeReference.typeRef("org.eclipse.xtext.web.servlet.XtextServlet");
-        _builder.append(_typeRef);
-        _builder.append(" {");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.append(DisposableRegistry.class, "\t");
-        _builder.append(" disposableRegistry");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.append("override init() {");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("super.init()");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("val injector = new ");
-        Grammar _grammar_1 = WebIntegrationFragment.this.getGrammar();
-        TypeReference _webSetup = WebIntegrationFragment.this._xtextGeneratorNaming.getWebSetup(_grammar_1);
-        _builder.append(_webSetup, "\t\t");
-        _builder.append("().createInjectorAndDoEMFRegistration()");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t\t");
-        _builder.append("disposableRegistry = injector.getInstance(");
-        _builder.append(DisposableRegistry.class, "\t\t");
-        _builder.append(")");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.append("override destroy() {");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("if (disposableRegistry != null) {");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("disposableRegistry.dispose()");
-        _builder.newLine();
-        _builder.append("\t\t\t");
-        _builder.append("disposableRegistry = null");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("\t\t");
-        _builder.append("super.destroy()");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.append("}");
-        _builder.newLine();
-        _builder.append("\t");
-        _builder.newLine();
-        _builder.append("}");
-        _builder.newLine();
-      }
-    };
-    XtendFileAccess _createXtendFile = this.fileAccessFactory.createXtendFile(_servletClass, _client);
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _src = _web.getSrc();
-    _createXtendFile.writeTo(_src);
+      };
+      this.fileAccessFactory.createXtendFile(_servletClass, _client).writeTo(this.getProjectConfig().getWeb().getSrc());
+    } else {
+      TypeReference _servletClass_1 = this.getServletClass(this.getGrammar());
+      StringConcatenationClient _client_1 = new StringConcatenationClient() {
+        @Override
+        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
+          _builder.append("/**");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("* Deploy this class into a servlet container to enable DSL-specific services.");
+          _builder.newLine();
+          _builder.append(" ");
+          _builder.append("*/");
+          _builder.newLine();
+          {
+            if (WebIntegrationFragment.this.useServlet3Api) {
+              _builder.append("@");
+              TypeReference _typeReference = new TypeReference("javax.servlet.annotation.WebServlet");
+              _builder.append(_typeReference);
+              _builder.append("(name = \"XtextServices\", urlPatterns = \"/xtext-service/*\")");
+              _builder.newLineIfNotEmpty();
+            }
+          }
+          _builder.append("public class ");
+          String _simpleName = WebIntegrationFragment.this.getServletClass(WebIntegrationFragment.this.getGrammar()).getSimpleName();
+          _builder.append(_simpleName);
+          _builder.append(" extends ");
+          TypeReference _typeRef = TypeReference.typeRef("org.eclipse.xtext.web.servlet.XtextServlet");
+          _builder.append(_typeRef);
+          _builder.append(" {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("private static final long serialVersionUID = 1L;");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append(DisposableRegistry.class, "\t");
+          _builder.append(" disposableRegistry;");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("public void init() throws ");
+          TypeReference _typeRef_1 = TypeReference.typeRef("javax.servlet.ServletException");
+          _builder.append(_typeRef_1, "\t");
+          _builder.append(" {");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("super.init();");
+          _builder.newLine();
+          _builder.append("\t\t");
+          TypeReference _typeRef_2 = TypeReference.typeRef("com.google.inject.Injector");
+          _builder.append(_typeRef_2, "\t\t");
+          _builder.append(" injector = new ");
+          TypeReference _webSetup = WebIntegrationFragment.this._xtextGeneratorNaming.getWebSetup(WebIntegrationFragment.this.getGrammar());
+          _builder.append(_webSetup, "\t\t");
+          _builder.append("().createInjectorAndDoEMFRegistration();");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t\t");
+          _builder.append("this.disposableRegistry = injector.getInstance(");
+          _builder.append(DisposableRegistry.class, "\t\t");
+          _builder.append(".class);");
+          _builder.newLineIfNotEmpty();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("public void destroy() {");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("if (disposableRegistry != null) {");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("disposableRegistry.dispose();");
+          _builder.newLine();
+          _builder.append("\t\t\t");
+          _builder.append("disposableRegistry = null;");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t\t");
+          _builder.append("super.destroy();");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.append("}");
+          _builder.newLine();
+          _builder.append("\t");
+          _builder.newLine();
+          _builder.append("}");
+          _builder.newLine();
+        }
+      };
+      this.fileAccessFactory.createJavaFile(_servletClass_1, _client_1).writeTo(this.getProjectConfig().getWeb().getSrc());
+    }
   }
   
   protected void generateWebXml() {
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IWebProjectConfig _web = _projectConfig.getWeb();
-    IXtextGeneratorFileSystemAccess _assets = _web.getAssets();
-    boolean _isFile = _assets.isFile("WEB-INF/web.xml");
+    boolean _isFile = this.getProjectConfig().getWeb().getAssets().isFile("WEB-INF/web.xml");
     if (_isFile) {
       return;
     }
@@ -1899,8 +2142,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
             _builder.append("\t");
             _builder.append("\t");
             _builder.append("<servlet-class>");
-            Grammar _grammar = WebIntegrationFragment.this.getGrammar();
-            TypeReference _servletClass = WebIntegrationFragment.this.getServletClass(_grammar);
+            TypeReference _servletClass = WebIntegrationFragment.this.getServletClass(WebIntegrationFragment.this.getGrammar());
             _builder.append(_servletClass, "\t\t");
             _builder.append("</servlet-class>");
             _builder.newLineIfNotEmpty();
@@ -2026,10 +2268,7 @@ public class WebIntegrationFragment extends AbstractXtextGeneratorFragment {
       }
     };
     xmlFile.setContent(_client);
-    IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-    IWebProjectConfig _web_1 = _projectConfig_1.getWeb();
-    IXtextGeneratorFileSystemAccess _assets_1 = _web_1.getAssets();
-    xmlFile.writeTo(_assets_1);
+    xmlFile.writeTo(this.getProjectConfig().getWeb().getAssets());
   }
   
   @Pure

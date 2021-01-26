@@ -1,15 +1,19 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext;
 
 import org.eclipse.xtext.conversion.IValueConverterService;
 import org.eclipse.xtext.formatting.IFormatter;
+import org.eclipse.xtext.formatting2.FormatterPreferenceValuesProvider;
+import org.eclipse.xtext.formatting2.FormatterPreferences;
+import org.eclipse.xtext.formatting2.IFormatter2;
 import org.eclipse.xtext.linking.ILinker;
 import org.eclipse.xtext.linking.ILinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.linking.ILinkingService;
@@ -17,6 +21,7 @@ import org.eclipse.xtext.parser.DefaultEcoreElementFactory;
 import org.eclipse.xtext.parser.antlr.IReferableElementsUnloader;
 import org.eclipse.xtext.parser.antlr.SyntaxErrorMessageProvider;
 import org.eclipse.xtext.parsetree.reconstr.ITokenSerializer.ICrossReferenceSerializer;
+import org.eclipse.xtext.preferences.IPreferenceValuesProvider;
 import org.eclipse.xtext.parsetree.reconstr.ITransientValueService;
 import org.eclipse.xtext.resource.DerivedStateAwareResourceDescriptionManager;
 import org.eclipse.xtext.resource.IDefaultResourceDescriptionStrategy;
@@ -38,6 +43,7 @@ import org.eclipse.xtext.xtext.XtextConfigurableIssueCodes;
 import org.eclipse.xtext.xtext.XtextCrossReferenceSerializer;
 import org.eclipse.xtext.xtext.XtextDiagnosticConverter;
 import org.eclipse.xtext.xtext.XtextFormatter;
+import org.eclipse.xtext.xtext.XtextFormatterJava;
 import org.eclipse.xtext.xtext.XtextFragmentProvider;
 import org.eclipse.xtext.xtext.XtextLinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.xtext.XtextLinkingService;
@@ -50,8 +56,6 @@ import org.eclipse.xtext.xtext.XtextTransientValueService2;
 import org.eclipse.xtext.xtext.XtextValidator;
 import org.eclipse.xtext.xtext.XtextValueConverters;
 import org.eclipse.xtext.xtext.CardinalityAwareSyntacticSequencer;
-import org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor;
-import org.eclipse.xtext.xtext.ecoreInference.XtendXtext2EcorePostProcessor;
 import org.eclipse.xtext.xtext.parser.CardinalityAwareEcoreFactory;
 import org.eclipse.xtext.xtext.parser.CardinalityAwareSyntaxErrorMessageProvider;
 
@@ -101,6 +105,15 @@ public class XtextRuntimeModule extends AbstractXtextRuntimeModule {
 		return XtextFormatter.class;
 	}
 
+	public Class<? extends IFormatter2> bindIFormatter2() {
+		return XtextFormatterJava.class;
+	}
+	
+	public void configureFormatterPreferences(Binder binder) {
+		binder.bind(IPreferenceValuesProvider.class).annotatedWith(FormatterPreferences.class)
+				.to(FormatterPreferenceValuesProvider.class);
+	}
+
 	@Override
 	public Class<? extends IValueConverterService> bindIValueConverterService() {
 		return XtextValueConverters.class;
@@ -109,10 +122,12 @@ public class XtextRuntimeModule extends AbstractXtextRuntimeModule {
 	/**
 	 * @since 2.9
 	 */
+	@SuppressWarnings("deprecation")
 	public void configureIXtext2EcorePostProcessor(Binder binder) {
 		try {
 			Class.forName("org.eclipse.xtend.expression.ExecutionContext");
-			binder.bind(IXtext2EcorePostProcessor.class).to(XtendXtext2EcorePostProcessor.class);
+			binder.bind(org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor.class)
+				.to(org.eclipse.xtext.xtext.ecoreInference.XtendXtext2EcorePostProcessor.class);
 		} catch (ClassNotFoundException e) {
 		}
 	}

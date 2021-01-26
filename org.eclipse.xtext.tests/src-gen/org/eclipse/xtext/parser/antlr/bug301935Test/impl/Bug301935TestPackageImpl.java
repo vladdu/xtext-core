@@ -6,6 +6,7 @@ package org.eclipse.xtext.parser.antlr.bug301935Test.impl;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcorePackage;
 
 import org.eclipse.emf.ecore.impl.EPackageImpl;
 
@@ -57,7 +58,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
 
   /**
    * Creates, registers, and initializes the <b>Package</b> for this model, and for any others upon which it depends.
-   * 
+   *
    * <p>This method is used to initialize {@link Bug301935TestPackage#eINSTANCE} when that field is accessed.
    * Clients should not invoke it directly. Instead, they should simply access that field to obtain the package.
    * <!-- begin-user-doc -->
@@ -72,9 +73,13 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
     if (isInited) return (Bug301935TestPackage)EPackage.Registry.INSTANCE.getEPackage(Bug301935TestPackage.eNS_URI);
 
     // Obtain or create and register package
-    Bug301935TestPackageImpl theBug301935TestPackage = (Bug301935TestPackageImpl)(EPackage.Registry.INSTANCE.get(eNS_URI) instanceof Bug301935TestPackageImpl ? EPackage.Registry.INSTANCE.get(eNS_URI) : new Bug301935TestPackageImpl());
+    Object registeredBug301935TestPackage = EPackage.Registry.INSTANCE.get(eNS_URI);
+    Bug301935TestPackageImpl theBug301935TestPackage = registeredBug301935TestPackage instanceof Bug301935TestPackageImpl ? (Bug301935TestPackageImpl)registeredBug301935TestPackage : new Bug301935TestPackageImpl();
 
     isInited = true;
+
+    // Initialize simple dependencies
+    EcorePackage.eINSTANCE.eClass();
 
     // Create package meta-data objects
     theBug301935TestPackage.createPackageContents();
@@ -85,7 +90,6 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
     // Mark meta-data to indicate it can't be changed
     theBug301935TestPackage.freeze();
 
-  
     // Update the registry and return the package
     EPackage.Registry.INSTANCE.put(Bug301935TestPackage.eNS_URI, theBug301935TestPackage);
     return theBug301935TestPackage;
@@ -96,6 +100,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EClass getModel()
   {
     return modelEClass;
@@ -106,6 +111,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getModel_Name()
   {
     return (EAttribute)modelEClass.getEStructuralFeatures().get(0);
@@ -116,6 +122,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getModel_Value()
   {
     return (EAttribute)modelEClass.getEStructuralFeatures().get(1);
@@ -126,6 +133,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public EAttribute getModel_Value2()
   {
     return (EAttribute)modelEClass.getEStructuralFeatures().get(2);
@@ -136,6 +144,7 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public Bug301935TestFactory getBug301935TestFactory()
   {
     return (Bug301935TestFactory)getEFactoryInstance();
@@ -191,6 +200,9 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
     setNsPrefix(eNS_PREFIX);
     setNsURI(eNS_URI);
 
+    // Obtain other dependent packages
+    EcorePackage theEcorePackage = (EcorePackage)EPackage.Registry.INSTANCE.getEPackage(EcorePackage.eNS_URI);
+
     // Create type parameters
 
     // Set bounds for type parameters
@@ -199,9 +211,9 @@ public class Bug301935TestPackageImpl extends EPackageImpl implements Bug301935T
 
     // Initialize classes and features; add operations and parameters
     initEClass(modelEClass, Model.class, "Model", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getModel_Name(), ecorePackage.getEString(), "name", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getModel_Value(), ecorePackage.getEString(), "value", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getModel_Value2(), ecorePackage.getEString(), "value2", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getModel_Name(), theEcorePackage.getEString(), "name", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getModel_Value(), theEcorePackage.getEString(), "value", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getModel_Value2(), theEcorePackage.getEString(), "value2", null, 0, 1, Model.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Create resource
     createResource(eNS_URI);

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.xtext.ecoreInference;
@@ -33,7 +34,6 @@ import org.eclipse.xtext.xtext.ecoreInference.EClassifierInfo.EClassInfo;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * A possible extension would be to normalize the type hierarchy and remove
@@ -164,22 +164,10 @@ public class EClassifierInfos {
 		while (i.hasNext())
 			result = getCompatibleType(result, i.next());
 
-		return result;
-	}
-
-	public EClassifier getCompatibleTypeNameOf(Collection<EClassifier> classifiers, boolean useParent) {
-		final Collection<EClassifierInfo> types = Sets.newLinkedHashSet();
-		for (EClassifier classifier : classifiers) {
-			final EClassifierInfo info = getInfoOrNull(classifier);
-			if (info == null)
-				return null;
-			types.add(info);
+		if (result == null) {
+			return getInfoOrNull(GrammarUtil.findEObject(grammar));
 		}
-
-		final EClassifierInfo compatibleType = getCompatibleTypeOf(types);
-		if (compatibleType != null)
-			return compatibleType.getEClassifier();
-		return GrammarUtil.findEObject(grammar);
+		return result;
 	}
 
 	public List<EClassInfo> getAllEClassInfos() {

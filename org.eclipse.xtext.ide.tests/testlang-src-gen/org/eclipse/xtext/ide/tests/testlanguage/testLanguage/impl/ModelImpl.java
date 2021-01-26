@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.testLanguage.impl;
 
@@ -21,9 +22,9 @@ import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
 import org.eclipse.emf.ecore.util.InternalEList;
 
+import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.AbstractElement;
 import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.Model;
 import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.TestLanguagePackage;
-import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.TypeDeclaration;
 
 /**
  * <!-- begin-user-doc -->
@@ -33,7 +34,7 @@ import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.TypeDeclaration;
  * The following features are implemented:
  * </p>
  * <ul>
- *   <li>{@link org.eclipse.xtext.ide.tests.testlanguage.testLanguage.impl.ModelImpl#getTypes <em>Types</em>}</li>
+ *   <li>{@link org.eclipse.xtext.ide.tests.testlanguage.testLanguage.impl.ModelImpl#getElements <em>Elements</em>}</li>
  * </ul>
  *
  * @generated
@@ -41,14 +42,14 @@ import org.eclipse.xtext.ide.tests.testlanguage.testLanguage.TypeDeclaration;
 public class ModelImpl extends MinimalEObjectImpl.Container implements Model
 {
   /**
-   * The cached value of the '{@link #getTypes() <em>Types</em>}' containment reference list.
+   * The cached value of the '{@link #getElements() <em>Elements</em>}' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
-   * @see #getTypes()
+   * @see #getElements()
    * @generated
    * @ordered
    */
-  protected EList<TypeDeclaration> types;
+  protected EList<AbstractElement> elements;
 
   /**
    * <!-- begin-user-doc -->
@@ -76,13 +77,14 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
    * <!-- end-user-doc -->
    * @generated
    */
-  public EList<TypeDeclaration> getTypes()
+  @Override
+  public EList<AbstractElement> getElements()
   {
-    if (types == null)
+    if (elements == null)
     {
-      types = new EObjectContainmentEList<TypeDeclaration>(TypeDeclaration.class, this, TestLanguagePackage.MODEL__TYPES);
+      elements = new EObjectContainmentEList<AbstractElement>(AbstractElement.class, this, TestLanguagePackage.MODEL__ELEMENTS);
     }
-    return types;
+    return elements;
   }
 
   /**
@@ -95,8 +97,8 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
   {
     switch (featureID)
     {
-      case TestLanguagePackage.MODEL__TYPES:
-        return ((InternalEList<?>)getTypes()).basicRemove(otherEnd, msgs);
+      case TestLanguagePackage.MODEL__ELEMENTS:
+        return ((InternalEList<?>)getElements()).basicRemove(otherEnd, msgs);
     }
     return super.eInverseRemove(otherEnd, featureID, msgs);
   }
@@ -111,8 +113,8 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
   {
     switch (featureID)
     {
-      case TestLanguagePackage.MODEL__TYPES:
-        return getTypes();
+      case TestLanguagePackage.MODEL__ELEMENTS:
+        return getElements();
     }
     return super.eGet(featureID, resolve, coreType);
   }
@@ -128,9 +130,9 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
   {
     switch (featureID)
     {
-      case TestLanguagePackage.MODEL__TYPES:
-        getTypes().clear();
-        getTypes().addAll((Collection<? extends TypeDeclaration>)newValue);
+      case TestLanguagePackage.MODEL__ELEMENTS:
+        getElements().clear();
+        getElements().addAll((Collection<? extends AbstractElement>)newValue);
         return;
     }
     super.eSet(featureID, newValue);
@@ -146,8 +148,8 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
   {
     switch (featureID)
     {
-      case TestLanguagePackage.MODEL__TYPES:
-        getTypes().clear();
+      case TestLanguagePackage.MODEL__ELEMENTS:
+        getElements().clear();
         return;
     }
     super.eUnset(featureID);
@@ -163,8 +165,8 @@ public class ModelImpl extends MinimalEObjectImpl.Container implements Model
   {
     switch (featureID)
     {
-      case TestLanguagePackage.MODEL__TYPES:
-        return types != null && !types.isEmpty();
+      case TestLanguagePackage.MODEL__ELEMENTS:
+        return elements != null && !elements.isEmpty();
     }
     return super.eIsSet(featureID);
   }

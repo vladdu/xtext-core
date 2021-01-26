@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class LocationProviderTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class LocationProviderTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.resource.LocationProviderTestLanguage.Model");
@@ -36,7 +36,8 @@ public class LocationProviderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//	components+=Component*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//elements+=Element* components+=Component*
+		//elements+=Element*
+		//components+=Component*
 		public Group getGroup() { return cGroup; }
 		
 		//elements+=Element*
@@ -135,10 +136,11 @@ public class LocationProviderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//	'end' ';';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//(Bus | Processor) ('modes' (mode+=Mode | transition+=Transition)+)? 'end' ';'
+		//(Bus | Processor) ('modes' (mode+=Mode | transition+=Transition)+)?
+		//'end' ';'
 		public Group getGroup() { return cGroup; }
 		
-		//Bus | Processor
+		//(Bus | Processor)
 		public Alternatives getAlternatives_0() { return cAlternatives_0; }
 		
 		//Bus
@@ -188,7 +190,8 @@ public class LocationProviderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//	port+=Port*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'bus' name=ID port+=Port*
+		//'bus' name=ID
+		//port+=Port*
 		public Group getGroup() { return cGroup; }
 		
 		//'bus'
@@ -220,7 +223,8 @@ public class LocationProviderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//	data+=Data*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'processor' name=ID data+=Data*
+		//'processor' name=ID
+		//data+=Data*
 		public Group getGroup() { return cGroup; }
 		
 		//'processor'

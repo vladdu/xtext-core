@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.serializer;
 
@@ -26,7 +27,6 @@ import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.serializer.acceptor.ISemanticSequenceAcceptor;
 import org.eclipse.xtext.serializer.acceptor.ISequenceAcceptor;
 import org.eclipse.xtext.serializer.diagnostic.ISerializationDiagnostic;
-import org.eclipse.xtext.serializer.sequencer.EmitterNodeIterator;
 import org.eclipse.xtext.serializer.sequencer.ISemanticSequencer;
 import org.eclipse.xtext.serializer.sequencer.ISyntacticSequencer;
 import org.eclipse.xtext.serializer.sequencer.NodeModelSemanticSequencer;
@@ -216,10 +216,12 @@ public class SyntacticSequencerTest extends AbstractXtextTests {
 		assertEquals(Joiner.on("\n").join(getNodeSequence(outObj)), Joiner.on("\n").join(actual.getResult()));
 	}
 
+	@SuppressWarnings("deprecation")
 	private List<String> getNodeSequence(EObject model) {
 		List<String> result = Lists.newArrayList();
 		GrammarElementTitleSwitch titleSwitch = new GrammarElementTitleSwitch().showAssignments();
-		EmitterNodeIterator ni = new EmitterNodeIterator(NodeModelUtils.findActualNodeFor(model));
+		org.eclipse.xtext.serializer.sequencer.EmitterNodeIterator ni = 
+				new org.eclipse.xtext.serializer.sequencer.EmitterNodeIterator(NodeModelUtils.findActualNodeFor(model));
 		while (ni.hasNext()) {
 			INode next = ni.next();
 			EObject ele = next.getGrammarElement() instanceof CrossReference ? ((CrossReference) next
@@ -300,6 +302,16 @@ public class SyntacticSequencerTest extends AbstractXtextTests {
 	@Test
 	public void testCrossRef1_d() throws Exception {
 		testSequence("#5 someid kw4 someid");
+	}
+	
+	@Test
+	public void testCrossRef1_e_1() throws Exception {
+		testSequence("#5 ^kw5 kw5 kw5");
+	}
+	
+	@Test
+	public void testCrossRef1_e_2() throws Exception {
+		testSequence("#5 kw5 kw5 kw5");
 	}
 
 	@Test

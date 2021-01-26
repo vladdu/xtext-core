@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.generator.parser.splitting;
@@ -67,7 +68,12 @@ public class AntlrLexerSplitterTest extends AbstractAntlrSplitterTest {
 		AntlrLexerSplitter splitter = new AntlrLexerSplitter(content);
 		String actual = splitter.transform();
 		assertNotNull(actual);
-		assertTrue(actual.equals(content));
+		assertNotEquals(content.replaceAll(System.lineSeparator(), "\n"), 
+		             actual.replaceAll(System.lineSeparator(), "\n"));
+		String actualDFA = actual.substring(actual.lastIndexOf("};") + 8).trim();
+		String contentDFA = content.substring(content.lastIndexOf("};") + 8).trim();
+		assertEquals(contentDFA.replaceAll(System.lineSeparator(), "\n"), 
+				actualDFA.replaceAll(System.lineSeparator(), "\n"));
 	}
 	
 	@Test public void testOuterBraceInIfCascadePattern() throws Exception {

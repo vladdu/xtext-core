@@ -24,6 +24,7 @@ import org.eclipse.xtext.testlanguages.lookaheadLang.LookaheadLangPackage;
  * </p>
  * <ul>
  *   <li>{@link org.eclipse.xtext.testlanguages.lookaheadLang.impl.LookAhead1Impl#getY <em>Y</em>}</li>
+ *   <li>{@link org.eclipse.xtext.testlanguages.lookaheadLang.impl.LookAhead1Impl#getX <em>X</em>}</li>
  *   <li>{@link org.eclipse.xtext.testlanguages.lookaheadLang.impl.LookAhead1Impl#getZ <em>Z</em>}</li>
  * </ul>
  *
@@ -40,6 +41,26 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
    * @ordered
    */
   protected LookAhead2 y;
+
+  /**
+   * The default value of the '{@link #getX() <em>X</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getX()
+   * @generated
+   * @ordered
+   */
+  protected static final String X_EDEFAULT = null;
+
+  /**
+   * The cached value of the '{@link #getX() <em>X</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getX()
+   * @generated
+   * @ordered
+   */
+  protected String x = X_EDEFAULT;
 
   /**
    * The default value of the '{@link #getZ() <em>Z</em>}' attribute.
@@ -87,6 +108,7 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public LookAhead2 getY()
   {
     return y;
@@ -114,6 +136,7 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public void setY(LookAhead2 newY)
   {
     if (newY != y)
@@ -135,6 +158,32 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
+  public String getX()
+  {
+    return x;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setX(String newX)
+  {
+    String oldX = x;
+    x = newX;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, LookaheadLangPackage.LOOK_AHEAD1__X, oldX, x));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public String getZ()
   {
     return z;
@@ -145,6 +194,7 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
   public void setZ(String newZ)
   {
     String oldZ = z;
@@ -181,6 +231,8 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
     {
       case LookaheadLangPackage.LOOK_AHEAD1__Y:
         return getY();
+      case LookaheadLangPackage.LOOK_AHEAD1__X:
+        return getX();
       case LookaheadLangPackage.LOOK_AHEAD1__Z:
         return getZ();
     }
@@ -199,6 +251,9 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
     {
       case LookaheadLangPackage.LOOK_AHEAD1__Y:
         setY((LookAhead2)newValue);
+        return;
+      case LookaheadLangPackage.LOOK_AHEAD1__X:
+        setX((String)newValue);
         return;
       case LookaheadLangPackage.LOOK_AHEAD1__Z:
         setZ((String)newValue);
@@ -220,6 +275,9 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
       case LookaheadLangPackage.LOOK_AHEAD1__Y:
         setY((LookAhead2)null);
         return;
+      case LookaheadLangPackage.LOOK_AHEAD1__X:
+        setX(X_EDEFAULT);
+        return;
       case LookaheadLangPackage.LOOK_AHEAD1__Z:
         setZ(Z_EDEFAULT);
         return;
@@ -239,6 +297,8 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
     {
       case LookaheadLangPackage.LOOK_AHEAD1__Y:
         return y != null;
+      case LookaheadLangPackage.LOOK_AHEAD1__X:
+        return X_EDEFAULT == null ? x != null : !X_EDEFAULT.equals(x);
       case LookaheadLangPackage.LOOK_AHEAD1__Z:
         return Z_EDEFAULT == null ? z != null : !Z_EDEFAULT.equals(z);
     }
@@ -255,8 +315,10 @@ public class LookAhead1Impl extends AltsImpl implements LookAhead1
   {
     if (eIsProxy()) return super.toString();
 
-    StringBuffer result = new StringBuffer(super.toString());
-    result.append(" (z: ");
+    StringBuilder result = new StringBuilder(super.toString());
+    result.append(" (x: ");
+    result.append(x);
+    result.append(", z: ");
     result.append(z);
     result.append(')');
     return result.toString();

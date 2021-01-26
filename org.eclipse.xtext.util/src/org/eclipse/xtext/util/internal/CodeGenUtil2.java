@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2002-2009 IBM Corporation and others.
- * All rights reserved.   This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2002, 2017 IBM Corporation and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *   IBM - Initial API and implementation
@@ -133,20 +134,26 @@ public class CodeGenUtil2 {
 	 */
 	public static Set<String> getJavaDefaultTypes() {
 		if (javaDefaultTypes == null) {
-			Set<String> result = new HashSet<String>(100);
+			Set<String> result = new HashSet<String>(125);
 			result.add("AbstractMethodError");
+			result.add("Appendable");
 			result.add("ArithmeticException");
 			result.add("ArrayIndexOutOfBoundsException");
 			result.add("ArrayStoreException");
+			result.add("AssertionError");
+			result.add("AutoCloseable");
 			result.add("Boolean");
+			result.add("BootstrapMethodError");
 			result.add("Byte");
 			result.add("Character");
+			result.add("CharSequence");
 			result.add("Class");
 			result.add("ClassCastException");
 			result.add("ClassCircularityError");
 			result.add("ClassFormatError");
 			result.add("ClassLoader");
 			result.add("ClassNotFoundException");
+			result.add("ClassValue");
 			result.add("CloneNotSupportedException");
 			result.add("Cloneable");
 			result.add("Comparable");
@@ -154,14 +161,17 @@ public class CodeGenUtil2 {
 			result.add("Double");
 			result.add("Deprecated");
 			result.add("Enum");
+			result.add("EnumConstantNotPresentException");
 			result.add("Error");
 			result.add("Exception");
 			result.add("ExceptionInInitializerError");
 			result.add("Float");
 			result.add("FloatingDecimal");
+			result.add("FunctionalInterface");
 			result.add("IllegalAccessError");
 			result.add("IllegalAccessException");
 			result.add("IllegalArgumentException");
+			result.add("IllegalCallerException");
 			result.add("IllegalMonitorStateException");
 			result.add("IllegalStateException");
 			result.add("IllegalThreadStateException");
@@ -173,9 +183,13 @@ public class CodeGenUtil2 {
 			result.add("Integer");
 			result.add("InternalError");
 			result.add("InterruptedException");
+			result.add("Iterable");
+			result.add("LayerInstantiationException");
 			result.add("LinkageError");
 			result.add("Long");
 			result.add("Math");
+			result.add("Module");
+			result.add("ModuleLayer");
 			result.add("NegativeArraySizeException");
 			result.add("NoClassDefFoundError");
 			result.add("NoSuchFieldError");
@@ -190,14 +204,21 @@ public class CodeGenUtil2 {
 			result.add("OutOfMemoryError");
 			result.add("Package");
 			result.add("Process");
+			result.add("ProcessBuilder");
+			result.add("Readable");
+			result.add("ReflectiveOperationException");
 			result.add("Runnable");
 			result.add("Runtime");
 			result.add("RuntimeException");
 			result.add("RuntimePermission");
+			result.add("SafeVarargs");
 			result.add("SecurityException");
 			result.add("SecurityManager");
 			result.add("Short");
 			result.add("StackOverflowError");
+			result.add("StackTraceElement");
+			result.add("StackWalker");
+			result.add("StrictMath");
 			result.add("String");
 			result.add("StringBuffer");
 			result.add("StringBuilder");
@@ -209,6 +230,7 @@ public class CodeGenUtil2 {
 			result.add("ThreadGroup");
 			result.add("ThreadLocal");
 			result.add("Throwable");
+			result.add("TypeNotPresentException");
 			result.add("UnknownError");
 			result.add("UnsatisfiedLinkError");
 			result.add("UnsupportedClassVersionError");

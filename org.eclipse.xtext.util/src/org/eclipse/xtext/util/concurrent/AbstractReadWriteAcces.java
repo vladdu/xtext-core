@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.util.concurrent;
 
@@ -17,11 +18,11 @@ import org.eclipse.emf.common.util.WrappedException;
  * @author Sven Efftinge - Initial contribution and API
  * @author Jan Koehnlein
  */
-public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
+public abstract class AbstractReadWriteAcces<State> implements IReadAccess<State>, IWriteAccess<State> {
 
 	private static Logger log = Logger.getLogger(AbstractReadWriteAcces.class);
 
-	protected abstract P getState();
+	protected abstract State getState();
 
 	/**
 	 * This field should be <code>private</code>. It is <code>protected</code> for API compatibility only. Never access
@@ -55,12 +56,12 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	};
 
 	@Override
-	public <T> T readOnly(IUnitOfWork<T, P> work) {
+	public <Result> Result readOnly(IUnitOfWork<Result, State> work) {
 		acquireReadLock();
 		try {
-			P state = getState();
+			State state = getState();
 			beforeReadOnly(state, work);
-			T exec = work.exec(state);
+			Result exec = work.exec(state);
 			afterReadOnly(state, exec, work);
 			return exec;
 		} catch (RuntimeException e) {
@@ -72,10 +73,11 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 		}
 	}
 
-	public <T> T modify(IUnitOfWork<T, P> work) {
+	@Override
+	public <Result> Result modify(IUnitOfWork<Result, State> work) {
 		acquireWriteLock();
-		P state = null;
-		T exec = null;
+		State state = null;
+		Result exec = null;
 		try {
 			state = getState();
 			beforeModify(state, work);
@@ -103,7 +105,7 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	 * @since 2.4
 	 * @noreference
 	 */
-	public <T> T process(IUnitOfWork<T, P> work) {
+	public <Result> Result process(IUnitOfWork<Result, State> work) {
 		releaseReadLock();
 		acquireWriteLock();
 		try {
@@ -124,7 +126,7 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	 * @param work
 	 *            - the unit of work to be processed
 	 */
-	protected void beforeModify(P state, IUnitOfWork<?, P> work) {
+	protected void beforeModify(State state, IUnitOfWork<?, State> work) {
 	}
 
 	/**
@@ -133,7 +135,7 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	 * @param work
 	 *            - the unit of work to be processed
 	 */
-	protected void beforeReadOnly(P state, IUnitOfWork<?, P> work) {
+	protected void beforeReadOnly(State state, IUnitOfWork<?, State> work) {
 	}
 
 	/**
@@ -142,7 +144,7 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	 * @param result - delivered result
 	 * @param work  - the unit of work to be processed
 	 */
-	protected void afterModify(P state, Object result, IUnitOfWork<?, P> work) {
+	protected void afterModify(State state, Object result, IUnitOfWork<?, State> work) {
 	}
 
 	/**
@@ -151,7 +153,7 @@ public abstract class AbstractReadWriteAcces<P> implements IReadAccess<P> {
 	 * @param result - delivered result
 	 * @param work  - the unit of work to be processed
 	 */
-	protected void afterReadOnly(P state, Object result, IUnitOfWork<?, P> work) {
+	protected void afterReadOnly(State state, Object result, IUnitOfWork<?, State> work) {
 	}
 
 	/**

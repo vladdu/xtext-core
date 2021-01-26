@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.services;
 
@@ -21,11 +22,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class PartialContentAssistTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class PartialContentAssistTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class TypeDeclarationElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.ide.tests.testlanguage.PartialContentAssistTestLanguage.TypeDeclaration");
@@ -49,7 +50,9 @@ public class PartialContentAssistTestLanguageGrammarAccess extends AbstractGramm
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'type' name=ID ('extends' superType=[TypeDeclaration])? '{' properties+=Property* '}'
+		//'type' name=ID ('extends' superType=[TypeDeclaration])? '{'
+		//properties+=Property*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'type'

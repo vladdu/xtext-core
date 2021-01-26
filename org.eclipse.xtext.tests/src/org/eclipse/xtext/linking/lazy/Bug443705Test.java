@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.linking.lazy;
 
@@ -28,9 +29,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 
 /**
  * @author Moritz Eysholdt - Initial contribution and API
@@ -46,7 +49,7 @@ public class Bug443705Test {
 		}
 	}
 
-	public static class Bug443705StandaloneSetup extends LazyLinkingTestLanguageStandaloneSetupGenerated {
+	public static class Bug443705StandaloneSetup extends LazyLinkingTestLanguageStandaloneSetup {
 		@Override
 		public Injector createInjector() {
 			return Guice.createInjector(new Bug443705RuntimeModule());
@@ -62,6 +65,11 @@ public class Bug443705Test {
 		@Override
 		public Class<? extends XtextResource> bindXtextResource() {
 			return CyclicResolutionExceptionIgnoringResource.class;
+		}
+		
+		public void configureCyclicLinkingLimit(Binder binder) {
+			// disable shortcut for test
+			binder.bind(Integer.TYPE).annotatedWith(Names.named(LazyLinkingResource.CYCLIC_LINKING_DECTECTION_COUNTER_LIMIT)).toInstance(0);
 		}
 	}
 

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.wizard
 
@@ -53,7 +54,6 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 		if (config.needsGradleBuild) {
 			files += file(Outlet.ROOT, 'settings.gradle', settingsGradle)
 			files += file(Outlet.ROOT, 'gradle/source-layout.gradle', sourceLayoutGradle)
-			files += file(Outlet.ROOT, 'gradle/maven-deployment.gradle', mavenDeploymentGradle)
 			if(config.needsGradleWrapper) {
 				files += file(Outlet.ROOT, 'gradlew', loadResource("gradlew/gradlew"), true)
 				files += file(Outlet.ROOT, 'gradlew.bat', loadResource("gradlew/gradlew.bat"))
@@ -68,6 +68,10 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 		config.javaVersion.qualifier	
 	}
 	
+	def String getTychoVersion() {
+		'1.7.0'
+	}
+	
 	def private CharSequence loadResource(String resourcePath) {
 		Resources.toString(class.classLoader.getResource(resourcePath), Charsets.ISO_8859_1)
 	}
@@ -77,20 +81,17 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 			additionalContent = '''
 				buildscript {
 					repositories {
-						jcenter()
+						mavenCentral()
 					}
 					dependencies {
 						classpath 'org.xtext:xtext-gradle-plugin:«config.xtextVersion.xtextGradlePluginVersion»'
-						«IF config.intellijProject.isEnabled»
-							classpath 'org.xtext:xtext-idea-gradle-plugin:«config.xtextVersion.xtextGradlePluginVersion»'
-						«ENDIF»
 					}
 				}
 				
 				subprojects {
 					ext.xtextVersion = '«config.xtextVersion»'
 					repositories {
-						jcenter()
+						mavenCentral()
 						«IF config.xtextVersion.isSnapshot»
 							maven {
 								url 'https://oss.sonatype.org/content/repositories/snapshots'
@@ -99,11 +100,13 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 					}
 					
 					apply plugin: 'java'
+					dependencies {
+						compile platform("org.eclipse.xtext:xtext-dev-bom:${xtextVersion}")
+					}
+
 					apply plugin: 'org.xtext.xtend'
 					apply from: "${rootDir}/gradle/source-layout.gradle"
-					apply from: "${rootDir}/gradle/maven-deployment.gradle"
 					apply plugin: 'eclipse'
-					apply plugin: 'idea'
 					
 					group = '«config.baseName»'
 					version = '1.0.0-SNAPSHOT'
@@ -154,7 +157,7 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 			}
 			
 			sourceSets.all {
-				resources.exclude '**/*.g', '**/*.xtext', '**/*.mwe2', '**/*.xtend', '**/*._trace'
+				resources.exclude '**/*.g', '**/*.mwe2', '**/*.xtend', '**/*._trace'
 			}
 		«ELSE»
 			sourceSets {
@@ -175,6 +178,11 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 			from('model') {
 				into('model')
 			}
+			«IF config.sourceLayout != SourceLayout.PLAIN»
+				from(sourceSets.main.allSource) {
+					include '**/*.xtext'
+				}
+			«ENDIF»
 			manifest {
 				attributes 'Bundle-SymbolicName': project.name
 			}
@@ -183,44 +191,51 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 		plugins.withId('war') {
 			webAppDirName = "«Outlet.WEBAPP.sourceFolder»"
 		}
-		
-		plugins.withId('org.xtext.idea-plugin') {
-			assembleSandbox.metaInf.from('«Outlet.META_INF.sourceFolder»')
-		}
 	'''
 	
-	def mavenDeploymentGradle() '''
-		//see https://docs.gradle.org/current/userguide/maven_plugin.html
-		apply plugin: 'maven'
-		
-		uploadArchives {
-			repositories {
-				mavenDeployer {
-					repository(url: "file://${buildDir}/localRepo")
-					snapshotRepository(url: "file://${buildDir}/localRepo")
-				}
-			}
-		}
-	'''
+	@Deprecated
+	def CharSequence mavenDeploymentGradle() {
+		throw new UnsupportedOperationException("Removed with 2.17")
+	}
 
 	override pom() {
 		super.pom => [
 			packaging = "pom"
 			buildSection = '''
 				<properties>
-					«IF config.needsTychoBuild»
-						<tycho-version>0.25.0</tycho-version>
-					«ENDIF»
 					<xtextVersion>«config.xtextVersion»</xtextVersion>
+					«IF config.needsTychoBuild»
+					<mwe2Version>«config.xtextVersion.mweVersion»</mwe2Version>
+					«ENDIF»
 					<project.build.sourceEncoding>«config.encoding»</project.build.sourceEncoding>
 					<maven.compiler.source>«javaVersion»</maven.compiler.source>
 					<maven.compiler.target>«javaVersion»</maven.compiler.target>
+					«IF config.needsTychoBuild»
+						<!-- Tycho settings -->
+						<tycho-version>«tychoVersion»</tycho-version>
+						<!-- Define overridable properties for tycho-surefire-plugin -->
+						<platformSystemProperties></platformSystemProperties>
+						<moduleProperties></moduleProperties>
+						<systemProperties></systemProperties>
+						<additionalTestArguments></additionalTestArguments>
+					«ENDIF»
 				</properties>
 				<modules>
 					«FOR p : config.enabledProjects.filter[it != this && partOfMavenBuild]»
 						<module>«IF config.projectLayout == ProjectLayout.FLAT»../«ENDIF»«p.name»</module>
 					«ENDFOR»
 				</modules>
+				<dependencyManagement>
+					<dependencies>
+						<dependency>
+							<groupId>org.eclipse.xtext</groupId>
+							<artifactId>xtext-dev-bom</artifactId>
+							<version>${xtextVersion}</version>
+							<type>pom</type>
+							<scope>import</scope>
+						</dependency>
+					</dependencies>
+				</dependencyManagement>
 				<build>
 					«IF config.needsTychoBuild»
 						<plugins>
@@ -302,6 +317,23 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 											<arch>x86_64</arch>
 										</environment>
 									</environments>
+									<dependency-resolution>
+										<extraRequirements>
+											<requirement>
+												<type>eclipse-plugin</type>
+												<id>org.eclipse.xtext.logging</id>
+												<versionRange>1.2.15</versionRange>
+											</requirement>
+											<!-- to get the org.eclipse.osgi.compatibility.state plugin if the target 
+												platform is Luna or later. (backward compatible with kepler and previous 
+												versions) see https://bugs.eclipse.org/bugs/show_bug.cgi?id=492149 -->
+											<requirement>
+												<type>eclipse-feature</type>
+												<id>org.eclipse.rcp</id>
+												<versionRange>0.0.0</versionRange>
+											</requirement>
+										</extraRequirements>
+									</dependency-resolution>
 								</configuration>
 							</plugin>
 						</plugins>
@@ -316,7 +348,9 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 									<execution>
 										<goals>
 											<goal>compile</goal>
+											<goal>xtend-install-debug-info</goal>
 											<goal>testCompile</goal>
+											<goal>xtend-test-install-debug-info</goal>
 										</goals>
 									</execution>
 								</executions>
@@ -328,20 +362,31 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 							<plugin>
 								<groupId>org.apache.maven.plugins</groupId>
 								<artifactId>maven-clean-plugin</artifactId>
-								<version>2.5</version>
+								<version>3.1.0</version>
 								<configuration>
 									<filesets>
-										<fileset>
-											«FOR dir : #[Outlet.MAIN_XTEND_GEN, Outlet.TEST_XTEND_GEN].toSet.map[sourceFolder]»
+										«FOR dir : #[Outlet.MAIN_XTEND_GEN, Outlet.TEST_XTEND_GEN].map[sourceFolder].toSet»
+											<fileset>
 												<directory>${basedir}/«dir»</directory>
 												<includes>
 													<include>**/*</include>
 												</includes>
-											«ENDFOR»
-										</fileset>
+											</fileset>
+										«ENDFOR»
 									</filesets>
 								</configuration>
 							</plugin>
+							«IF !config.needsTychoBuild»
+								<plugin>
+									<groupId>org.apache.maven.plugins</groupId>
+									<artifactId>maven-surefire-plugin</artifactId>
+									<version>2.22.1</version>
+									<configuration>
+										<!-- workaround for https://issues.apache.org/jira/browse/SUREFIRE-1588 -->
+										<useSystemClassLoader>false</useSystemClassLoader>
+									</configuration>
+								</plugin>
+							«ENDIF»
 							<plugin>
 								<groupId>org.eclipse.m2e</groupId>
 								<artifactId>lifecycle-mapping</artifactId>
@@ -349,26 +394,6 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 								<configuration>
 									<lifecycleMappingMetadata>
 										<pluginExecutions>
-											<pluginExecution>
-												<pluginExecutionFilter>
-													<groupId>
-														org.apache.maven.plugins
-													</groupId>
-													<artifactId>
-														maven-resources-plugin
-													</artifactId>
-													<versionRange>
-														[2.4.3,)
-													</versionRange>
-													<goals>
-														<goal>resources</goal>
-														<goal>testResources</goal>
-													</goals>
-												</pluginExecutionFilter>
-												<action>
-													<ignore></ignore>
-												</action>
-											</pluginExecution>
 											<pluginExecution>
 												<pluginExecutionFilter>
 													<groupId>
@@ -439,18 +464,34 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 								</configuration>
 							</plugin>
 							«IF config.needsTychoBuild»
-							<plugin>
-								<!-- 
-									Can be removed after first generator execution
-									https://bugs.eclipse.org/bugs/show_bug.cgi?id=480097
-								-->
-								<groupId>org.eclipse.tycho</groupId>
-								<artifactId>tycho-compiler-plugin</artifactId>
-								<version>${tycho-version}</version>
-								<configuration>
-									<compilerArgument>-err:-forbidden</compilerArgument>
-								</configuration>
-							</plugin>
+								<plugin>
+									<!-- 
+										Can be removed after first generator execution
+										https://bugs.eclipse.org/bugs/show_bug.cgi?id=480097
+									-->
+									<groupId>org.eclipse.tycho</groupId>
+									<artifactId>tycho-compiler-plugin</artifactId>
+									<version>${tycho-version}</version>
+									<configuration>
+										<compilerArgument>-err:-forbidden</compilerArgument>
+										<useProjectSettings>false</useProjectSettings>
+									</configuration>
+								</plugin>
+								<!-- to skip running (and compiling) tests use commandline flag: -Dmaven.test.skip
+									To skip tests, but still compile them, use: -DskipTests
+									To allow all tests in a pom to pass/fail, use commandline flag: -fae (fail
+									at end) -->
+								<plugin>
+									<groupId>org.eclipse.tycho</groupId>
+									<artifactId>tycho-surefire-plugin</artifactId>
+									<version>${tycho-version}</version>
+									<configuration>
+										<!-- THE FOLLOWING LINE MUST NOT BE BROKEN BY AUTOFORMATTING -->
+										<argLine>${platformSystemProperties} ${systemProperties} ${moduleProperties} ${additionalTestArguments}</argLine>
+										<failIfNoTests>false</failIfNoTests>
+										<useUIHarness>false</useUIHarness>
+									</configuration>
+								</plugin>
 							«ENDIF»
 						</plugins>
 					</pluginManagement>
@@ -496,7 +537,36 @@ class ParentProjectDescriptor extends ProjectDescriptor {
 							<snapshots><enabled>true</enabled></snapshots>
 						</pluginRepository>
 					«ENDIF»
+					«IF config.needsTychoBuild && tychoVersion.endsWith("-SNAPSHOT")»
+						<pluginRepository>
+							<id>tycho-snapshots</id>
+							<url>https://repo.eclipse.org/content/repositories/tycho-snapshots/</url>
+						</pluginRepository>
+					«ENDIF»
 				</pluginRepositories>
+				<profiles>
+					<profile>
+						<id>macos</id>
+						<activation>
+							<os>
+								<family>mac</family>
+							</os>
+						</activation>
+						<properties>
+							<!-- THE FOLLOWING LINE MUST NOT BE BROKEN BY AUTOFORMATTING -->
+							<platformSystemProperties>-XstartOnFirstThread</platformSystemProperties>
+						</properties>
+					</profile>
+					<profile>
+						<id>jdk9-or-newer</id>
+						<activation>
+							<jdk>[9,)</jdk>
+						</activation>
+						<properties>
+							<moduleProperties>--add-modules=ALL-SYSTEM</moduleProperties>
+						</properties>
+					</profile>
+				</profiles>
 			'''
 		]
 	}

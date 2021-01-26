@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.internal
 
@@ -127,6 +128,54 @@ class FormattableDocumentTest {
 			'''
 		]
 	}
+	
+	@Test def void autoWrapRewrite() {
+		assertFormatted[
+			preferences[
+				put(maxLineWidth, 10)
+			]
+			toBeFormatted = '''
+				kwlist  kw1  kw2
+			'''
+			formatter = [ KWList model, extension regions, extension document |
+				model.regionFor.keyword("kwlist").append [
+					autowrap;
+					onAutowrap = [ region, wrapped, extension doc |
+						model.regionFor.keyword("kw1").append[space = "!"]
+					]
+					model.regionFor.keyword("kw1").append[space = "@"; lowPriority]
+				]
+			]
+			expectation = '''
+				kwlist
+				kw1!kw2
+			'''
+		]
+	}
+	
+	@Test def void autoWrapInsert() {
+		assertFormatted[
+			preferences[
+				put(maxLineWidth, 10)
+			]
+			toBeFormatted = '''
+				kwlist  kw1  kw2
+			'''
+			formatter = [ KWList model, extension regions, extension document |
+				model.regionFor.keyword("kwlist").append [
+					autowrap;
+					onAutowrap = [ region, wrapped, extension doc |
+						model.regionFor.keyword("kw1").append[space = "!"]
+					]
+					model.regionFor.keyword("kw2").append[space = "@"+System.getProperty("line.separator")]
+				]
+			]
+			expectation = '''
+				kwlist
+				kw1!kw2@
+			'''
+		]
+	}
 
 	@Test def void conditionalFormatting1() {
 		assertFormatted[
@@ -227,4 +276,6 @@ class FormattableDocumentTest {
 			expectation = '''idlist'''
 		]
 	}
+	
+	
 }

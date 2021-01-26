@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.ecore
 
@@ -23,6 +24,7 @@ import java.util.List
 import java.util.Map
 import java.util.Properties
 import java.util.Set
+import org.apache.log4j.Logger
 import org.eclipse.emf.codegen.ecore.generator.Generator
 import org.eclipse.emf.codegen.ecore.genmodel.GenJDKLevel
 import org.eclipse.emf.codegen.ecore.genmodel.GenModel
@@ -64,7 +66,6 @@ import org.eclipse.xtext.Grammar
 import org.eclipse.xtext.resource.XtextResourceSet
 import org.eclipse.xtext.util.StringInputStream
 import org.eclipse.xtext.util.Strings
-import org.eclipse.xtext.util.internal.Log
 import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 import org.eclipse.xtext.xtext.generator.CodeConfig
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess
@@ -75,8 +76,9 @@ import static org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
 
-@Log
 class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
+	
+	static val Logger LOG = Logger.getLogger(EMFGeneratorFragment2)
 	
 	@Inject CodeConfig codeConfig
 	
@@ -170,13 +172,16 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 	@Accessors(PUBLIC_SETTER)
 	boolean suppressLoadInitialization = false
 
-	GenRuntimeVersion emfRuntimeVersion
-	GenJDKLevel jdkLevel = GenJDKLevel.JDK60_LITERAL
+	/* Default to 2.20 if available, otherwise #get will return null */
+	GenRuntimeVersion emfRuntimeVersion = GenRuntimeVersion.get(GenRuntimeVersion.EMF220_VALUE)
+	GenJDKLevel jdkLevel = GenJDKLevel.JDK80_LITERAL
+	String rootExtendsClass = 'org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container'
 	
 	/**
 	 * Sets the target EMF runtime version to generate for to the specified value.
+	 * Defaults to 2.20.
 	 */
-	public def void setEmfRuntimeVersion(String emfRuntimeVersion) {
+	def void setEmfRuntimeVersion(String emfRuntimeVersion) {
 		this.emfRuntimeVersion = GenRuntimeVersion.get(emfRuntimeVersion)
 		if (this.emfRuntimeVersion === null)
 			LOG.warn('Illegal EMF runtime version: ' + emfRuntimeVersion)
@@ -191,12 +196,22 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 	 *   <li>"JDK70"</li>
 	 *   <li>"JDK80"</li>
 	 * </ul>
-	 * The default level is "JDK60".
+	 * The default level is "JDK80".
 	 */
-	public def void setJdkLevel(String jdkLevel) {
+	def void setJdkLevel(String jdkLevel) {
 		this.jdkLevel = GenJDKLevel.getByName(jdkLevel)
 		if (this.jdkLevel === null)
 			LOG.warn('Illegal JDK level: ' + jdkLevel)
+	}
+	
+	/**
+	 * Sets the BaseClass for the EClasses in the inferred GenModel.
+	 * Default value is {@link org.eclipse.emf.ecore.impl.MinimalEObjectImpl.Container}.
+	 * 
+	 * @since 2.16
+	 */
+	def void setRootExtendsClass(String rootExtendsClass) {
+		this.rootExtendsClass = rootExtendsClass
 	}
 	
 	boolean bindEPackageAndEFactory = false
@@ -205,7 +220,7 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 	 * If set generated {@link EPackage} and {@link EFactory} interfaces are bound to their <code>eINSTANCE</code> instance.
 	 * @since 2.11
 	 */
-	public def void setBindEPackageAndEFactory (boolean bindEPackageAndEFactory) {
+	def void setBindEPackageAndEFactory (boolean bindEPackageAndEFactory) {
 		this.bindEPackageAndEFactory = bindEPackageAndEFactory
 	}
 	
@@ -362,7 +377,7 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			projectConfig.runtime.pluginXml.entries += '''
 				<extension point="org.eclipse.emf.ecore.generated_package">
 					«FOR pack : generatedPackages»
-						<package 
+						<package
 							uri = "«pack.nsURI»"
 							class = "«pack.getGenPackage(rs).qualifiedPackageInterfaceName»"
 							genModel = "«grammar.genModelPath.relativePath»" />
@@ -539,8 +554,10 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		new GenModelHelper().registerGenModel(genModel)
 		return genModel
 	}
-	
-	private def void reconcileMissingGenPackagesInUsedModels(List<GenPackage> usedGenPackages) {
+	/**
+	 * @since 2.14
+	 */
+	protected def void reconcileMissingGenPackagesInUsedModels(List<GenPackage> usedGenPackages) {
 		val processedModels = Sets.newHashSetWithExpectedSize(usedGenPackages.size)
 		for (usedGenPackage : usedGenPackages) {
 			val genModel = usedGenPackage.genModel
@@ -598,7 +615,7 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			genModel.updateClasspath = false
 			genModel.complianceLevel = jdkLevel
 			genModel.runtimeVersion = emfRuntimeVersion
-			genModel.rootExtendsClass = 'org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container'
+			genModel.rootExtendsClass = rootExtendsClass
 			genModel.lineDelimiter = codeConfig.lineDelimiter
 			if (codeConfig.fileHeader !== null) {
 				genModel.copyrightText = codeConfig.fileHeader.trimMultiLineComment
@@ -608,8 +625,8 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		return genModel
 	}
 	
-	def static String trimMultiLineComment(String string) {
-		return string.replace('*/','').replace('/*','').replace(' * ','').trim
+	def String trimMultiLineComment(String string) {
+		return string.replace(' * ','').replaceAll("/\\*+\\s*|\\s*\\*+/", "").replaceAll('(?m)^ \\*$','').trim
 	}
 	
 	protected def Set<EPackage> getReferencedEPackages(List<EPackage> packs) {
@@ -649,8 +666,10 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		])
 		return result
 	}
-
-	private def void saveResource(Resource resource) {
+	/**
+	 * @since 2.14
+	 */
+	protected def void saveResource(Resource resource) {
 		val saveOptions = newHashMap
 		saveOptions.put(XMLResource.OPTION_URI_HANDLER, new URIHandlerImpl.AbsoluteCrossBundleAware {
 			override deresolve(URI uri) {
@@ -704,13 +723,18 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 	private def void updateBuildProperties() {
 		if (!updateBuildProperties || modelPluginID !== null || projectConfig.runtime.manifest === null)
 			return;
-		val rootOutlet = projectConfig.runtime.root
-		val buildPropertiesPath = rootOutlet.path + '/build.properties'
-		val modelContainer = projectConfig.runtime.ecoreModelFolder
-		val buildProperties = new Properties
-		val reader = new InputStreamReader(new FileInputStream(new File(buildPropertiesPath)), Charset.forName(codeConfig.encoding))
-		try {
-			var existingContent = CharStreams.toString(reader)
+		val buildPropertiesPath = projectConfig.runtime.root.path + '/build.properties'
+		val buildPropertiesFile = new File(buildPropertiesPath)
+		if (buildPropertiesFile.exists) {
+			val modelContainer = projectConfig.runtime.ecoreModelFolder
+			val buildProperties = new Properties
+			val charset = Charset.forName(codeConfig.encoding)
+			val reader = new InputStreamReader(new FileInputStream(buildPropertiesFile), charset)
+			var existingContent = try {
+				CharStreams.toString(reader)
+			} finally {
+				reader.close()
+			}
 			buildProperties.load(new StringInputStream(existingContent, 'ISO-8859-1'))
 			val binIncludes = buildProperties.getProperty('bin.includes')
 			var changed = false
@@ -723,12 +747,13 @@ class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 				changed = true
 			}
 			if (changed) {
-				val writer = new OutputStreamWriter(new FileOutputStream(new File(buildPropertiesPath)), Charset.forName(codeConfig.encoding))
-				writer.write(existingContent)
-				writer.close()
+				val writer = new OutputStreamWriter(new FileOutputStream(buildPropertiesFile), charset)
+				try {
+					writer.write(existingContent)
+				} finally {
+					writer.close()
+				}
 			}
-		} finally {
-			reader.close()
 		}
 	}
 

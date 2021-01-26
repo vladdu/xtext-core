@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource.containers;
 
@@ -19,10 +20,10 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 /**
- * This class ensures that every IResourceDescription from a local IResourceDescrions that is not known to the global
+ * This class ensures that every IResourceDescription from a local IResourceDescriptions that is not known to the global
  * IAllContainerState gets a proper container.
  * 
- * This is usually necessary when an IResourceDescrion has no (not yet a) file in the file system.
+ * This is usually necessary when an IResourceDescription has no (not yet a) file in the file system.
  * 
  * @author Moritz Eysholdt - Initial contribution and API
  * @since 2.6
@@ -30,8 +31,8 @@ import com.google.inject.Inject;
 public class LiveShadowedAllContainerState implements IAllContainersState {
 
 	public static class Provider {
-		// we're not implementing IAllContainerState.Provider here because its get() expects a global instance of IResourceDescrions. 
-		// Here, we expect one that only holds an IResourceDescrion for every resource from a ResourceSet.  
+		// we're not implementing IAllContainerState.Provider here because its get() expects a global instance of IResourceDescriptions. 
+		// Here, we expect one that only holds an IResourceDescription for every resource from a ResourceSet.  
 
 		@Inject
 		private com.google.inject.Provider<LiveShadowedAllContainerState> provider;
@@ -58,6 +59,17 @@ public class LiveShadowedAllContainerState implements IAllContainersState {
 		}
 		result.addAll(globalState.getContainedURIs(containerHandle));
 		return result;
+	}
+	
+	@Override
+	public boolean containsURI(String containerHandle, URI candidateURI) {
+		if(localDescriptions.getResourceDescription(candidateURI) != null) {
+			String computedHandle = getContainerHandle(candidateURI);
+			if (computedHandle != null && computedHandle.equals(containerHandle)) {
+				return true;
+			}
+		}
+		return globalState.containsURI(containerHandle, candidateURI);
 	}
 
 	@Override

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2011, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator;
 
@@ -23,6 +24,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.xtext.generator.trace.AbstractTraceRegion;
 import org.eclipse.xtext.generator.trace.ITraceRegionProvider;
 import org.eclipse.xtext.generator.trace.TraceFileNameProvider;
+import org.eclipse.xtext.generator.trace.TraceNotFoundException;
 import org.eclipse.xtext.generator.trace.TraceRegionSerializer;
 import org.eclipse.xtext.parser.IEncodingProvider;
 import org.eclipse.xtext.resource.IResourceServiceProvider;
@@ -121,16 +123,21 @@ public class JavaIoFileSystemAccess extends AbstractFileSystemAccess2 {
 	protected void generateTrace(String generatedFile, String outputConfigName, CharSequence contents) {
 		try {
 			if (contents instanceof ITraceRegionProvider) {
-				String traceFileName = traceFileNameProvider.getTraceFromJava(generatedFile);
-				File traceFile = getFile(traceFileName, outputConfigName);
-				OutputStream out = new BufferedOutputStream(new FileOutputStream(traceFile));
+				OutputStream out = null;
 				try {
 					AbstractTraceRegion traceRegion = ((ITraceRegionProvider) contents).getTraceRegion();
+					String traceFileName = traceFileNameProvider.getTraceFromJava(generatedFile);
+					File traceFile = getFile(traceFileName, outputConfigName);
+					out = new BufferedOutputStream(new FileOutputStream(traceFile));
 					traceSerializer.writeTraceRegionTo(traceRegion, out);
 					if(callBack != null) 
 						callBack.fileAdded(traceFile);
-				} finally {
-					out.close();
+				} catch (TraceNotFoundException e) {
+					// ok
+				}finally {
+					if (out != null) {
+						out.close();
+					}
 				}
 			}
 		} catch (FileNotFoundException e) {

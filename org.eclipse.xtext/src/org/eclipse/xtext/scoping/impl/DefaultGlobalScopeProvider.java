@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.scoping.impl;
 
@@ -69,7 +70,7 @@ public class DefaultGlobalScopeProvider extends AbstractGlobalScopeProvider {
 		List<IContainer> result = null;
 		result = cache.get(cacheKey);
 		if (result == null) {
-			result = containerManager.getVisibleContainers(description,	resourceDescriptions);
+			result = containerManager.getVisibleContainers(description, resourceDescriptions);
 			// SZ: I'ld like this dependency to be moved to the implementation of the
 			// container manager, but it is not aware of a CacheAdapter
 			if (resourceDescriptions instanceof IResourceDescription.Event.Source) {

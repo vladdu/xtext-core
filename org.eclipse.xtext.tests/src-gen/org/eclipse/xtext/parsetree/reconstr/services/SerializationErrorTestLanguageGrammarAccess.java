@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class SerializationErrorTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class SerializationErrorTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.reconstr.SerializationErrorTestLanguage.Model");
@@ -150,7 +150,7 @@ public class SerializationErrorTestLanguageGrammarAccess extends AbstractGrammar
 		//"twooptions"
 		public Keyword getTwooptionsKeyword_0() { return cTwooptionsKeyword_0; }
 		
-		//"one" one=ID | "two" two=ID
+		//("one" one=ID | "two" two=ID)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//"one" one=ID
@@ -189,7 +189,8 @@ public class SerializationErrorTestLanguageGrammarAccess extends AbstractGrammar
 		private final RuleCall cIndentIndentParserRuleCall_3_0 = (RuleCall)cIndentAssignment_3.eContents().get(0);
 		private final Keyword cRightCurlyBracketKeyword_4 = (Keyword)cGroup.eContents().get(4);
 		
-		///* SuppressWarnings[noInstantiation] */ Indent:
+		///* SuppressWarnings[noInstantiation] */
+		//Indent:
 		//	"{" req=TwoRequired? opt=TwoOptions? indent+=Indent* "}";
 		@Override public ParserRule getRule() { return rule; }
 		
@@ -323,7 +324,8 @@ public class SerializationErrorTestLanguageGrammarAccess extends AbstractGrammar
 		return getTwoOptionsAccess().getRule();
 	}
 	
-	///* SuppressWarnings[noInstantiation] */ Indent:
+	///* SuppressWarnings[noInstantiation] */
+	//Indent:
 	//	"{" req=TwoRequired? opt=TwoOptions? indent+=Indent* "}";
 	public IndentElements getIndentAccess() {
 		return pIndent;

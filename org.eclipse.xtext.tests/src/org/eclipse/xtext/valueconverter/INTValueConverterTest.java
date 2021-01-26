@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.valueconverter;
 
@@ -32,14 +33,14 @@ public class INTValueConverterTest extends AbstractXtextTests {
 	@Test public void testSimple() throws Exception {
 		String s = "42";
 		Integer value = valueConverter.toValue(s, null);
-		assertEquals(new Integer(42), value);
+		assertEquals(Integer.valueOf(42), value);
 		assertEquals(s, valueConverter.toString(value));
 	}
 
 	@Test public void testZero() throws Exception {
 		String s = "0";
 		Integer value = valueConverter.toValue(s, null);
-		assertEquals(new Integer(0), value);
+		assertEquals(Integer.valueOf(0), value);
 		assertEquals(s, valueConverter.toString(value));
 	}
 

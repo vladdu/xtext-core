@@ -1,15 +1,17 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.wizard
 
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class PomFile extends TextFile {
+	
 	@Accessors String packaging = "jar"
 	@Accessors String buildSection = ""
 	@Accessors String profileSection = ""
@@ -41,28 +43,30 @@ class PomFile extends TextFile {
 			«buildSection»
 		
 			«IF !project.isEclipsePluginProject»
-			<dependencies>
-				«FOR p: project.upstreamProjects»
-					<dependency>
-						<groupId>${project.groupId}</groupId>
-						<artifactId>«p.name»</artifactId>
-						<version>${project.version}</version>
-					</dependency>
-				«ENDFOR»
-				«FOR dep : project.externalDependencies.map[maven].filter[artifactId !== null]»
-					<dependency>
-						<groupId>«dep.groupId»</groupId>
-						<artifactId>«dep.artifactId»</artifactId>
-						<version>«dep.version»</version>
-						«IF dep.scope != Scope.COMPILE»
-							<scope>«dep.scope.mavenNotation»</scope>
-						«ENDIF»
-						«IF dep.optional»
-							<optional>true</optional>
-						«ENDIF»
-					</dependency>
-				«ENDFOR»
-			</dependencies>
+				<dependencies>
+					«FOR p: project.upstreamProjects»
+						<dependency>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>«p.name»</artifactId>
+							<version>${project.version}</version>
+						</dependency>
+					«ENDFOR»
+					«FOR dep : project.externalDependencies.map[maven].filter[artifactId !== null]»
+						<dependency>
+							<groupId>«dep.groupId»</groupId>
+							<artifactId>«dep.artifactId»</artifactId>
+							«IF dep.version !== null»
+								<version>«dep.version»</version>
+							«ENDIF»
+							«IF dep.scope != Scope.COMPILE»
+								<scope>«dep.scope.mavenNotation»</scope>
+							«ENDIF»
+							«IF dep.optional»
+								<optional>true</optional>
+							«ENDIF»
+						</dependency>
+					«ENDFOR»
+				</dependencies>
 			«ENDIF»
 			«profileSection»
 		</project>

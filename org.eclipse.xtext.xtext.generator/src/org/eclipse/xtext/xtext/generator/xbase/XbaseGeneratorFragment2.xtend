@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.xbase
 
 import com.google.inject.Inject
+import com.google.inject.name.Names
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend2.lib.StringConcatenationClient
 import org.eclipse.xtext.GrammarUtil
@@ -15,6 +17,7 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider
 import org.eclipse.xtext.resource.ILocationInFileProvider
 import org.eclipse.xtext.scoping.IGlobalScopeProvider
 import org.eclipse.xtext.validation.IResourceValidator
+import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess
@@ -22,7 +25,6 @@ import org.eclipse.xtext.xtext.generator.model.TypeReference
 
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 import static extension org.eclipse.xtext.xtext.generator.util.GenModelUtil2.*
-import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 
 class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 
@@ -55,6 +57,10 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		if (!grammar.inheritsXbase)
 			return;
 		
+		if (!grammar.eclipsePluginEditor.equals(grammar.eclipsePluginXbaseEditor)) {
+			contributeEditorStub()
+		}
+		
 		contributeRuntimeGuiceBindings()
 		contributeEclipsePluginGuiceBindings()
 		if (projectConfig.eclipsePlugin.pluginXml !== null)
@@ -64,7 +70,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		
 		if (projectConfig.runtime.manifest !== null) {
 			projectConfig.runtime.manifest.requiredBundles.addAll(#[
-				'org.eclipse.xtext.xbase', 'org.eclipse.xtext.xbase.lib'
+				'org.eclipse.xtext.xbase', 'org.eclipse.xtext.xbase.lib;bundle-version="'+projectConfig.runtime.xbaseLibVersionLowerBound+'"'
 			])
 			if ((generateXtendInferrer || useInferredJvmModel) && !skipExportedPackage) {
 				projectConfig.runtime.manifest.exportedPackages += jvmModelInferrer.packageName
@@ -80,11 +86,38 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		language.webGenModule.superClass = 'org.eclipse.xtext.xbase.web.DefaultXbaseWebModule'.typeRef
 	}
 	
+	protected def contributeEditorStub() {
+		if (projectConfig.eclipsePlugin?.srcGen !== null) {
+			val file = fileAccessFactory.createGeneratedJavaFile(grammar.eclipsePluginEditor)
+			
+			file.content = '''
+				/**
+				 * This class was generated. Customizations should only happen in a newly
+				 * introduced subclass.
+				 */
+				public class «grammar.eclipsePluginEditor.simpleName» extends «grammar.eclipsePluginXbaseEditor» {
+				}
+			'''
+			file.writeTo(projectConfig.eclipsePlugin.srcGen)
+		}
+
+		if (projectConfig.eclipsePlugin.manifest !== null) {
+			projectConfig.eclipsePlugin.manifest.exportedPackages += grammar.eclipsePluginEditor.packageName
+		}
+	}
+	
 	protected def contributeRuntimeGuiceBindings() {
 		val bindingFactory = new GuiceModuleAccess.BindingFactory()
 				// overrides binding from org.eclipse.xtext.generator.exporting.QualifiedNamesFragment
 				.addTypeToType(IQualifiedNameProvider.typeRef,
 						'org.eclipse.xtext.xbase.scoping.XbaseQualifiedNameProvider'.typeRef)
+		if (!grammar.usesXImportSection) {
+			bindingFactory.addConfiguredBinding("RewritableImportSectionEnablement", '''
+					binder.bind(«Boolean».TYPE)
+						.annotatedWith(«Names».named(«new TypeReference('org.eclipse.xtext.xbase.imports','RewritableImportSection.Factory')».REWRITABLEIMPORTSECTION_ENABLEMENT))
+						.toInstance(«Boolean».FALSE);
+				''')
+		}
 		if (useInferredJvmModel) {
 			bindingFactory
 				.addTypeToType(ILocationInFileProvider.typeRef,
@@ -97,7 +130,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 						'org.eclipse.xtext.xbase.typesystem.internal.LogicalContainerAwareBatchTypeResolver'.typeRef)
 				.addTypeToType('org.eclipse.xtext.xbase.typesystem.internal.DefaultReentrantTypeResolver'.typeRef,
 						'org.eclipse.xtext.xbase.typesystem.internal.LogicalContainerAwareReentrantTypeResolver'.typeRef)
-				.addTypeToType(IResourceValidator.typeRef, 
+				.addTypeToType(IResourceValidator.typeRef,
 						'org.eclipse.xtext.xbase.annotations.validation.DerivedStateAwareResourceValidator'.typeRef)
 			if (generateXtendInferrer) {
 				bindingFactory
@@ -128,16 +161,16 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			'''
 			// Rename refactoring
 			bindingFactory
-				.addTypeToType('org.eclipse.xtext.ui.editor.findrefs.FindReferencesHandler'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.editor.findrefs.FindReferencesHandler'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.findrefs.JvmModelFindReferenceHandler'.typeRef)
-				.addTypeToType('org.eclipse.xtext.ui.editor.findrefs.ReferenceQueryExecutor'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.editor.findrefs.ReferenceQueryExecutor'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.findrefs.JvmModelReferenceQueryExecutor'.typeRef)
-						
+				
 				// overrides binding from org.eclipse.xtext.generator.exporting.QualifiedNamesFragment
 				.addTypeToType('org.eclipse.xtext.ui.refactoring.IDependentElementsCalculator'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.refactoring.JvmModelDependentElementsCalculator'.typeRef)
 				// overrides binding from RefactorElementNameFragment
-				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameRefactoringProvider'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameRefactoringProvider'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.refactoring.jdt.CombinedJvmJdtRenameRefactoringProvider'.typeRef)
 				// overrides binding from RefactorElementNameFragment
 				.addTypeToType('org.eclipse.xtext.ui.refactoring.IReferenceUpdater'.typeRef,
@@ -146,22 +179,22 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 				.addfinalTypeToType('org.eclipse.xtext.ui.refactoring.ui.IRenameContextFactory'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.refactoring.jdt.CombinedJvmJdtRenameContextFactory'.typeRef)
 				// overrides binding from RefactorElementNameFragment
-				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameStrategy'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameStrategy'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.refactoring.DefaultJvmModelRenameStrategy'.typeRef)
 				
 				.addTypeToType(new TypeReference('org.eclipse.xtext.common.types.ui.refactoring.participant', 'JdtRenameParticipant.ContextFactory'),
 						new TypeReference ('org.eclipse.xtext.xbase.ui.jvmmodel.refactoring', 'JvmModelJdtRenameParticipantContext.ContextFactory'))
-				.addTypeToType('org.eclipse.xtext.ui.editor.outline.impl.OutlineNodeElementOpener'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.editor.outline.impl.OutlineNodeElementOpener'.typeRef,
 						'org.eclipse.xtext.xbase.ui.jvmmodel.outline.JvmOutlineNodeElementOpener'.typeRef)
-				.addTypeToType('org.eclipse.xtext.ui.editor.GlobalURIEditorOpener'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.editor.GlobalURIEditorOpener'.typeRef,
 						'org.eclipse.xtext.common.types.ui.navigation.GlobalDerivedMemberAwareURIEditorOpener'.typeRef)
-				.addTypeToType('org.eclipse.xtext.common.types.ui.query.IJavaSearchParticipation'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.common.types.ui.query.IJavaSearchParticipation'.typeRef,
 						new TypeReference('org.eclipse.xtext.common.types.ui.query', 'IJavaSearchParticipation.No'))
 				// DerivedMemberAwareEditorOpener
 				.addConfiguredBinding('LanguageSpecificURIEditorOpener', statement)
 		} else {
 			bindingFactory
-				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameStrategy'.typeRef, 
+				.addTypeToType('org.eclipse.xtext.ui.refactoring.IRenameStrategy'.typeRef,
 						'org.eclipse.xtext.xbase.ui.refactoring.XbaseRenameStrategy'.typeRef)
 		}
 		if (language.grammar.usesXImportSection) {
@@ -177,6 +210,8 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 				.addTypeToType('org.eclipse.xtext.xbase.ui.quickfix.JavaTypeQuickfixes'.typeRef,
 						'org.eclipse.xtext.xbase.ui.quickfix.JavaTypeQuickfixesNoImportSection'.typeRef)
 		}
+		bindingFactory.addTypeToType(grammar.eclipsePluginDefaultEditor, grammar.eclipsePluginEditor)
+		
 		bindingFactory.contributeTo(language.eclipsePluginGenModule)
 		
 		if (language.grammar.inheritsXbaseWithAnnotations)
@@ -189,10 +224,10 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		val firstRuleType = language.grammar.rules.head.type.classifier.getJavaTypeName(language.grammar.eResource.resourceSet).typeRef
 		fileAccessFactory.createXtendFile(jvmModelInferrer, '''
 			/**
-			 * <p>Infers a JVM model from the source model.</p> 
+			 * <p>Infers a JVM model from the source model.</p>
 			 *
-			 * <p>The JVM model should contain all elements that would appear in the Java code 
-			 * which is generated from the source model. Other models link against the JVM model rather than the source model.</p>     
+			 * <p>The JVM model should contain all elements that would appear in the Java code
+			 * which is generated from the source model. Other models link against the JVM model rather than the source model.</p>
 			 */
 			class «jvmModelInferrer.simpleName» extends «'org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer'.typeRef» {
 			
@@ -204,7 +239,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 				/**
 				 * The dispatch method {@code infer} is called for each instance of the
 				 * given element's type that is contained in a resource.
-				 * 
+				 *
 				 * @param element
 				 *            the model to create one or more
 				 *            {@link org.eclipse.xtext.common.types.JvmDeclaredType declared
@@ -228,10 +263,10 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 					// Here you explain how your model is mapped to Java elements, by writing the actual translation code.
 					
 					// An implementation for the initial hello world example could look like this:
-			// 		acceptor.accept(element.toClass("my.company.greeting.MyGreetings")) [
-			// 			for (greeting : element.greetings) {
-			// 				members += greeting.toMethod("hello" + greeting.name, typeRef(String)) [
-			// 					body = «"'''"»
+			//		acceptor.accept(element.toClass("my.company.greeting.MyGreetings")) [
+			//			for (greeting : element.greetings) {
+			//				members += greeting.toMethod("hello" + greeting.name, typeRef(String)) [
+			//					body = «"'''"»
 			//						return "Hello «'«'»greeting.name«'»'»";
 			//					«"'''"»
 			//				]
@@ -248,7 +283,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			projectConfig.eclipsePlugin.pluginXml.entries += '''
 				<!-- Type Hierarchy  -->
 				<extension point="org.eclipse.ui.handlers">
-					<handler 
+					<handler
 						class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.xbase.ui.hierarchy.OpenTypeHierarchyHandler"
 						commandId="org.eclipse.xtext.xbase.ui.hierarchy.OpenTypeHierarchy">
 						<activeWhen>
@@ -257,7 +292,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 							</reference>
 						</activeWhen>
 					</handler>
-					<handler 
+					<handler
 						class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.xbase.ui.hierarchy.QuickTypeHierarchyHandler"
 						commandId="org.eclipse.jdt.ui.edit.text.java.open.hierarchy">
 						<activeWhen>
@@ -282,10 +317,10 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 					«IF language.grammar.usesXImportSection»
 						<menuContribution
 							locationURI="popup:#TextEditorContext?after=group.edit">
-							 <command
-								 commandId="org.eclipse.xtext.xbase.ui.organizeImports"
-								 style="push"
-								 tooltip="Organize Imports">
+							<command
+								commandId="org.eclipse.xtext.xbase.ui.organizeImports"
+								style="push"
+								tooltip="Organize Imports">
 								<visibleWhen checkEnabled="false">
 									<reference
 										definitionId="«name».Editor.opened">
@@ -321,7 +356,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			projectConfig.eclipsePlugin.pluginXml.entries += '''
 				<!-- Call Hierachy -->
 				<extension point="org.eclipse.ui.handlers">
-					<handler 
+					<handler
 						class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.xbase.ui.hierarchy.OpenCallHierachyHandler"
 						commandId="org.eclipse.xtext.xbase.ui.hierarchy.OpenCallHierarchy">
 						<activeWhen>
@@ -348,16 +383,16 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 		projectConfig.eclipsePlugin.pluginXml.entries += '''
 			<extension point="org.eclipse.core.runtime.adapters">
 				<factory class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.builder.smap.StratumBreakpointAdapterFactory"
-					adaptableType="org.eclipse.xtext.ui.editor.XtextEditor">
+					adaptableType="«grammar.eclipsePluginEditor.name»">
 					<adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
-				</factory> 
+				</factory>
 			</extension>
 			<extension point="org.eclipse.ui.editorActions">
-				<editorContribution targetID="«name»" 
+				<editorContribution targetID="«name»"
 					id="«name».rulerActions">
 					<action
 						label="Not Used"
-			 			class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+						class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
 						style="push"
 						actionID="RulerDoubleClick"
 						id="«name».doubleClickBreakpointAction"/>
@@ -390,7 +425,7 @@ class XbaseGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 			</extension>
 			<!-- Introduce Local Variable Refactoring -->
 			<extension point="org.eclipse.ui.handlers">
-				<handler 
+				<handler
 					class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.xbase.ui.refactoring.ExtractVariableHandler"
 					commandId="org.eclipse.xtext.xbase.ui.refactoring.ExtractLocalVariable">
 					<activeWhen>

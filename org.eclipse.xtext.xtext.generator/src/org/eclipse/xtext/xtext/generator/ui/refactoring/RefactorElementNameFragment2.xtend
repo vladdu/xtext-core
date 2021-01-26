@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.ui.refactoring
 
@@ -19,6 +20,7 @@ import org.eclipse.xtext.xtext.generator.xbase.XbaseUsageDetector
 
 import static extension org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
+import org.eclipse.xtext.xtext.generator.Issues
 
 /**
  * Contributes the registration of element renaming infrastructure.
@@ -34,6 +36,8 @@ class RefactorElementNameFragment2 extends AbstractXtextGeneratorFragment {
 	extension XbaseUsageDetector
 
 	val useJdtRefactoring = new BooleanGeneratorOption
+	
+	val useChangeSerializer = new BooleanGeneratorOption
 
 	protected def isUseJdtRefactoring(Grammar grammar) {
 		if (useJdtRefactoring.isSet)
@@ -46,30 +50,69 @@ class RefactorElementNameFragment2 extends AbstractXtextGeneratorFragment {
 		this.useJdtRefactoring.set(useJdtRefactoring)
 	}
 
+	protected def isUseChangeSerializer(Grammar grammer) {
+		if (useChangeSerializer.isSet)
+			useChangeSerializer.get
+		else 
+			false
+	}
+
+	/**
+	 * Use the newer rename infrastructure based on the change serializer also in Eclipse.
+	 * This is only applicable for non-Xbase languages. 
+	 */
+	def void setUseChangeSerializer(boolean useChangeSerializer) {
+		this.useChangeSerializer.set(useChangeSerializer)		
+	}
+	
+	override checkConfiguration(Issues issues) {
+		super.checkConfiguration(issues)
+		if(useJdtRefactoring.isSet && useChangeSerializer.isSet)
+			issues.addError("IChangeSerializer-based refactoring doesn't work with JDT")
+	}
+
 	override generate() {
 		if (projectConfig.eclipsePlugin?.manifest !== null) {
 			projectConfig.eclipsePlugin.manifest.requiredBundles += "org.eclipse.xtext.ui"
 		}
 
-		val bindings = new GuiceModuleAccess.BindingFactory()
-			.addTypeToType(
-					"org.eclipse.xtext.ui.refactoring.IRenameStrategy".typeRef, 
-					"org.eclipse.xtext.ui.refactoring.impl.DefaultRenameStrategy".typeRef)
-					
-			.addTypeToType(
-					"org.eclipse.xtext.ui.refactoring.IReferenceUpdater".typeRef, 
-					"org.eclipse.xtext.ui.refactoring.impl.DefaultReferenceUpdater".typeRef)
-					
+		val uiBindings = new GuiceModuleAccess.BindingFactory()
+		uiBindings				
 			.addConfiguredBinding(
-					"org.eclipse.xtext.ui.editor.preferences.IPreferenceStoreInitializer".typeRef.simpleNames.join("."),
-					'''
-						binder.bind(«"org.eclipse.xtext.ui.editor.preferences.IPreferenceStoreInitializer".typeRef».class)
-							.annotatedWith(«Names».named("RefactoringPreferences"))
-							.to(«new TypeReference("org.eclipse.xtext.ui.refactoring.ui", "RefactoringPreferences.Initializer")».class);
-					''')
+						"org.eclipse.xtext.ui.editor.preferences.IPreferenceStoreInitializer".typeRef.simpleNames.join("."),
+						'''
+							binder.bind(«"org.eclipse.xtext.ui.editor.preferences.IPreferenceStoreInitializer".typeRef».class)
+								.annotatedWith(«Names».named("RefactoringPreferences"))
+								.to(«new TypeReference("org.eclipse.xtext.ui.refactoring.ui", "RefactoringPreferences.Initializer")».class);
+						''')
+		
+		if (isUseChangeSerializer(grammar)) {
+			uiBindings
+				.addTypeToType(
+						"org.eclipse.xtext.ide.refactoring.IRenameStrategy2".typeRef, 
+						new TypeReference("org.eclipse.xtext.ide.refactoring", "IRenameStrategy2.DefaultImpl"))
+
+				.addTypeToType(
+						"org.eclipse.xtext.ui.refactoring.impl.AbstractRenameProcessor".typeRef, 
+						"org.eclipse.xtext.ui.refactoring2.rename.RenameElementProcessor2".typeRef)
+						
+				.addTypeToType(
+						"org.eclipse.xtext.ui.refactoring.ILinkedPositionGroupCalculator".typeRef, 
+						"org.eclipse.xtext.ui.refactoring2.rename.DefaultLinkedPositionGroupCalculator2".typeRef)
+						
+		} else {
+			uiBindings
+				.addTypeToType(
+						"org.eclipse.xtext.ui.refactoring.IRenameStrategy".typeRef, 
+						"org.eclipse.xtext.ui.refactoring.impl.DefaultRenameStrategy".typeRef)
+						
+				.addTypeToType(
+						"org.eclipse.xtext.ui.refactoring.IReferenceUpdater".typeRef, 
+						"org.eclipse.xtext.ui.refactoring.impl.DefaultReferenceUpdater".typeRef)
+		}
 				
 		if (grammar.useJdtRefactoring) {
-			bindings
+			uiBindings
 				.addTypeToType(
 						"org.eclipse.xtext.ui.refactoring.ui.IRenameContextFactory".typeRef,
 						"org.eclipse.xtext.common.types.ui.refactoring.JdtRefactoringContextFactory".typeRef)
@@ -96,7 +139,7 @@ class RefactorElementNameFragment2 extends AbstractXtextGeneratorFragment {
 								».class);
 						''')
 		} else {
-			bindings
+			uiBindings
 				.addTypeToType(
 						"org.eclipse.xtext.ui.refactoring.IRenameRefactoringProvider".typeRef,
 						"org.eclipse.xtext.ui.refactoring.impl.DefaultRenameRefactoringProvider".typeRef)
@@ -106,13 +149,13 @@ class RefactorElementNameFragment2 extends AbstractXtextGeneratorFragment {
 						new TypeReference("org.eclipse.xtext.ui.refactoring.ui", "DefaultRenameSupport.Factory"))
 		}
 
-		bindings.contributeTo(language.eclipsePluginGenModule);
+		uiBindings.contributeTo(language.eclipsePluginGenModule);
 		
 		if (projectConfig.eclipsePlugin?.pluginXml !== null) {
 			projectConfig.eclipsePlugin.pluginXml.entries += '''
 				<!-- Rename Refactoring -->
 				<extension point="org.eclipse.ui.handlers">
-					<handler 
+					<handler
 						class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.ui.refactoring.ui.DefaultRenameElementHandler"
 						commandId="org.eclipse.xtext.ui.refactoring.RenameElement">
 						<activeWhen>
@@ -145,6 +188,17 @@ class RefactorElementNameFragment2 extends AbstractXtextGeneratorFragment {
 					</page>
 				</extension>
 			'''
+		}
+		
+		if (projectConfig.genericIde.enabled) {
+			val ideBindings = new GuiceModuleAccess.BindingFactory()
+			ideBindings.addTypeToType(
+				'org.eclipse.xtext.ide.server.rename.IRenameService2'.typeRef,
+				'org.eclipse.xtext.ide.server.rename.RenameService2'.typeRef)
+			ideBindings.addTypeToType(
+				'org.eclipse.xtext.ide.refactoring.IRenameStrategy2'.typeRef,
+				new TypeReference('org.eclipse.xtext.ide.refactoring', 'IRenameStrategy2.DefaultImpl'))
+			ideBindings.contributeTo(language.ideGenModule)
 		}
 	}
 }

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr.splitting;
 
@@ -32,7 +33,7 @@ public class PartialClassExtractor {
 	
 	private final String content;
 	private final String originalContent;
-	private static final Pattern SIGNATURE = Pattern.compile("^\\s*public final (void|EObject|AntlrDatatypeRuleToken|Boolean) \\S*\\(\\) throws RecognitionException \\{\\s*$");
+	private static final Pattern SIGNATURE = Pattern.compile("^\\s*public final (void|EObject|Enumerator|AntlrDatatypeRuleToken|Boolean) \\S*\\((EObject in_current)?\\) throws RecognitionException \\{\\s*$");
 	private static final String ANTLR_END_MARKER = "    // $ANTLR end ";
 	private static final String ANTLR_START_MARKER = "    // $ANTLR start ";
 

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -13,6 +14,7 @@ import org.eclipse.xtext.formatting.impl.FormattingConfig;
 import org.eclipse.xtext.services.XtextGrammarAccess;
 import org.eclipse.xtext.services.XtextGrammarAccess.AbstractTokenWithCardinalityElements;
 import org.eclipse.xtext.services.XtextGrammarAccess.ActionElements;
+import org.eclipse.xtext.services.XtextGrammarAccess.AnnotationElements;
 import org.eclipse.xtext.services.XtextGrammarAccess.AssignmentElements;
 import org.eclipse.xtext.services.XtextGrammarAccess.CharacterRangeElements;
 import org.eclipse.xtext.services.XtextGrammarAccess.CrossReferenceElements;
@@ -147,6 +149,12 @@ public class XtextFormatter extends AbstractDeclarativeFormatter {
 		cfg.setNoSpace().around(naa.getCalledByNameAssignment_0_1());
 		cfg.setNoSpace().around(naa.getValueAssignment_1());
 		cfg.setNoSpace().around(naa.getParameterAssignment_0_0());
+		
+		// @Override
+		AnnotationElements a = g.getAnnotationAccess();
+		cfg.setNoSpace().between(a.getCommercialAtKeyword_0(), a.getNameAssignment_1());
+		cfg.setLinewrap().after(g.getAnnotationRule());
+		cfg.setLinewrap(2).before(g.getAnnotationRule());
 
 		//saveDebugGraphvizDiagram("XtextFormatting.dot");
 	}

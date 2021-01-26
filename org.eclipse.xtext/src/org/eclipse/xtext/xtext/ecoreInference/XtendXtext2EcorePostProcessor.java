@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.ecoreInference;
 
@@ -38,7 +39,10 @@ import org.eclipse.xtext.util.Strings;
  * 
  * @author Knut Wannheden - Initial contribution and API
  * @author Michael Clay
+ * 
+ * @deprecated This class depends on Xpand/Xtend(1) which is dead as a mouse. So don't use this post processor. Switch to a manually maintained metamodel instead.
  */
+@Deprecated
 public class XtendXtext2EcorePostProcessor implements IXtext2EcorePostProcessor {
 
 	private static final Logger logger = Logger.getLogger(XtendXtext2EcorePostProcessor.class);
@@ -49,6 +53,7 @@ public class XtendXtext2EcorePostProcessor implements IXtext2EcorePostProcessor 
 	public void process(GeneratedMetamodel metamodel) {
 		Resource xtendFile = loadXtendFile(metamodel);
 		if (xtendFile != null) {
+			logger.warn("You are using an old xtend(1)-based IXtext2EcorePostProcessor. This features is deprecated and will be dropped in a future release of Xtext.");
 			ExecutionContext ctx = getExecutionContext(metamodel);
 			ctx = ctx.cloneWithResource(xtendFile);
 			ResourceLoader currentThreadResourceLoader = null;

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.validation;
 
@@ -24,6 +25,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.Exceptions;
 import org.eclipse.xtext.util.SimpleCache;
 
@@ -46,8 +48,14 @@ import com.google.inject.Injector;
  * }
  * </pre>
  * 
+ * <p>
+ * By default {@link NullPointerException NullPointerExceptions} occurring in the invocation of validation code are swallowed. 
+ * This behavior can be switched by overriding {@link #handleExceptionDuringValidation(Throwable)}.
+ * </p>
+ * 
  * @author Sven Efftinge - Initial contribution and API
  * @author Michael Clay
+ * @author Karsten Thoms
  */
 public abstract class AbstractDeclarativeValidator extends AbstractInjectableValidator implements
 		ValidationMessageAcceptor {
@@ -85,11 +93,14 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 		private final Method method;
 		private final String s;
 		private final AbstractDeclarativeValidator instance;
+		private final CheckType checkType;
 
 		protected MethodWrapper(AbstractDeclarativeValidator instance, Method m) {
 			this.instance = instance;
 			this.method = m;
 			this.s = m.getName() + ":" + m.getParameterTypes()[0].getName();
+			Check annotation = m.getAnnotation(Check.class);
+			checkType = annotation.value();
 		}
 
 		@Override
@@ -102,18 +113,18 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 		}
 
 		public void invoke(State state) {
-			if (instance.state.get() != null && instance.state.get() != state)
+			State instanceState = instance.state.get();
+			if (instanceState != null && instanceState != state)
 				throw new IllegalStateException("State is already assigned.");
-			boolean wasNull = instance.state.get() == null;
+			boolean wasNull = instanceState == null;
 			if (wasNull)
 				instance.state.set(state);
 			try {
-				Check annotation = method.getAnnotation(Check.class);
-				if (!state.checkMode.shouldCheck(annotation.value()))
+				if (!state.checkMode.shouldCheck(checkType))
 					return;
 				try {
 					state.currentMethod = method;
-					state.currentCheckType = annotation.value();
+					state.currentCheckType = checkType;
 					method.setAccessible(true);
 					method.invoke(instance, state.currentObject);
 				} catch (IllegalArgumentException e) {
@@ -126,15 +137,12 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 				}
 			} finally {
 				if (wasNull)
-					instance.state.set(null);
+					instance.state.remove();
 			}
 		}
 		
 		protected void handleInvocationTargetException(Throwable targetException, State state) {
-			// ignore GuardException, check is just not evaluated if guard is false
-			// ignore NullPointerException, as not having to check for NPEs all the time is a convenience feature
-			if (!(targetException instanceof GuardException) && !(targetException instanceof NullPointerException))
-				Exceptions.throwUncheckedException(targetException);
+			instance.handleExceptionDuringValidation(targetException);
 		}
 
 		@Override
@@ -286,6 +294,23 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 
 	protected Map<Object, Object> getContext() {
 		return state.get().context;
+	}
+	
+	/**
+	 * Obtain a cancel indicator that is valid for the current validation run. 
+	 * 
+	 * @since 2.22
+	 */
+	protected CancelIndicator getCancelIndicator() {
+		Map<Object, Object> context = getContext();
+		if (context == null) {
+			return CancelIndicator.NullImpl;
+		}
+		CancelIndicator result = (CancelIndicator) context.get(CancelableDiagnostician.CANCEL_INDICATOR);
+		if (result == null) {
+			return CancelIndicator.NullImpl;
+		}
+		return result;
 	}
 
 	@Override
@@ -543,7 +568,7 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 	protected void checkDone() {
 		throw guardException;
 	}
-
+	
 	//////////////////////////////////////////////////////////
 	// Implementation of the Validation message acceptor below
 	//////////////////////////////////////////////////////////
@@ -552,22 +577,24 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 	public void acceptError(String message, EObject object, EStructuralFeature feature, int index, String code,
 			String... issueData) {
 		checkIsFromCurrentlyCheckedResource(object);
-		this.state.get().hasErrors = true;
-		state.get().chain.add(createDiagnostic(Severity.ERROR, message, object, feature, index, code, issueData));
+		State currentState = this.state.get();
+		currentState.hasErrors = true;
+		currentState.chain.add(createDiagnostic(Severity.ERROR, message, object, feature, index, code, issueData));
 	}
 
 	/**
 	 * @since 2.4
 	 */
 	protected void checkIsFromCurrentlyCheckedResource(EObject object) {
-		if (object != null && this.state.get() != null && this.state.get().currentObject != null
-				&& object.eResource() != this.state.get().currentObject.eResource()) {
+		State currentState = this.state.get();
+		if (object != null && currentState != null && currentState.currentObject != null
+				&& object.eResource() != currentState.currentObject.eResource()) {
 			URI uriGiven = null;
 			if (object.eResource() != null)
 				uriGiven = object.eResource().getURI();
 			URI uri = null;
-			if (this.state.get().currentObject.eResource() != null)
-				uri = this.state.get().currentObject.eResource().getURI();
+			if (currentState.currentObject.eResource() != null)
+				uri = currentState.currentObject.eResource().getURI();
 			throw new IllegalArgumentException(
 					"You can only add issues for EObjects contained in the currently validated resource '" + uri
 							+ "'. But the given EObject was contained in '" + uriGiven + "'");
@@ -591,8 +618,9 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 	@Override
 	public void acceptError(String message, EObject object, int offset, int length, String code, String... issueData) {
 		checkIsFromCurrentlyCheckedResource(object);
-		this.state.get().hasErrors = true;
-		state.get().chain.add(createDiagnostic(Severity.ERROR, message, object, offset, length, code, issueData));
+		State currentState = this.state.get();
+		currentState.hasErrors = true;
+		currentState.chain.add(createDiagnostic(Severity.ERROR, message, object, offset, length, code, issueData));
 	}
 
 	@Override
@@ -650,4 +678,19 @@ public abstract class AbstractDeclarativeValidator extends AbstractInjectableVal
 		return messageAcceptor;
 	}
 
+	/**
+	 * Handles exceptions occuring during execution of validation code. 
+	 * By default this method will swallow {@link NullPointerException NullPointerExceptions} and {@link GuardException}s.
+	 * Clients may override this method to propagate {@link NullPointerException NullPointerExceptions} or more smarter
+	 * handling.
+	 * 
+	 * @since 2.17
+	 */
+	protected void handleExceptionDuringValidation(Throwable targetException) throws RuntimeException {
+		// ignore NullPointerException, as not having to check for NPEs all the time is a convenience feature
+		// ignore GuardException, check is just not evaluated if guard is false
+		if (!(targetException instanceof GuardException) && !(targetException instanceof NullPointerException)) {
+			Exceptions.throwUncheckedException(targetException);
+		}
+	}
 }

@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 module org.eclipse.xtext.ide.tests.testlanguage.GenerateTestLanguage
 
@@ -39,21 +40,44 @@ Workflow {
 				createEclipseMetaData = false
 			}
 			code = {
+				preferXtendStubs = false
 				encoding = "UTF-8"
 				fileHeader = 
 "/*
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 "
 			}
 		}
 		language = StandardLanguage {
 			name = "org.eclipse.xtext.ide.tests.testlanguage.TestLanguage"
-			fileExtensions = "testlang"
+			fileExtensions = "testlang,testlangext"
+
+			serializer = {
+				generateStub = false
+			}
+			validator = {
+				generateStub = true
+				// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
+			}
+			junitSupport = {
+				generateStub = false
+			}
+			generator = {
+				generateXtendStub = true
+			}
+			formatter = {
+				generateStub = true
+			}
+		}
+		language = StandardLanguage {
+			name = "org.eclipse.xtext.ide.tests.testlanguage.IndentationAwareUiTestLanguage"
+			fileExtensions = "indentationAwareUiTestLang"
 
 			serializer = {
 				generateStub = false
@@ -63,6 +87,9 @@ Workflow {
 			}
 			junitSupport = {
 				generateStub = false
+			}
+			generator = {
+				generateStub = true
 			}
 		}
 		language = StandardLanguage {
@@ -80,6 +107,54 @@ Workflow {
 			parserGenerator = {
 				partialParsing = true
 			}
+			generator = {
+				generateStub = true
+			}
 		}
+		language = StandardLanguage {
+			referencedResource = "platform:/resource/org.eclipse.emf.ecore/model/Ecore.genmodel"
+			referencedResource = "platform:/resource/org.eclipse.xtext.ide.tests/testlang-src/org/eclipse/xtext/ide/tests/testlanguage/WithTransient.genmodel"
+			name = "org.eclipse.xtext.ide.tests.testlanguage.PartialSerializationTestLanguage"
+			fileExtensions = "pstl"
+			serializer = {
+				generateStub = false
+			}
+			validator = {
+			// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
+			}
+			junitSupport = {
+				generateStub = false
+			}
+			parserGenerator = {
+				partialParsing = true
+			}
+			formatter = {
+				generateStub = true
+			}
+			generator = {
+				generateStub = true
+			}
+		}
+		language = StandardLanguage {
+			name = "org.eclipse.xtext.ide.tests.testlanguage.RenameTestLanguage"
+			fileExtensions = "renametl"
+			serializer = {
+				generateStub = false
+			}
+			validator = {
+			// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
+			}
+			junitSupport = {
+				generateStub = false
+			}
+			generator = {
+				generateStub = true
+			}
+		}
+	}
+	
+	component = org.eclipse.emf.mwe2.ecore.EcoreGenerator {
+		genModel = "platform:/resource/org.eclipse.xtext.ide.tests/testlang-src/org/eclipse/xtext/ide/tests/testlanguage/WithTransient.genmodel"
+		srcPath = "platform./resource/${baseName}/testlang-src-gen" 
 	}
 }

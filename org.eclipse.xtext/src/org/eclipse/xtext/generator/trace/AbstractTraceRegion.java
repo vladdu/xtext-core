@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2012 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2012, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
@@ -456,10 +457,10 @@ public abstract class AbstractTraceRegion {
 	 * <code>r1</code> and <code>r2</code> are considered to be equal if
 	 * 
 	 * <pre>
-	 * (r1.getMyOffset() == r2.getMyOffset()) && (r1.getMyLength() == r2.getMyLength())
-	 * 		&& (r1.getAssociatedOffset() == r2.getAssociatedOffset())
-	 * 		&& (r1.getAssociatedLength() == r2.getAssociatedLength())
-	 * 		&& (r1.getParent() == null ? r2.getParent() == null : r1.getParent().equals(r2.getParent()))
+	 * (r1.getMyOffset() == r2.getMyOffset()) &amp;&amp; (r1.getMyLength() == r2.getMyLength())
+	 * 		&amp;&amp; (r1.getAssociatedOffset() == r2.getAssociatedOffset())
+	 * 		&amp;&amp; (r1.getAssociatedLength() == r2.getAssociatedLength())
+	 * 		&amp;&amp; (r1.getParent() == null ? r2.getParent() == null : r1.getParent().equals(r2.getParent()))
 	 * </pre>
 	 * 
 	 * This ensures that the {@link #equals(Object)} method works properly across different implementations of the
@@ -512,7 +513,7 @@ public abstract class AbstractTraceRegion {
 			associatedText = "";
 		else
 			associatedText = " associations={\n  " + Joiner.on("\n").join(associated).replace("\n", "\n  ") + "\n}";
-		return getClass().getSimpleName() + " [myOffset=" + getMyOffset() + ", myLength=" + getMyLength() + "]"
+		return getClass().getSimpleName() + " [myOffset=" + getMyOffset() + ", myLength=" + getMyLength() + ", useForDebugging="+isUseForDebugging()+"]"
 				+ associatedText + nestedText;
 	}
 

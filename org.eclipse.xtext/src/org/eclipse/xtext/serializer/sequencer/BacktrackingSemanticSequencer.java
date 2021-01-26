@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2011, 2016 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.serializer.sequencer;
 
@@ -361,6 +362,16 @@ public class BacktrackingSemanticSequencer extends AbstractSemanticSequencer {
 			return node.getNode();
 		}
 
+		public ICompositeNode getCompositeNode() {
+			INode result = this.getNode();
+			return result instanceof ICompositeNode ? (ICompositeNode) result : null;
+		}
+
+		public ILeafNode getLeafNode() {
+			INode result = this.getNode();
+			return result instanceof ILeafNode ? (ILeafNode) result : null;
+		}
+
 		public SerializableObject getObj() {
 			return obj;
 		}
@@ -433,16 +444,16 @@ public class BacktrackingSemanticSequencer extends AbstractSemanticSequencer {
 			if (ele instanceof RuleCall)
 				feeder.accept((RuleCall) ele, ti.getValue(), ti.getIndex(), ti.getNode());
 			else if (ele instanceof Action)
-				feeder.accept((Action) ele, (EObject) ti.getValue(), (ICompositeNode) ti.getNode());
+				feeder.accept((Action) ele, (EObject) ti.getValue(), ti.getCompositeNode());
 			else if (ele instanceof Keyword)
-				feeder.accept((Keyword) ele, ti.getValue(), ti.getIndex(), (ILeafNode) ti.getNode());
+				feeder.accept((Keyword) ele, ti.getValue(), ti.getIndex(), ti.getLeafNode());
 		} else {
 			if (ele instanceof RuleCall)
 				feeder.accept((RuleCall) ele, ti.getValue(), ti.getNode());
 			else if (ele instanceof Action)
-				feeder.accept((Action) ele, (EObject) ti.getValue(), (ICompositeNode) ti.getNode());
+				feeder.accept((Action) ele, (EObject) ti.getValue(), ti.getCompositeNode());
 			else if (ele instanceof Keyword)
-				feeder.accept((Keyword) ele, ti.getValue(), (ILeafNode) ti.getNode());
+				feeder.accept((Keyword) ele, ti.getValue(), ti.getLeafNode());
 		}
 	}
 

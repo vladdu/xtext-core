@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr;
 
@@ -143,6 +144,7 @@ public class KeywordHelper implements Adapter {
 				result.charAt(0) == '_' // rule names may not start with an underscore 
 			|| "System".equals(result) // the generated code contains System.err.printlns which is ambiguous with the generated field name
 			|| result.startsWith("DFA") // the generated code may have fields named DFA... - avoid (unlikely) conflicts
+			|| result.startsWith("EOF") // the generated code may have fields named EOF... - avoid (unlikely) conflicts
 			|| result.startsWith("FOLLOW") // same with FOLLOW_ field names
 			|| result.startsWith("Internal") && result.endsWith("Parser") // same with the name of the class itself
 			) { 

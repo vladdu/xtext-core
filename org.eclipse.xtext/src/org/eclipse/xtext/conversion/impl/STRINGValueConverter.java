@@ -1,15 +1,17 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.conversion.impl;
 
 import org.eclipse.xtext.conversion.ValueConverterException;
 import org.eclipse.xtext.conversion.ValueConverterWithValueException;
 import org.eclipse.xtext.nodemodel.INode;
+import org.eclipse.xtext.util.JavaStringConverter;
 import org.eclipse.xtext.util.Strings;
 
 /**
@@ -35,7 +37,7 @@ public class STRINGValueConverter extends AbstractLexerBasedConverter<String> {
 			throw new ValueConverterException(e.getMessage(), node, e);
 		}
 	}
-
+	
 	/**
 	 * Converts a string literal (including leading and trailing single or double quote) to a semantic
 	 * string value. Recovers from invalid escape sequences and announces the first problem with a
@@ -46,148 +48,115 @@ public class STRINGValueConverter extends AbstractLexerBasedConverter<String> {
 	 * @see Strings#convertFromJavaString(String, boolean)
 	 */
 	protected String convertFromString(String literal, INode node) throws ValueConverterWithValueException {
-		char[] in = literal.toCharArray();
-		int off = 1;
-		int len = literal.length() - 1;
-		char[] convtBuf = new char[len];
-		char aChar;
-		char[] out = convtBuf;
-		int outLen = 0;
-		int end = off + len;
+		Implementation converter = createConverter();
+		String result = converter.convertFromJavaString(literal);
+		if (converter.errorMessage != null) {
+			throw new ValueConverterWithValueException(converter.errorMessage, node, result.toString(), converter.errorIndex,
+					converter.errorLength, null);
+		}
+		return result;
+	}
 
+	/**
+	 * @since 2.16
+	 */
+	protected Implementation createConverter() {
+		return new Implementation();
+	}
+	
+	/**
+	 * @since 2.16
+	 */
+	protected class Implementation extends JavaStringConverter {
 		String errorMessage = null;
 		int errorIndex = -1;
 		int errorLength = -1;
-		while (off < end - 1) {
-			aChar = in[off++];
-			if (aChar == '\\') {
-				if (off < end) {
-					aChar = in[off++];
-					switch (aChar) {
-						case 'u':
-							// Try to read the xxxx
-							int value = 0;
-							if (off + 4 > end || !isHexSequence(in, off, 4)) {
-								out[outLen++] = aChar;
-								if (errorMessage == null) {
-									errorMessage = "Invalid unicode";
-									errorIndex = off - 2;
-									errorLength = 2;
-								}
-								break;
-							} else {
-								for (int i = 0; i < 4; i++) {
-									aChar = in[off++];
-									switch (aChar) {
-										case '0':
-										case '1':
-										case '2':
-										case '3':
-										case '4':
-										case '5':
-										case '6':
-										case '7':
-										case '8':
-										case '9':
-											value = (value << 4) + aChar - '0';
-											break;
-										case 'a':
-										case 'b':
-										case 'c':
-										case 'd':
-										case 'e':
-										case 'f':
-											value = (value << 4) + 10 + aChar - 'a';
-											break;
-										case 'A':
-										case 'B':
-										case 'C':
-										case 'D':
-										case 'E':
-										case 'F':
-											value = (value << 4) + 10 + aChar - 'A';
-											break;
-										default:
-											throw new IllegalArgumentException("Malformed \\uxxxx encoding.");
-									}
-								}
-								out[outLen++] = (char) value;
-								break;
-							}
-						case 't':
-							out[outLen++] = '\t';
-							break;
-						case 'r':
-							out[outLen++] = '\r';
-							break;
-						case 'n':
-							out[outLen++] = '\n';
-							break;
-						case 'f':
-							out[outLen++] = '\f';
-							break;
-						case 'b':
-							out[outLen++] = '\b';
-							break;
-						case '"':
-							out[outLen++] = '"';
-							break;
-						case '\'':
-							out[outLen++] = '\'';
-							break;
-						case '\\':
-							out[outLen++] = '\\';
-							break;
-						default:
-							if (errorMessage == null) {
-								errorMessage = getInvalidEscapeSequenceMessage();
-								errorIndex = off - 2;
-								errorLength = 2;
-							}
-							out[outLen++] = aChar;
-							break;
-					}
-				} else {
-					if (errorMessage == null) {
-						errorMessage = getInvalidEscapeSequenceMessage();
-						errorIndex = off - 1;
-						errorLength = 1;
-					}
-					out[outLen++] = aChar;
-				}
-			} else {
-				out[outLen++] = aChar;
+		int nextIndex = 1;
+		
+		protected Implementation() {}
+		
+		public String convertFromJavaString(String literal) {
+			int idx = literal.indexOf('\\');
+			if (idx < 0 && literal.length() > 1 && literal.charAt(0) == literal.charAt(literal.length() - 1)) {
+				return literal.substring(1, literal.length() - 1);
 			}
+			return convertFromJavaString(literal, true, 1, new StringBuilder(literal.length()));
 		}
-		if (off < end) {
-			if (off != end - 1) {
-				throw new IllegalStateException();
+		
+		@Override
+		protected String convertFromJavaString(String string, boolean useUnicode, int index, StringBuilder result) {
+			int length = string.length();
+			while(index < length - 1) {
+				nextIndex = index = unescapeCharAndAppendTo(string, useUnicode, index, result);
 			}
-			aChar = in[off];
-			if (in[0] != in[off]) {
-				out[outLen++] = aChar;
-				if (errorMessage == null) {
-					if (in[off] == '\\') {
-						errorMessage = getInvalidEscapeSequenceMessage();
-						errorIndex = off;
-						errorLength = 1;
+			if (nextIndex < length) {
+				if (nextIndex != length - 1) {
+					throw new IllegalStateException();
+				}
+				char next = string.charAt(nextIndex);
+				if (string.charAt(0) != next) {
+					result.append(next);
+					if (errorMessage == null) {
+						if (next == '\\') {
+							errorMessage = getInvalidEscapeSequenceMessage();
+							errorIndex = nextIndex;
+							errorLength = 1;
+						} else {
+							errorMessage = getStringNotClosedMessage();
+						}
 					} else {
 						errorMessage = getStringNotClosedMessage();
+						errorIndex = -1;
+						errorLength = -1;
 					}
-				} else {
-					errorMessage = getStringNotClosedMessage();
-					errorIndex = -1;
-					errorLength = -1;
 				}
+			} else if (nextIndex == length) {
+				errorMessage = getStringNotClosedMessage();
 			}
+			return result.toString();
 		}
-		if (errorMessage != null) {
-			throw new ValueConverterWithValueException(errorMessage, node, new String(out, 0, outLen), errorIndex,
-					errorLength, null);
+		
+		@Override
+		protected boolean isHexSequence(char[] in, int off, int chars) {
+			// keep chance to use overridden methods by funneling it through STRINGValueConverter
+			return STRINGValueConverter.this.isHexSequence(in, off, chars);
 		}
-		return new String(out, 0, outLen);
-	}
+		
+		@Override
+		protected int handleInvalidUnicodeEscapeSequence(String string, int index, StringBuilder result) {
+			result.append('u');
+			errorMessage = "Invalid unicode";
+			errorIndex = index - 2;
+			errorLength = 2;
+			return index;
+		}
+		
+		@Override
+		protected int doUnescapeCharAndAppendTo(String string, boolean useUnicode, int index, StringBuilder result) {
+			if (string.length() == index) {
+				if (errorMessage == null) {
+					errorMessage = getInvalidEscapeSequenceMessage();
+					errorIndex = index - 1;
+					errorLength = 1;
+				}
+				return index;
+			}
+			return super.doUnescapeCharAndAppendTo(string, useUnicode, index, result);
+		}
+		
+		@Override
+		protected int handleUnknownEscapeSequence(String string, char c, boolean useUnicode, int index, StringBuilder result) {
+			if (errorMessage == null) {
+				errorMessage = getInvalidEscapeSequenceMessage();
+				errorIndex = index - 2;
+				errorLength = 2;
+			}
+			result.append(c);
+			return index;
+		}
 
+	}
+		
 	/**
 	 * @since 2.7
 	 */
@@ -201,42 +170,12 @@ public class STRINGValueConverter extends AbstractLexerBasedConverter<String> {
 	protected String getStringNotClosedMessage() {
 		return "String literal is not properly closed";
 	}
-
+	
 	/**
 	 * @since 2.7
 	 */
 	protected boolean isHexSequence(char[] in, int off, int chars) {
-		for (int i = off; i < in.length && i < off + chars; i++) {
-			char c = in[i];
-			switch (c) {
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-				case 'a':
-				case 'b':
-				case 'c':
-				case 'd':
-				case 'e':
-				case 'f':
-				case 'A':
-				case 'B':
-				case 'C':
-				case 'D':
-				case 'E':
-				case 'F':
-					continue;
-				default:
-					return false;
-			}
-		}
-		return true;
+		return Implementation.doIsHexSequence(in, off, chars);
 	}
 
 }

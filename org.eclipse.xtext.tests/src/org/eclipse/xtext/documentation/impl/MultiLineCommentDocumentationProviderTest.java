@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 Christoph Kulla
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2020 Christoph Kulla
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  * 
  * Contributors:
  *   Christoph Kulla - Initial API and implementation
@@ -31,11 +32,11 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 		with(DummyTestLanguageStandaloneSetup.class);
 	}
 
-	public String getComment (String modelString) throws Exception {
+	public String getComment(String modelString) throws Exception {
 		return getComment (modelString, 0);
 	}
 	
-	public String getComment (String modelString, int index) throws Exception {
+	public String getComment(String modelString, int index) throws Exception {
 		Model model = (Model) getModel(modelString);
 		assertNotNull (model);
 		assertNotNull (model.getElements());
@@ -49,7 +50,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}
 	
 	@Test public void testSimple() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				"/**\n" +
 				"* " + expectedDocumentation + "\n" +
 				"*/\n" +
@@ -58,7 +59,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}
 
 	@Test public void testMissingStartTag() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				"/*\n" +
 				"* " + expectedDocumentation + "\n" +
 				"*/\n" +
@@ -67,7 +68,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}
 	
 	@Test public void testRect() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				"/********************************************\n" +
 				" **                               **\n" +
 				" ** " + expectedDocumentation + " **\n" +
@@ -78,7 +79,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}	
 	
 	@Test public void testWhitespace() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				" \t \t /***\n" +
 				"** " + expectedDocumentation + " \t \t ** \t \t \n" +
 				" \t \t ***/ \t \t \n" +
@@ -87,7 +88,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}	
 	
 	@Test public void testWithSingleLineComment() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				"/**\n" +
 				"* " + expectedDocumentation + "\n" +
 				"*/\n" +
@@ -97,7 +98,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}
 
 	@Test public void testMultipleCommentsForOneObject() throws Exception {
-		String documentation = getComment (
+		String documentation = getComment(
 				"/**\n" +
 				"* " + expectedDocumentation + "2\n" +
 				"*/\n" +
@@ -113,13 +114,12 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 			"* " + expectedDocumentation + "\n" +
 			"*/\n" +
 			document;
-		s.replaceAll ("A", "B");
-		String documentation = getComment (s.replaceAll ("A", "B") + s, 1);
+		String documentation = getComment(s.replace('A', 'B') + s, 1);
 		assertEquals (expectedDocumentation, documentation);
 	}
 
 	@Test public void testMultipleMultiLineComments() throws Exception {
-		String documentation = getComment ("/**\n" +
+		String documentation = getComment("/**\n" +
 			"* " + expectedDocumentation + "\n" +
 			"*/\n" +
 			"/* */" +
@@ -128,7 +128,7 @@ public class MultiLineCommentDocumentationProviderTest extends AbstractXtextTest
 	}
 	
 	@Test public void testNoComment() throws Exception {
-		String documentation = getComment (document);
+		String documentation = getComment(document);
 		assertNull (documentation);		
 	}
 }

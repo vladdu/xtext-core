@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class FowlerDslTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class FowlerDslTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class StatemachineElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.testlanguages.FowlerDslTestLanguage.Statemachine");
@@ -36,7 +36,8 @@ public class FowlerDslTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final Assignment cStatesAssignment_6 = (Assignment)cGroup.eContents().get(6);
 		private final RuleCall cStatesStateParserRuleCall_6_0 = (RuleCall)cStatesAssignment_6.eContents().get(0);
 		
-		///* SuppressWarnings[noInstantiation] */ Statemachine:
+		///* SuppressWarnings[noInstantiation] */
+		//Statemachine:
 		//	'events'
 		//	events+=Event*
 		//	'end'
@@ -46,7 +47,13 @@ public class FowlerDslTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	states+=State*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'events' events+=Event* 'end' 'commands' commands+=Command* 'end' states+=State*
+		//'events'
+		//events+=Event*
+		//'end'
+		//'commands'
+		//commands+=Command*
+		//'end'
+		//states+=State*
 		public Group getGroup() { return cGroup; }
 		
 		//'events'
@@ -164,7 +171,9 @@ public class FowlerDslTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	'end';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'state' name=ID ('actions' '{' actions+=[Command]+ '}')? transitions+=Transition* 'end'
+		//'state' name=ID ('actions' '{' actions+=[Command]+ '}')?
+		//transitions+=Transition*
+		//'end'
 		public Group getGroup() { return cGroup; }
 		
 		//'state'
@@ -296,7 +305,8 @@ public class FowlerDslTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 
 	
-	///* SuppressWarnings[noInstantiation] */ Statemachine:
+	///* SuppressWarnings[noInstantiation] */
+	//Statemachine:
 	//	'events'
 	//	events+=Event*
 	//	'end'

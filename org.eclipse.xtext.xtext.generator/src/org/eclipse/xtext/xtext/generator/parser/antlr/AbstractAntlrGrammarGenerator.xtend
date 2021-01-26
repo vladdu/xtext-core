@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2021 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr
 
@@ -114,7 +115,7 @@ abstract class AbstractAntlrGrammarGenerator {
 					memoize=true;
 				«ENDIF»
 				«IF options.k >= 0»
-					memoize=«options.k»;
+					k=«options.k»;
 				«ENDIF»
 			«ENDIF»
 		}
@@ -337,7 +338,7 @@ abstract class AbstractAntlrGrammarGenerator {
 	'''
 	
 	protected dispatch def String dataTypeEbnf2(Keyword it, boolean supportActions) {
-		if (combinedGrammar) "'" + value.toAntlrString + "'" else keywordHelper.getRuleName(value)
+		it.ebnf
 	}
 	
 	protected dispatch def String dataTypeEbnf2(RuleCall it, boolean supportActions) {
@@ -366,8 +367,12 @@ abstract class AbstractAntlrGrammarGenerator {
 		''
 	}
 	
+	protected def String ebnf(Keyword it) {
+		if (combinedGrammar) "'" + value.toAntlrString + "'" else keywordHelper.getRuleName(value)
+	}
+	
 	protected dispatch def String ebnf2(Keyword it, AntlrOptions options, boolean supportActions) {
-		if (combinedGrammar) "'" + value.toAntlrString + "'" else keywordHelper.getRuleName(value) 
+		it.ebnf 
 	}
 	
 	protected dispatch def String ebnf2(RuleCall it, AntlrOptions options, boolean supportActions) {
@@ -394,6 +399,10 @@ abstract class AbstractAntlrGrammarGenerator {
 			}
 		}
 		rule.crossrefEbnf(it, ref, supportActions)
+	}
+	
+	protected dispatch def String crossrefEbnf(Keyword it, CrossReference ref, boolean supportActions) {
+		it.ebnf
 	}
 	
 	protected def String crossrefEbnf(AbstractRule it, RuleCall call, CrossReference ref, boolean supportActions) {

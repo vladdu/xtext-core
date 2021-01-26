@@ -15,11 +15,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class HiddenTerminalsTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class HiddenTerminalsTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.terminalrules.HiddenTerminalsTestLanguage.Model");
@@ -227,7 +227,7 @@ public class HiddenTerminalsTestLanguageGrammarAccess extends AbstractGrammarEle
 		//'('
 		public Keyword getLeftParenthesisKeyword_2() { return cLeftParenthesisKeyword_2; }
 		
-		//called=InheritingHiddensCall | hidingCalled=HidingHiddens
+		//(called=InheritingHiddensCall | hidingCalled=HidingHiddens)
 		public Alternatives getAlternatives_3() { return cAlternatives_3; }
 		
 		//called=InheritingHiddensCall

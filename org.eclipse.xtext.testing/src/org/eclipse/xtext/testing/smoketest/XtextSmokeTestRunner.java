@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.testing.smoketest;
 
@@ -14,7 +15,7 @@ import org.junit.runners.model.InitializationError;
 import com.google.common.annotations.Beta;
 
 /**
- * Use this runner on a class that is annotated with {@link Suite.SuiteClasses}
+ * Use this runner on a class that is annotated with {@link org.junit.runners.Suite.SuiteClasses SuitClasses}
  * to test the input documents that are used in that test class for exceptions
  * by using a {@link ScenarioProcessor}. The suite has to be annotated with {@link ProcessedBy}
  * to find the processor instance and the parameters.

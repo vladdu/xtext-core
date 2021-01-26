@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 module org.eclipse.xtext.GenerateAllTestLanguages
 
@@ -34,15 +35,17 @@ Workflow {
 		registerGenModelFile = "platform:/resource/${projectName}/src/org/eclipse/xtext/generator/grammarAccess/ametamodel.genmodel"
 		registerGenModelFile = "platform:/resource/${projectName}/src/org/eclipse/xtext/enumrules/enums.genmodel"
 		registerGenModelFile = "platform:/resource/${projectName}/src/org/eclipse/xtext/metamodelreferencing/tests/EcoreReferences.genmodel"
+		registerGenModelFile = "platform:/resource/${projectName}/src/org/eclipse/xtext/linking/lazy/LazyLinkingTestLanguage.genmodel"
 		registerGenModelFile = "platform:/resource/org.eclipse.xtext/org/eclipse/xtext/Xtext.genmodel"
 		registerGenModelFile = "platform:/resource/org.eclipse.emf.ecore/model/Ecore.genmodel"
 		
 		registerGeneratedEPackage = "org.eclipse.xtext.grammarinheritance.ametamodel.AmetamodelPackage"
+		registerGeneratedEPackage = "org.eclipse.xtext.linking.lazy.lazyLinking.LazyLinkingPackage"
 		registerGeneratedEPackage = "org.eclipse.xtext.XtextPackage"
 		registerGeneratedEPackage = "org.eclipse.emf.ecore.EcorePackage"
 	}
 	
-	bean = tests.ecore.EcoreSupportStandaloneSetup {}
+	bean = org.eclipse.xtext.testlanguages.ecore.EcoreSupport {}
 	
 	component = DirectoryCleaner {
 		directory = "${runtimeProject}/src-gen"
@@ -114,7 +117,7 @@ Workflow {
 		}
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/linking/lazy/LazyLinkingTestLanguage.xtext"
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 			fragment = @TestLanguagesFragments {}
@@ -282,17 +285,11 @@ Workflow {
 				ignoreCase = true
 			}
 		}
-		
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug301935TestLanguage.xtext"
 			fragment = @TestLanguagesFragments {
 				generateStub = true
 			}
-		}
-		
-		language = {
-			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug378967TestLanguage.xtext"
-			fragment = @TestLanguagesFragments {}
 		}
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug301935ExTestLanguage.xtext"
@@ -301,11 +298,19 @@ Workflow {
 			}
 		}
 		language = {
-			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug443221TestLanguage.xtext"
+			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug378967TestLanguage.xtext"
 			fragment = @TestLanguagesFragments {}
 		}
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug406914TestLanguage.xtext"
+			fragment = @TestLanguagesFragments {}
+		}
+		language = {
+			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/Bug443221TestLanguage.xtext"
+			fragment = @TestLanguagesFragments {}
+		}
+		language = {
+			grammarUri = "classpath:/org/eclipse/xtext/parser/antlr/GH1462TestLanguage.xtext"
 			fragment = @TestLanguagesFragments {}
 		}
 		language = { 
@@ -337,7 +342,7 @@ Workflow {
 			fragment = @TestLanguagesFragments auto-inject {
 				generateStub = true
 			}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
@@ -346,7 +351,7 @@ Workflow {
 			fragment = @TestLanguagesFragments auto-inject {
 				generateStub = true
 			}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
@@ -355,7 +360,7 @@ Workflow {
 			fragment = @TestLanguagesFragments auto-inject {
 				generateStub = true
 			}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
@@ -366,28 +371,28 @@ Workflow {
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/parser/parameters/ParametersTestLanguage.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/parser/parameters/TwoParametersTestLanguage.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/parser/parameters/NoParametersTestLanguage.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/parser/parameters/ParametersTestLanguageEx.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
@@ -447,19 +452,23 @@ Workflow {
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/formatting2/internal/FormatterTestLanguage.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
 		language = {
 			grammarUri = "classpath:/org/eclipse/xtext/formatting2/regionaccess/internal/RegionAccessTestLanguage.xtext"
 			fragment = @TestLanguagesFragments auto-inject {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/parsetree/formatter/FormatterTestLanguage.xtext"
+			fragment = @TestLanguagesFragments {}
+		}
+		language = { 
+			grammarUri = "classpath:/org/eclipse/xtext/parsetree/formatter/FormatterTestLanguage2.xtext"
 			fragment = @TestLanguagesFragments {}
 		}
 		language = { 
@@ -473,7 +482,7 @@ Workflow {
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/serializer/SequencerTestLanguage.xtext"
 			fragment = @TestLanguagesFragments {}
-			fragment = junit.Junit4Fragment2 {
+			fragment = junit.JUnitFragment {
 				generateStub = false
 			}
 		}
@@ -507,6 +516,10 @@ Workflow {
 		}
 		language = { 
 			grammarUri = "classpath:/org/eclipse/xtext/testlanguages/ActionTestLanguage2.xtext"
+			fragment = @TestLanguagesFragments {}
+		}
+		language = { 
+			grammarUri = "classpath:/org/eclipse/xtext/testlanguages/ActionTestLanguage3.xtext"
 			fragment = @TestLanguagesFragments {}
 		}
 		language = { 

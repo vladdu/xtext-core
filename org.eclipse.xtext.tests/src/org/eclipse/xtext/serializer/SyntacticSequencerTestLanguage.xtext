@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2016 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 grammar org.eclipse.xtext.serializer.SyntacticSequencerTestLanguage with org.eclipse.xtext.common.Terminals
@@ -55,11 +56,12 @@ DatatypeID:
 	ID;
 
 SingleCrossReference:
-	"#5" name=(TERMINAL_ID | ID)
+	"#5" name=(TERMINAL_ID | ID | "kw5")
 	("kw1" ref1=[SingleCrossReference|TERMINAL_ID])?
 	("kw2" ref2=[SingleCrossReference|DatatypeID])?
 	("kw3" ref3=[SingleCrossReference|ID])?
-	("kw4" ref4=[SingleCrossReference])?;
+	("kw4" ref4=[SingleCrossReference])?
+	("kw5" ref5=[SingleCrossReference|"kw5"])?;
 
 BooleanAlternative:
 	"#6" bool=BooleanAlternativeLiteral;

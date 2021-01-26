@@ -1,17 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.nodemodel.impl;
 
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.RandomAccess;
-
+import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.nodemodel.BidiTreeIterator;
@@ -19,9 +16,6 @@ import org.eclipse.xtext.nodemodel.ICompositeNode;
 import org.eclipse.xtext.nodemodel.ILeafNode;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.SyntaxErrorMessage;
-
-import com.google.common.collect.Interner;
-import com.google.common.collect.Maps;
 
 /**
  * A stateful (!) builder that provides call back methods for clients who
@@ -31,54 +25,9 @@ import com.google.common.collect.Maps;
  */
 public class NodeModelBuilder {
 
-	private static class ArrayInterner<T> implements Interner<T[]> {
-
-		private static class ArrayAsList<T> extends AbstractList<T> implements RandomAccess {
-			final T[] array;
-			private int hashCode = -1;
-
-			ArrayAsList(/* @Nullable */ T[] array) {
-				this.array = array;
-			}
-
-			@Override public int size() {
-				return array.length;
-			}
-
-			@Override /* @Nullable */ public T get(int index) {
-				return array[index];
-			}
-
-			@Override public int hashCode() {
-				if (hashCode == -1)
-					hashCode = Arrays.hashCode(array);
-				return hashCode;
-			}
-
-			@Override public boolean equals(/* @Nullable */ Object o) {
-				if (this == o)
-					return true;
-				return o instanceof ArrayAsList<?> && Arrays.equals(array, ((ArrayAsList<?>) o).array);
-			}
-		}
-
-		private Map<ArrayAsList<T>, T[]> map = Maps.newHashMap();
-
-		@Override
-		public /* @Nullable */ T[] intern(/* @Nullable */ T[] sample) {
-			ArrayAsList<T> key = new ArrayAsList<T>(sample);
-			T[] canonical = map.get(key);
-			if (canonical == null) {
-				canonical = sample;
-				map.put(key, canonical);
-			}
-	        return canonical;
-		}
-	}
-
 	private EObject forcedGrammarElement;
 
-	private ArrayInterner<EObject> cachedFoldedGrammarElements = new ArrayInterner<EObject>();
+	private GrammarElementsInterner cachedFoldedGrammarElements = new GrammarElementsInterner();
 
 	private boolean compressRoot = true;
 	
@@ -202,13 +151,8 @@ public class NodeModelBuilder {
 				// if it refers not to a syntax error or a semantic object
 				EObject myGrammarElement = casted.getGrammarElement();
 				Object childGrammarElement = firstChild.basicGetGrammarElement();
-				EObject[] list = null;
-				if (childGrammarElement instanceof EObject) {
-					list = new EObject[] {myGrammarElement, (EObject) childGrammarElement};
-				} else {
-					list = newEObjectArray(myGrammarElement, (EObject[]) childGrammarElement);
-				}
-				casted.basicSetGrammarElement(cachedFoldedGrammarElements.intern(list));
+				EObject[] grammarElements = cachedFoldedGrammarElements.prependAndIntern(myGrammarElement, childGrammarElement);
+				casted.basicSetGrammarElement(grammarElements);
 				replaceChildren(firstChild, casted);
 			}
 		}
@@ -262,18 +206,12 @@ public class NodeModelBuilder {
 		rootNode.basicSetLookAhead(oldNode.getLookAhead());
 		EObject semanticElement = oldNode.getSemanticElement();
 		if (semanticElement != null) {
-			semanticElement.eAdapters().remove(oldNode);
+			if (oldNode instanceof Adapter)
+				semanticElement.eAdapters().remove((Adapter)oldNode);
 			rootNode.getSemanticElement().eAdapters().add(rootNode);
 		}
 	}
 	
-	private /* @Nullable */ EObject[] newEObjectArray(/* @Nullable */ EObject first, EObject[] rest) {
-		EObject[] array = new EObject[rest.length + 1];
-		array[0] = first;
-		System.arraycopy(rest, 0, array, 1, rest.length);
-		return array;
-	}
-
 	public INode setSyntaxError(INode node, SyntaxErrorMessage errorMessage) {
 		if (node instanceof LeafNode) {
 			LeafNode oldNode = (LeafNode) node;
@@ -299,7 +237,8 @@ public class NodeModelBuilder {
 				CompositeNodeWithSemanticElementAndSyntaxError newComposite = new CompositeNodeWithSemanticElementAndSyntaxError();
 				newComposite.basicSetSemanticElement(oldNode.basicGetSemanticElement());
 				newComposite.basicSetSyntaxErrorMessage(errorMessage);
-				oldNode.basicGetSemanticElement().eAdapters().remove(oldNode);
+				if (oldNode instanceof Adapter)
+					oldNode.basicGetSemanticElement().eAdapters().remove((Adapter)oldNode);
 				newComposite.basicGetSemanticElement().eAdapters().add(newComposite);
 				newNode = newComposite;
 			} else {

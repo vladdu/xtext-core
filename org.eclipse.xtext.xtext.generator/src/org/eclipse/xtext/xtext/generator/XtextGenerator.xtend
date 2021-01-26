@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator
 
@@ -17,6 +18,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.HashMap
 import java.util.List
+import org.apache.log4j.Logger
 import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.mwe.core.WorkflowContext
 import org.eclipse.emf.mwe.core.issues.Issues
@@ -29,9 +31,8 @@ import org.eclipse.xtext.Grammar
 import org.eclipse.xtext.XtextStandaloneSetup
 import org.eclipse.xtext.parser.IEncodingProvider
 import org.eclipse.xtext.resource.IResourceServiceProvider
-import org.eclipse.xtext.util.MergeableManifest
+import org.eclipse.xtext.util.MergeableManifest2
 import org.eclipse.xtext.util.Tuples
-import org.eclipse.xtext.util.internal.Log
 import org.eclipse.xtext.xtext.generator.model.IXtextGeneratorFileSystemAccess
 import org.eclipse.xtext.xtext.generator.model.ManifestAccess
 import org.eclipse.xtext.xtext.generator.model.PluginXmlAccess
@@ -40,14 +41,33 @@ import org.eclipse.xtext.xtext.generator.model.project.BundleProjectConfig
 import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig
 
 /**
- * The Xtext language infrastructure generator. Can be configured with {@link IXtextGeneratorFragment}
- * instances as well as with some properties declared via setter or adder methods.
+ * The Xtext language infrastructure generator. Use the {@code configuration} block to add general
+ * configuration for your Xtext project and the generated code, e.g.
+ * <pre>
+ * configuration = {
+ *     project = model.project.StandardProjectConfig {
+ *         baseName = "org.example.language"
+ *         rootPath = ".."
+ *     }
+ *     code = {
+ *         encoding = 'ISO-8859-1'
+ *     }
+ * }
+ * </pre>
+ * You can generate code for one or more Xtext languages within the same project. For each language,
+ * add a {@code language} block, e.g.
+ * <pre>
+ * language = StandardLanguage {
+ *     name = "org.example.language.MyExampleLanguage"
+ * }
+ * </pre>
  * 
- * @noextend
+ * @noextend This class should not be extended by clients.
  */
-@Log
 class XtextGenerator extends AbstractWorkflowComponent2 {
-
+	
+	static val Logger LOG = Logger.getLogger(XtextGenerator)
+	
 	@Accessors
 	DefaultGeneratorModule configuration = new DefaultGeneratorModule
 	
@@ -84,7 +104,7 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 		this.languageConfigs.add(language)
 	}
 	
-	override protected checkConfigurationInternal(org.eclipse.emf.mwe.core.issues.Issues issues) {
+	override protected checkConfigurationInternal(Issues issues) {
 		initialize
 		val generatorIssues = new MweIssues(this, issues)
 		configuration.checkConfiguration(generatorIssues)
@@ -140,7 +160,7 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 		parent.createChildInjector(new LanguageModule(language))
 	}
 	
-	protected override invokeInternal(WorkflowContext ctx, ProgressMonitor monitor, org.eclipse.emf.mwe.core.issues.Issues issues) {
+	protected override invokeInternal(WorkflowContext ctx, ProgressMonitor monitor, Issues issues) {
 		initialize
 		try {
 			cleaner.clean
@@ -187,8 +207,6 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 		templates.createIdeGenModule(language).writeTo(projectConfig.genericIde.srcGen)
 		templates.createEclipsePluginGenModule(language).writeTo(projectConfig.eclipsePlugin.srcGen)
 		templates.createEclipsePluginModule(language).writeTo(projectConfig.eclipsePlugin.src)
-		templates.createIdeaGenModule(language).writeTo(projectConfig.ideaPlugin.srcGen)
-		templates.createIdeaModule(language).writeTo(projectConfig.ideaPlugin.src)
 		templates.createWebGenModule(language).writeTo(projectConfig.web.srcGen)
 		templates.createWebModule(language).writeTo(projectConfig.web.src)
 	}
@@ -252,7 +270,7 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 		var InputStream in
 		try {
 			in = metaInf.readBinaryFile(manifest.path)
-			val merge = new MergeableManifest(in, manifest.bundleName)
+			val merge = new MergeableManifest2(in, manifest.bundleName)
 			merge.lineDelimiter = codeConfig.lineDelimiter
 			merge.addExportedPackages(manifest.exportedPackages)
 			merge.addRequiredBundles(manifest.requiredBundles)
@@ -289,7 +307,7 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 	
 	protected def void generateActivator() {
 		if (projectConfig.eclipsePlugin.srcGen !== null && !languageConfigs.empty)
-			templates.createEclipsePluginActivator(languageConfigs).writeTo(projectConfig.eclipsePlugin.srcGen)
+			templates.createEclipsePluginActivator(projectConfig, languageConfigs).writeTo(projectConfig.eclipsePlugin.srcGen)
 	}
 	
 	protected def void generatePluginXmls() {
@@ -320,7 +338,7 @@ class XtextGenerator extends AbstractWorkflowComponent2 {
 			if (root.isFile(pluginXml.path)) { 
 				// only write plugin.xml_gen if entries exist and content differs
 				if (!pluginXml.entries.isEmpty
-					&& root.readTextFile(pluginXml.path) != pluginXml.getContent 
+					&& root.readTextFile(pluginXml.path)?.toString != pluginXml.getContentString
 					&& pluginXml.path.endsWith('.xml')) {
 						pluginXml.path = pluginXml.path + '_gen'
 						pluginXml.writeTo(root)

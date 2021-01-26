@@ -204,7 +204,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "first", true, "foo\\bar");
+                    					setWithLastConsumed(current, "first", lv_first_0_0 != null, "foo\\bar");
                     				
 
                     }
@@ -232,7 +232,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "second", true, "foo\\");
+                    					setWithLastConsumed(current, "second", lv_second_1_0 != null, "foo\\");
                     				
 
                     }
@@ -260,7 +260,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "third", true, "\\bar");
+                    					setWithLastConsumed(current, "third", lv_third_2_0 != null, "\\bar");
                     				
 
                     }
@@ -282,13 +282,13 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     {
                     lv_forth_3_0=(Token)match(input,14,FollowSets000.FOLLOW_2); 
 
-                    					newLeafNode(lv_forth_3_0, grammarAccess.getModelAccess().getForthReverseSolidusKeyword_3_0());
+                    					newLeafNode(lv_forth_3_0, grammarAccess.getModelAccess().getForthBackslashKeyword_3_0());
                     				
 
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "forth", true, "\\");
+                    					setWithLastConsumed(current, "forth", lv_forth_3_0 != null, "\\");
                     				
 
                     }
@@ -316,7 +316,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "fifth", true, "\"a\"");
+                    					setWithLastConsumed(current, "fifth", lv_fifth_4_0 != null, "\"a\"");
                     				
 
                     }
@@ -344,7 +344,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "sixth", true, "\'b\'");
+                    					setWithLastConsumed(current, "sixth", lv_sixth_5_0 != null, "\'b\'");
                     				
 
                     }
@@ -372,7 +372,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "seventh", true, "\'c\'");
+                    					setWithLastConsumed(current, "seventh", lv_seventh_6_0 != null, "\'c\'");
                     				
 
                     }
@@ -400,7 +400,7 @@ public class InternalKeywordsTestLanguageParser extends AbstractInternalAntlrPar
                     					if (current==null) {
                     						current = createModelElement(grammarAccess.getModelRule());
                     					}
-                    					setWithLastConsumed(current, "eighth", true, "\"d\"");
+                    					setWithLastConsumed(current, "eighth", lv_eighth_7_0 != null, "\"d\"");
                     				
 
                     }

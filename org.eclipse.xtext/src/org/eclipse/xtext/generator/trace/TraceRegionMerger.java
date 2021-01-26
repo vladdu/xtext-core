@@ -1,18 +1,22 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
 import static com.google.common.collect.Lists.*;
+import static com.google.common.collect.Sets.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 
@@ -44,7 +48,7 @@ public class TraceRegionMerger {
 				firstLeaf.getMyLineNumber(), 
 				lastLeaf.getMyEndLineNumber(), 
 				true,
-				Collections.<ILocationData>emptyList(), null);
+				(Collection<ILocationData>) Collections.<ILocationData>emptyList(), null);
 		for(AbstractTraceRegion leafRegion: leafRegions) 
 			leafRegion.setParent(mergedRoot);
 		return mergedRoot;
@@ -93,7 +97,7 @@ public class TraceRegionMerger {
 					if (newRegions == null)
 						newRegions = Lists.newArrayListWithExpectedSize(4);
 					newRegions.add(new TraceRegion(prevEnd, next.getMyOffset() - prevEnd, 
-							prev.getMyEndLineNumber(), next.getMyLineNumber(), true, locations, null));
+							prev.getMyEndLineNumber(), next.getMyLineNumber(), true, (Collection<ILocationData>) locations, null));
 				}
 			}
 			if (next.getMyOffset() + next.getMyLength() <= exclusiveEndOffset) {
@@ -110,7 +114,7 @@ public class TraceRegionMerger {
 						inclusiveEndLine, 
 						oldEndLine,
 						true,
-						next.getAssociatedLocations(), 
+						(Collection<ILocationData>) next.getAssociatedLocations(), 
 						null));
 				next = replaceMerged(i, next, locations);
 			}
@@ -144,7 +148,7 @@ public class TraceRegionMerger {
 						prevEnd, expectedEndOffset - prevEnd, 
 						pending.getMyEndLineNumber(), expectedEndLine,
 						true,
-						locations, null);
+						(Collection<ILocationData>) locations, null);
 				if (result == null)
 					result = Collections.singletonList(fillRegion);
 				else
@@ -171,13 +175,13 @@ public class TraceRegionMerger {
 				region.getMyOffset(), newLength, 
 				region.getMyLineNumber(), newEndLine,
 				true,
-				region.getAssociatedLocations(), null);
+				(Collection<ILocationData>) region.getAssociatedLocations(), null);
 		leafRegions.set(index, truncated);
 		return truncated;
 	}
 
 	private AbstractTraceRegion replaceMerged(int index, AbstractTraceRegion region, List<ILocationData> locationData) {
-		List<ILocationData> mergedLocations = newArrayList(region.getAssociatedLocations());
+		Set<ILocationData> mergedLocations = newLinkedHashSet(region.getAssociatedLocations());
 		mergedLocations.addAll(locationData);
 		AbstractTraceRegion merged = new TraceRegion(
 				region.getMyOffset(), region.getMyLength(),
@@ -193,7 +197,7 @@ public class TraceRegionMerger {
 				region.getMyOffset(), region.getMyLength(),
 				region.getMyLineNumber(), region.getMyEndLineNumber(),
 				true,
-				region.getAssociatedLocations(), null);
+				(Collection<ILocationData>) region.getAssociatedLocations(), null);
 		return merged;
 	}
 }

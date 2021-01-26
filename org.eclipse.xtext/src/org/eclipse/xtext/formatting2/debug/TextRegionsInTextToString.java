@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.debug;
 
@@ -66,7 +67,8 @@ public class TextRegionsInTextToString {
 		ITextRegionAccess access = getTextRegionAccess();
 		if (access != null) {
 			ITextSegment impactRegion = TextRegions.merge(this.items);
-			List<ILineRegion> expandToLines = TextRegions.expandToLines(impactRegion, getLeadingLines(), getTrailingLines());
+			List<ILineRegion> expandToLines = TextRegions.expandToLines(impactRegion, getLeadingLines(),
+					getTrailingLines());
 			return TextRegions.merge(expandToLines);
 		}
 		return null;
@@ -127,7 +129,7 @@ public class TextRegionsInTextToString {
 			ITextRegionAccess access = getTextRegionAccess();
 			ITextSegment frame = getFrame();
 			if (access == null || frame == null)
-				return "(null)";
+				return box(title, "(no changes)");
 			StringBuilder builder = new StringBuilder();
 			String vizualized = access.getRewriter().renderToString(frame, items);
 			builder.append(box(title, vizualized));

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.conversion.impl;
 
@@ -25,7 +26,7 @@ import com.google.inject.Inject;
 /**
  * Abstract implementation of a value converter that escapes a string
  * based on a set of values. The strategy to compute this values and how the 
- * the string is found in this set is the responsibility of the concrete 
+ * string is found in this set is the responsibility of the concrete 
  * implementation. A common use-case is to collect the keywords in a grammar
  * and match the string against these keywords or to use some ignore-case matching
  * algorithm against the list of normalized keywords.

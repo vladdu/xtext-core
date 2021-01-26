@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -16,6 +17,7 @@ import org.eclipse.xtext.GrammarUtil;
 import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.XtextPackage;
+import org.eclipse.xtext.util.IResourceScopeCache;
 import org.eclipse.xtext.util.Strings;
 import org.eclipse.xtext.validation.ValidationMessageAcceptor;
 
@@ -32,9 +34,11 @@ import org.eclipse.xtext.validation.ValidationMessageAcceptor;
 public class KeywordInspector {
 
 	private final ValidationMessageAcceptor acceptor;
+	private final IResourceScopeCache cache;
 
-	public KeywordInspector(ValidationMessageAcceptor messageAcceptor) {
+	public KeywordInspector(ValidationMessageAcceptor messageAcceptor, IResourceScopeCache cache) {
 		this.acceptor = messageAcceptor;
+		this.cache = cache;
 	}
 	
 	public void inspectKeywordHidesTerminalRule(Keyword keyword) {
@@ -42,14 +46,14 @@ public class KeywordInspector {
 		if (container instanceof TerminalRule)
 			return;
 		Grammar grammar = GrammarUtil.getGrammar(container);
-		List<TerminalRule> rules = GrammarUtil.allTerminalRules(grammar);
+		List<TerminalRule> rules = cache.get(KeywordInspector.class, grammar.eResource(), ()->GrammarUtil.allTerminalRules(grammar));
 		for(TerminalRule rule: rules) {
 			if (!rule.isFragment()) {
 				AbstractElement element = rule.getAlternatives();
 				if (element instanceof Keyword && Strings.isEmpty(element.getCardinality())) {
 					String value = ((Keyword) element).getValue();
 					if (value.equals(keyword.getValue()))
-					acceptor.acceptError(
+						acceptor.acceptError(
 							"The keyword '" + value + "' hides the terminal rule " + rule.getName()+ ".", 
 							keyword,
 							XtextPackage.Literals.KEYWORD__VALUE,

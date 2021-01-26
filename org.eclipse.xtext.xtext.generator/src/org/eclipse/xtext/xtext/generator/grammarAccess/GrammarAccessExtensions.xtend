@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.grammarAccess
 
@@ -11,7 +12,6 @@ import com.google.common.collect.Maps
 import com.google.inject.Binder
 import com.google.inject.Guice
 import com.google.inject.Inject
-import com.ibm.icu.text.Transliterator
 import java.util.ArrayList
 import java.util.List
 import java.util.Map
@@ -68,8 +68,6 @@ class GrammarAccessExtensions {
 	};
 	val Map<String, ISerializer> xtextSerializerByLineDelimiter = Maps.newHashMapWithExpectedSize(2)
 	
-	val transliterator = Transliterator.getInstance('Any-Name')
-	
 	@Inject CodeConfig codeConfig
 	
 	@Inject extension XtextGeneratorNaming
@@ -91,7 +89,7 @@ class GrammarAccessExtensions {
 
 	/**
 	 * Converts an arbitary string to a valid Java identifier that is valid in an Antlr grammar action context, too.
-	 * The string is split up along the the characters that are not valid as java 
+	 * The string is split up along the characters that are not valid as java 
 	 * identifier. The first character of each segments is made upper case which 
 	 * leads to a camel-case style.
 	 * @param text the string
@@ -138,8 +136,7 @@ class GrammarAccessExtensions {
 	 * Returns the Unicode string name for a character.
 	 */
 	def String getUnicodeName(char character) {
-		val transliterated = transliterator.transliterate(String.valueOf(character))
-		return transliterated.substring('\\N{'.length, transliterated.length - '}'.length)
+		Character.getName(character)
 	}
 
 	private def String toJavaIdentifierSegmentInt(String text, boolean isFirst, boolean uppercaseFirst) {

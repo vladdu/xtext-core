@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2;
 
@@ -21,6 +22,7 @@ import org.eclipse.xtext.formatting2.internal.HiddenRegionFormatting;
 import org.eclipse.xtext.formatting2.internal.HiddenRegionFormattingMerger;
 import org.eclipse.xtext.formatting2.internal.HiddenRegionReplacer;
 import org.eclipse.xtext.formatting2.internal.MultilineCommentReplacer;
+import org.eclipse.xtext.formatting2.internal.RegionTraceMissingException;
 import org.eclipse.xtext.formatting2.internal.RootDocument;
 import org.eclipse.xtext.formatting2.internal.SingleHiddenRegionFormatter;
 import org.eclipse.xtext.formatting2.internal.SinglelineCodeCommentReplacer;
@@ -34,6 +36,7 @@ import org.eclipse.xtext.formatting2.regionaccess.IEObjectRegion;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegion;
 import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegionPart;
 import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegion;
+import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegionFinder;
 import org.eclipse.xtext.formatting2.regionaccess.ITextRegionAccess;
 import org.eclipse.xtext.formatting2.regionaccess.ITextRegionExtensions;
 import org.eclipse.xtext.formatting2.regionaccess.ITextReplacement;
@@ -110,15 +113,19 @@ import com.google.common.collect.Lists;
  * </p>
  * 
  * <pre>
- * 	def dispatch void format(Entity entity, extension IFormattableDocument document) {
- * 		entity.regionForFeature(ABSTRACT_ELEMENT__NAME).surround[oneSpace]
- * 		entity.regionForKeyword("{").append[newLine; increaseIndentation]
- * 		for (Feature feature : entity.features) {
- * 			format(feature, document);
- * 			feature.append[newLine]
- * 		}
- * 		entity.regionForKeyword("}").prepend[decreaseIndentation]
- * 	}
+	def dispatch void format(Entity entity, extension IFormattableDocument document) {
+		val open = entity.regionFor.keyword("{")
+		val close = entity.regionFor.keyword("}")
+		entity.regionFor.feature(ABSTRACT_ELEMENT__NAME).surround[oneSpace]
+		entity.superType.surround[oneSpace]
+		open.append[newLine]
+		interior(open, close)[indent]
+		format(entity.getSuperType(), document);
+		for (Feature feature : entity.features) {
+			feature.format
+			feature.append[setNewLines(1, 1, 2)]
+		}
+	}
  * </pre>
  * 
  * <p>
@@ -130,9 +137,9 @@ import com.google.common.collect.Lists;
  * </p>
  * 
  * <p>
- * The methods {@code regionForFeature()} and {@code regionForKeyword} are extension methods: {link
- * ITextRegionAccess#regionForFeature(EObject, EStructuralFeature)} and {link
- * ITextRegionAccess#regionForKeyword(EObject, String)}. They return an {@link ISemanticRegion}.
+ * The method calls {@code regionFor.feature()} and {@code regionFor.keyword()} are using extension methods: {@link
+ * ITextRegionExtensions#regionFor(EObject)} and {@link
+ * ISemanticRegionFinder#keyword(String)} respectively {@link ISemanticRegionFinder#feature(EStructuralFeature)}. They return an {@link ISemanticRegion}.
  * </p>
  * 
  * <p>
@@ -264,15 +271,30 @@ public abstract class AbstractFormatter2 implements IFormatter2 {
 	public final List<ITextReplacement> format(FormatterRequest request) {
 		try {
 			initialize(request);
-			IFormattableDocument document = createFormattableRootDocument();
 			XtextResource xtextResource = request.getTextRegionAccess().getResource();
-			format(xtextResource, document);
+			IFormattableDocument document = createFormattableRootDocument();
+			try {
+				format(xtextResource, document);
+			} catch (RegionTraceMissingException e) {
+				document = handleTraceMissing(document, e);
+			}
 			List<ITextReplacement> rendered = document.renderToTextReplacements();
 			List<ITextReplacement> postprocessed = postProcess(document, rendered);
 			return postprocessed;
 		} finally {
 			reset();
 		}
+	}
+
+	protected IFormattableDocument handleTraceMissing(IFormattableDocument problematic, RegionTraceMissingException e) {
+		if (request.isEnableDebugTracing()) {
+			return problematic;
+		}
+		request.setEnableDebugTracing(true);
+		XtextResource xtextResource = request.getTextRegionAccess().getResource();
+		IFormattableDocument document = createFormattableRootDocument();
+		format(xtextResource, document);
+		return document;
 	}
 
 	/**
@@ -350,11 +372,21 @@ public abstract class AbstractFormatter2 implements IFormatter2 {
 		return false;
 	}
 
+	private boolean isInRequestedRange(int offset, int endOffset) {
+		Collection<ITextRegion> regions = request.getRegions();
+		if (regions.isEmpty())
+			return true;
+		for (org.eclipse.xtext.util.ITextRegion region : regions)
+			if (region.getOffset() <= offset && region.getOffset() + region.getLength() >= endOffset)
+				return true;
+		return false;
+	}
+
 	protected List<ITextReplacement> postProcess(IFormattableDocument document, List<ITextReplacement> replacements) {
 		List<ITextSegment> expected = Lists.newArrayList();
 		IHiddenRegion current = getTextRegionAccess().regionForRootEObject().getPreviousHiddenRegion();
 		while (current != null) {
-			if (current.isUndefined())
+			if (current.isUndefined() && isInRequestedRange(current.getOffset(), current.getEndOffset()))
 				expected.addAll(current.getMergedSpaces());
 			current = current.getNextHiddenRegion();
 		}

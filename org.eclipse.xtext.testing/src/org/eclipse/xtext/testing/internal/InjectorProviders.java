@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2013 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.testing.internal;
 
@@ -35,7 +36,7 @@ public class InjectorProviders {
 			IInjectorProvider injectorProvider = injectorProviderClassCache.get(klass);
 			if (injectorProvider == null) {
 				try {
-					injectorProvider = klass.newInstance();
+					injectorProvider = klass.getDeclaredConstructor().newInstance();
 					injectorProviderClassCache.put(klass, injectorProvider);
 				} catch (Exception e) {
 					throwUncheckedException(e);
@@ -58,7 +59,7 @@ public class InjectorProviders {
 		InjectWith injectWith = testClass.getJavaClass().getAnnotation(InjectWith.class);
 		if (injectWith != null) {
 			try {
-				return injectWith.value().newInstance();
+				return injectWith.value().getDeclaredConstructor().newInstance();
 			} catch (Exception e) {
 				throwUncheckedException(e);
 			}

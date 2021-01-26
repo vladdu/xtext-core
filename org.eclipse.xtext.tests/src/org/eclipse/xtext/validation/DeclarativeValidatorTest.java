@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2019 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.validation;
 
@@ -20,6 +21,7 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.xtext.util.Exceptions;
 import org.eclipse.xtext.validation.ValidationTestHelper.TestChain;
 import org.junit.After;
 import org.junit.Assert;
@@ -343,4 +345,43 @@ public class DeclarativeValidatorTest extends Assert {
 		
 	}
 
+	// By default, NPEs occurring in validation code are swallowed 
+	@Test public void testSwallowNPEInValidation () {
+		AbstractDeclarativeValidator test = new AbstractDeclarativeValidator() {
+			@Check
+			public void foo(Object x) {
+				throw new NullPointerException();
+			}
+		};
+		BasicDiagnostic chain = new BasicDiagnostic();
+		Resource r = new ResourceImpl(URI.createURI("http://foo"));
+		EObject x = EcoreFactory.eINSTANCE.createEAttribute();
+		r.getContents().add(x);
+		test.validate(x, chain, Collections.emptyMap());
+		assertTrue(chain.getChildren().isEmpty());
+	}
+
+	// configure validator to forward NPEs occurring in validation code
+	@Test public void testDontSwallowNPEInValidation () {
+		AbstractDeclarativeValidator test = new AbstractDeclarativeValidator() {
+			@Override
+			protected void handleExceptionDuringValidation(Throwable targetException) throws RuntimeException {
+				Exceptions.throwUncheckedException(targetException);
+			}
+			@Check
+			public void foo(Object x) {
+				throw new NullPointerException();
+			}
+		};
+		BasicDiagnostic chain = new BasicDiagnostic();
+		Resource r = new ResourceImpl(URI.createURI("http://foo"));
+		EObject x = EcoreFactory.eINSTANCE.createEAttribute();
+		r.getContents().add(x);
+		try {
+			test.validate(x, chain, Collections.emptyMap());
+			fail("NPE expected");
+		} catch (NullPointerException expected) {
+			; // this is expected
+		}
+	}
 }

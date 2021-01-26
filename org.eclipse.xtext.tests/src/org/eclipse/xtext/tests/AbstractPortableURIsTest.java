@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.tests;
 
@@ -24,7 +25,6 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
@@ -52,7 +52,7 @@ public abstract class AbstractPortableURIsTest extends URIHandlerImpl.PlatformSc
 		GlobalRegistries.initializeDefaults();
 	}
 
-	private ResourceSet resourceSet;
+	private XtextResourceSet resourceSet;
 	private GlobalStateMemento globalStateMemento;
 
 	@Before
@@ -67,8 +67,13 @@ public abstract class AbstractPortableURIsTest extends URIHandlerImpl.PlatformSc
 		resourceSet.getURIConverter().getURIMap().put(URI.createPlatformPluginURI("org.eclipse.xtext/", false), URI.createURI("classpath:/"));
 		resourceSet.getURIConverter().getURIMap().put(URI.createPlatformResourceURI("org.eclipse.emf.ecore/", false), URI.createURI("classpath:/"));
 		resourceSet.getLoadOptions().put(XMLResource.OPTION_URI_HANDLER, this);
+		resourceSet.setClasspathURIContext(getClasspathURIContext());
 	}
 	
+	protected Object getClasspathURIContext() {
+		return null;
+	}
+
 	@After
 	public void tearDown() {
 		globalStateMemento.restoreGlobalState();

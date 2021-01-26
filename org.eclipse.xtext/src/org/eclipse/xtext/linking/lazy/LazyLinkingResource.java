@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.linking.lazy;
@@ -18,6 +19,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.inject.Named;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.TreeIterator;
@@ -78,6 +81,12 @@ public class LazyLinkingResource extends XtextResource {
 	 */
 	public static final String UNRESOLVEABLE_PROXIES_KEY = "UNRESOLVEABLE_PROXIES";
 
+	/**
+	 * Determines the limit that is used to switch from a counter to a set to detect cyclic linking.
+	 * @since 2.16
+	 */
+	public static final String CYCLIC_LINKING_DECTECTION_COUNTER_LIMIT = "CYCLIC_LINKING_DECTECTION_COUNTER_LIMIT";
+
 	@Inject
 	private ILinkingService linkingService;
 
@@ -94,6 +103,12 @@ public class LazyLinkingResource extends XtextResource {
 	private LinkingHelper linkingHelper;
 
 	private boolean eagerLinking = false;
+
+	@Named(CYCLIC_LINKING_DECTECTION_COUNTER_LIMIT)
+	@Inject(optional=true)
+	protected int cyclicLinkingDectectionCounterLimit = 100;
+
+	private int cyclicLinkingDetectionCounter = 0;
 
 	@Override
 	protected void doLoad(InputStream inputStream, Map<?, ?> options) throws IOException {
@@ -236,8 +251,12 @@ public class LazyLinkingResource extends XtextResource {
 	 * @since 2.4
 	 */
 	protected EObject getEObject(String uriFragment, Triple<EObject, EReference, INode> triple) throws AssertionError {
-		if (!resolving.add(triple))
-			return handleCyclicResolution(triple);
+		cyclicLinkingDetectionCounter++;
+		if (cyclicLinkingDetectionCounter > cyclicLinkingDectectionCounterLimit) {
+			if (!resolving.add(triple)) {
+				return handleCyclicResolution(triple);
+			}
+		}
 		try {
 			Set<String> unresolveableProxies = getUnresolvableURIFragments();
 			if (unresolveableProxies.contains(uriFragment))
@@ -287,7 +306,10 @@ public class LazyLinkingResource extends XtextResource {
 			createAndAddDiagnostic(triple, ex);
 			return null;
 		} finally {
-			resolving.remove(triple);
+			if (cyclicLinkingDetectionCounter > cyclicLinkingDectectionCounterLimit) {
+				resolving.remove(triple);
+			}
+			cyclicLinkingDetectionCounter--;
 		}
 	}
 
@@ -485,6 +507,17 @@ public class LazyLinkingResource extends XtextResource {
 	}
 	
 	private ArrayList<Triple<EObject, EReference, INode>> proxyInformation = newArrayList();
+	
+	/**
+	 * Returns the list of installed lazy linking proxies encoded as a {@link Triple} of the owning object,
+	 * the reference and the node that holds the raw text for the link.
+	 * 
+	 * @since 2.23
+	 */
+	protected List<Triple<EObject, EReference, INode>> getLazyProxyInformation() {
+		// Make the list available to sub-types in a modifiable way such that they can work with it more efficiently
+		return proxyInformation;
+	}
 	
 	/**
 	 * @since 2.7

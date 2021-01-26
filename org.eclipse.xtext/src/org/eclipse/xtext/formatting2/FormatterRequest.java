@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2;
 
@@ -206,6 +207,10 @@ public class FormatterRequest {
 			return ExceptionAcceptor.LOGGING;
 		return exceptionHandler;
 	}
+	
+	public IAcceptor<Exception> getExplicitExceptionHandler() {
+		return exceptionHandler;
+	}
 
 	/**
 	 * @see #exceptionHandler
@@ -213,5 +218,24 @@ public class FormatterRequest {
 	public FormatterRequest setExceptionHandler(IAcceptor<Exception> problemHandler) {
 		this.exceptionHandler = problemHandler;
 		return this;
+	}
+	
+	/**
+	 * Enable creation of Java stack traces to diagnose conflicting formatting
+	 * instructions.
+	 * 
+	 * This option is disabled for performance reasons. It is safe to leave it
+	 * disabled, because in case a conflict happens, the formatter will
+	 * automatically enable this flag and format again. The second pass of the
+	 * formatter will then lead to the desired debug information.
+	 **/
+	private boolean enableDebugTracing = false;
+
+	public boolean isEnableDebugTracing() {
+		return enableDebugTracing;
+	}
+
+	public void setEnableDebugTracing(boolean enableDebugTracing) {
+		this.enableDebugTracing = enableDebugTracing;
 	}
 }

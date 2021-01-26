@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.serializer.acceptor;
 
@@ -29,6 +30,7 @@ import org.eclipse.xtext.serializer.analysis.SerializationContext;
 import org.eclipse.xtext.serializer.diagnostic.ISerializationDiagnostic;
 import org.eclipse.xtext.serializer.diagnostic.ISerializationDiagnostic.Acceptor;
 import org.eclipse.xtext.serializer.sequencer.ISemanticSequencer;
+import org.eclipse.xtext.serializer.sequencer.ISemanticNodeProvider;
 import org.eclipse.xtext.serializer.sequencer.ISemanticNodeProvider.INodesForEObjectProvider;
 import org.eclipse.xtext.serializer.tokens.ICrossReferenceSerializer;
 import org.eclipse.xtext.serializer.tokens.IEnumLiteralSerializer;
@@ -56,7 +58,7 @@ public class SequenceFeeder {
 		protected IValueSerializer valueSerializer;
 
 		/**
-		 * @deprecated {@link #create(ISerializationContext, EObject, INodesForEObjectProvider, ISemanticSequencer, ISemanticSequenceAcceptor, Acceptor)}
+		 * @deprecated {@link #create(ISerializationContext, EObject, ISemanticNodeProvider.INodesForEObjectProvider, ISemanticSequencer, ISemanticSequenceAcceptor, ISerializationDiagnostic.Acceptor)}
 		 */
 		@Deprecated
 		public SequenceFeeder create(EObject semanticObject, INodesForEObjectProvider nodes, ISemanticSequencer masterSequencer,
@@ -85,7 +87,7 @@ public class SequenceFeeder {
 	protected final ISerializationContext context;
 	
 	/**
-	 * @deprecated {@link #SequenceFeeder(Provider, ISerializationContext, EObject, INodesForEObjectProvider, ISemanticSequencer, ISemanticSequenceAcceptor, Acceptor)}
+	 * @deprecated {@link #SequenceFeeder(SequenceFeeder.Provider, ISerializationContext, EObject, ISemanticNodeProvider.INodesForEObjectProvider, ISemanticSequencer, ISemanticSequenceAcceptor, ISerializationDiagnostic.Acceptor)}
 	 */
 	@Deprecated
 	protected SequenceFeeder(Provider provider, EObject semanticObject, INodesForEObjectProvider nodes, ISemanticSequencer masterSequencer,

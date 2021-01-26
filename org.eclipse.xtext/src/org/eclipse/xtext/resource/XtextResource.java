@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.resource;
@@ -173,9 +174,9 @@ public class XtextResource extends ResourceImpl {
 		setEncodingFromOptions(options);
 		IParseResult result;
 		if (entryPoint == null) {
-			result = parser.parse(createReader(inputStream));
+			result = getParser().parse(createReader(inputStream));
 		} else {
-			result = parser.parse(entryPoint, createReader(inputStream));
+			result = getParser().parse(entryPoint, createReader(inputStream));
 		}
 		updateInternalState(this.parseResult, result);
 	}
@@ -262,11 +263,11 @@ public class XtextResource extends ResourceImpl {
 			IParseResult newParseResult;
 			ParserRule oldEntryPoint = NodeModelUtils.getEntryParserRule(oldParseResult.getRootNode());
 			if (entryPoint == null || entryPoint == oldEntryPoint) {
-				newParseResult = parser.reparse(oldParseResult, replaceRegion);
+				newParseResult = getParser().reparse(oldParseResult, replaceRegion);
 			} else {
 				StringBuilder builder = new StringBuilder(oldParseResult.getRootNode().getText());
 				replaceRegion.applyTo(builder);
-				newParseResult = parser.parse(entryPoint, new StringReader(builder.toString()));
+				newParseResult = getParser().parse(entryPoint, new StringReader(builder.toString()));
 			}
 			updateInternalState(oldParseResult, newParseResult);
 		} finally {

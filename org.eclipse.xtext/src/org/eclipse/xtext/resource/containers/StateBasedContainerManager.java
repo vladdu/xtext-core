@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource.containers;
 
@@ -84,9 +85,19 @@ public class StateBasedContainerManager implements IContainer.Manager {
 	protected IContainer createContainer(String handle, IResourceDescriptions resourceDescriptions) {
 		IAllContainersState state = getState(resourceDescriptions);
 		IContainerState containerState = new ContainerState(handle, state);
+		
+		return createContainer(resourceDescriptions, state, containerState);
+	}
+
+	/**
+	 * @since 2.20
+	 */
+	protected IContainer createContainer(IResourceDescriptions resourceDescriptions, IAllContainersState allContainerState, IContainerState containerState) {
 		StateBasedContainer result = new StateBasedContainer(resourceDescriptions, containerState);
-		if (state instanceof FlatResourceSetBasedAllContainersState)
+		
+		if (allContainerState instanceof FlatResourceSetBasedAllContainersState)
 			result.setUriToDescriptionCacheEnabled(false);
+		
 		return result;
 	}
 

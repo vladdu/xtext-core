@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.ide.tests.testlanguage.tests;
 
@@ -29,7 +30,6 @@ public class PartialContentAssistTestLanguageInjectorProvider implements IInject
 	@Override
 	public Injector getInjector() {
 		if (injector == null) {
-			stateBeforeInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
 			this.injector = internalCreateInjector();
 			stateAfterInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
 		}
@@ -60,11 +60,15 @@ public class PartialContentAssistTestLanguageInjectorProvider implements IInject
 	@Override
 	public void restoreRegistry() {
 		stateBeforeInjectorCreation.restoreGlobalState();
+		stateBeforeInjectorCreation = null;
 	}
 
 	@Override
 	public void setupRegistry() {
-		getInjector();
+		stateBeforeInjectorCreation = GlobalRegistries.makeCopyOfGlobalState();
+		if (injector == null) {
+			getInjector();
+		}
 		stateAfterInjectorCreation.restoreGlobalState();
 	}
 }

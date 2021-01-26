@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2016 TypeFox GmbH (http://www.typefox.io) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2016, 2017 TypeFox GmbH (http://www.typefox.io) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.ide.server.occurrences;
 
@@ -18,6 +19,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightKind;
+import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.xtext.findReferences.IReferenceFinder;
 import org.eclipse.xtext.findReferences.IReferenceFinder.Acceptor;
 import org.eclipse.xtext.findReferences.TargetURICollector;
@@ -25,13 +27,16 @@ import org.eclipse.xtext.findReferences.TargetURIs;
 import org.eclipse.xtext.ide.server.Document;
 import org.eclipse.xtext.ide.util.DocumentHighlightComparator;
 import org.eclipse.xtext.nodemodel.ICompositeNode;
+import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.parser.IParseResult;
 import org.eclipse.xtext.resource.EObjectAtOffsetHelper;
 import org.eclipse.xtext.resource.ILocationInFileProvider;
 import org.eclipse.xtext.resource.IReferenceDescription;
 import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.ITextRegion;
 import org.eclipse.xtext.util.ITextRegionWithLineInformation;
+import org.eclipse.xtext.util.TextRegion;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -72,6 +77,9 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 	protected ILocationInFileProvider locationInFileProvider;
 
 	@Inject
+	protected ITextRegionTransformer textRegionTransformer;
+
+	@Inject
 	private Provider<TargetURIs> targetURIsProvider;
 
 	@Inject
@@ -81,14 +89,15 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 	private TargetURICollector uriCollector;
 
 	@Inject
-	private ITextRegionTransformer textRegionTransformer;
-
-	@Inject
 	private DocumentHighlightComparator comparator;
 
 	@Override
-	public List<DocumentHighlight> getDocumentHighlights(final XtextResource resource, final int offset) {
+	public List<? extends DocumentHighlight> getDocumentHighlights(Document document, XtextResource resource, DocumentHighlightParams params, CancelIndicator cancelIndicator) {
+		int offset = document.getOffSet(params.getPosition());
+		return getDocumentHighlights(resource, offset);
+	}
 
+	public List<DocumentHighlight> getDocumentHighlights(final XtextResource resource, final int offset) {
 		if (resource == null) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.warn("Resource was null.");
@@ -123,13 +132,13 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 			return emptyList();
 		}
 
-		final EObject selectedElemnt = offsetHelper.resolveElementAt(resource, offset);
-		if (!isDocumentHighlightAvailableFor(selectedElemnt, resource, offset)) {
+		final EObject selectedElement = offsetHelper.resolveElementAt(resource, offset);
+		if (!isDocumentHighlightAvailableFor(selectedElement, resource, offset)) {
 			return emptyList();
 		}
 
 		final Supplier<Document> docSupplier = Suppliers.memoize(() -> new Document(UNUSED_VERSION, docContent));
-		Iterable<URI> targetURIs = getTargetURIs(selectedElemnt);
+		Iterable<URI> targetURIs = getTargetURIs(selectedElement);
 		if (!(targetURIs instanceof TargetURIs)) {
 			final TargetURIs result = targetURIsProvider.get();
 			result.addAllURIs(targetURIs);
@@ -145,8 +154,8 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 		};
 		referenceFinder.findReferences((TargetURIs) targetURIs, resource, acceptor, new NullProgressMonitor());
 
-		if (resource.equals(selectedElemnt.eResource())) {
-			final ITextRegion region = locationInFileProvider.getSignificantTextRegion(selectedElemnt);
+		if (resource.equals(selectedElement.eResource())) {
+			final ITextRegion region = locationInFileProvider.getSignificantTextRegion(selectedElement);
 			if (!isNullOrEmpty(region)) {
 				resultBuilder.add(textRegionTransformer.apply(docSupplier.get(), region, DocumentHighlightKind.Write));
 			}
@@ -162,7 +171,7 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 	 * <p>
 	 * Clients may override this method to change the default behavior.
 	 * 
-	 * @param selectedElemnt
+	 * @param selectedElement
 	 *            the selected element resolved via the offset from the
 	 *            resource. Can be {@code null}.
 	 * @param resource
@@ -174,17 +183,35 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 	 *         selected element, otherwise {@code false}.
 	 *
 	 */
-	protected boolean isDocumentHighlightAvailableFor(final EObject selectedElemnt, final XtextResource resource,
+	protected boolean isDocumentHighlightAvailableFor(final EObject selectedElement, final XtextResource resource,
 			final int offset) {
-
-		if (selectedElemnt == null || !getSelectedElementFilter().apply(selectedElemnt)) {
+		if (selectedElement == null || !getSelectedElementFilter().apply(selectedElement)) {
 			return false;
 		}
 
+		// This code handles the special case where your language has constructs that can refer to
+		// themselves. For example "function MyFunction begin ... end MyFunction" defines the function "MyFunction" and
+		// terminates its implementation block with an additional repetition of the word "MyFunction". Normally, when
+		// you are positioned on a selected element, you only want to highlight that selected element when you are
+		// positioned directly on top of the name of the selected element. However, when the selected element can refer
+		// to itself then there are references inside the element that must trigger highlighting.  In the example,
+		// we also want to highlight "MyFunction" when we are positioned on the "end MyFunction".
+		
+		INode crossReferenceNode = offsetHelper.getCrossReferenceNode(resource, new TextRegion(offset, 0));
+		
+		if (crossReferenceNode != null) {
+			EObject crossReferencedElement = offsetHelper.getCrossReferencedElement(crossReferenceNode);
+
+			if (crossReferencedElement != null && crossReferencedElement == selectedElement) {
+				return true;
+			}
+		}
+
 		final EObject containedElement = offsetHelper.resolveContainedElementAt(resource, offset);
-		// Special handling to avoid such cases when the selection is not
-		// exactly on the desired element.
-		if (selectedElemnt == containedElement) {
+		// When the cursor is positioned in the selected element, then we only want to highlight the selected element
+		// when we are directly on top of the name (the significant text region) of that element.
+		
+ 		if (selectedElement == containedElement) {
 			final ITextRegion region = locationInFileProvider.getSignificantTextRegion(containedElement);
 			return !isNullOrEmpty(region)
 					// Region is comparable to a selection in an editor,
@@ -245,5 +272,7 @@ public class DefaultDocumentHighlightService implements IDocumentHighlightServic
 		}
 
 	}
+
+	
 
 }

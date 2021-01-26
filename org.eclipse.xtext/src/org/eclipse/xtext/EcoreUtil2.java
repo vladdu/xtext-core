@@ -5,11 +5,12 @@
  *  /  \| |_  __/>  <| |_
  * /_/\_\\__\___/_/\_\\__|
  *
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext;
 
@@ -31,6 +32,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.AbstractTreeIterator;
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.SegmentSequence;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
@@ -41,6 +43,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EcorePackage;
+import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.impl.EClassImpl;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -55,10 +58,10 @@ import org.eclipse.xtext.resource.DerivedStateAwareResource;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.Strings;
 
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.MapMaker;
 
 /**
@@ -401,10 +404,14 @@ public class EcoreUtil2 extends EcoreUtil {
 	 * Returns whether the given super type is the same as, or a super type of, some other class.
 	 * @param superType the super type
 	 * @param candidate the subtype
-	 * @return whether the super type is the same as, or a super type of, some other class.
+	 * @return whether the super type is the same as, or a super type of, some other class. Yields <code>null</code>
+	 * when either argument is <code>null</code>.
 	 */
 	public static boolean isAssignableFrom(EClass superType, EClass candidate) {
-		return (candidate != null && (superType == EcorePackage.Literals.EOBJECT || superType.isSuperTypeOf(candidate)));
+		if (superType == null || candidate == null) {
+			return false;
+		}
+		return superType == candidate || superType == EcorePackage.Literals.EOBJECT || superType.isSuperTypeOf(candidate);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -773,4 +780,59 @@ public class EcoreUtil2 extends EcoreUtil {
 			}
 		};
 	}
+	
+	public static URI getFragmentPathURI(final EObject object) {
+		Resource resource = object.eResource();
+		if(resource != null) {
+			String fragment = getFragmentPath(object);
+			URI resourceURI = getPlatformResourceOrNormalizedURI(resource);
+			return resourceURI.appendFragment(fragment);
+		} else {
+			return getPlatformResourceOrNormalizedURI(object);
+		}
+	}
+
+	public static String getFragmentPath(EObject object) {
+		SegmentSequence.Builder builder = SegmentSequence.newBuilder("/");
+		InternalEObject internalEObject = (InternalEObject) object;
+		boolean isContained = internalEObject.eDirectResource() != null;
+		for (InternalEObject container = internalEObject.eInternalContainer(); 
+			container != null && !isContained; 
+			container = internalEObject.eInternalContainer()) {
+			builder.append(getFragmentPathSegment(container, internalEObject.eContainingFeature(), internalEObject));
+			internalEObject = container;
+			if (container.eDirectResource() != null) {
+				isContained = true;
+			}
+		}
+		if (!isContained) {
+			return "/-1";
+		}
+		builder.append(getFragmentPathRootSegment(internalEObject));
+		builder.append("");
+		builder.reverse();
+		return builder.toSegmentSequence().toString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected static String getFragmentPathSegment(InternalEObject container, EStructuralFeature feature, InternalEObject contained) {
+	    StringBuilder result = new StringBuilder();
+	    result.append('@');
+	    result.append(feature.getName());
+	    if(feature.isMany()) {
+			int index = ((List<EObject>) container.eGet(feature)).indexOf(contained);
+		    	result.append(".");
+		    	result.append(index);
+	    }
+	    return result.toString();
+	}
+	
+	protected static String getFragmentPathRootSegment(EObject eObject) {
+		List<EObject> contents = eObject.eResource().getContents();
+		if (contents.size() > 1)
+			return Integer.toString(contents.indexOf(eObject));
+		else
+			return "";
+	}
+
 }

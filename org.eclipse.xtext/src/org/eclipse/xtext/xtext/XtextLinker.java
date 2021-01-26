@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -23,7 +24,6 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.util.EContentAdapter;
 import org.eclipse.xtext.AbstractMetamodelDeclaration;
 import org.eclipse.xtext.AbstractRule;
 import org.eclipse.xtext.CrossReference;
@@ -51,8 +51,8 @@ import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import org.eclipse.xtext.parser.antlr.IReferableElementsUnloader;
 import org.eclipse.xtext.scoping.IScopeProvider;
+import org.eclipse.xtext.util.NonRecursiveEContentAdapter;
 import org.eclipse.xtext.util.OnChangeEvictingCache;
-import org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor;
 import org.eclipse.xtext.xtext.ecoreInference.TransformationDiagnosticsProducer;
 import org.eclipse.xtext.xtext.ecoreInference.Xtext2EcoreTransformer;
 
@@ -70,7 +70,8 @@ public class XtextLinker extends Linker {
 	private IScopeProvider scopeProvider;
 
 	@Inject(optional = true)
-	private IXtext2EcorePostProcessor postProcessor;
+	@SuppressWarnings("deprecation")
+	private org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor postProcessor;
 
 	@Inject(optional = true)
 	private IReferableElementsUnloader unloader;
@@ -86,11 +87,13 @@ public class XtextLinker extends Linker {
 		this.scopeProvider = scopeProvider;
 	}
 
-	public IXtext2EcorePostProcessor getPostProcessor() {
+	@Deprecated
+	public org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor getPostProcessor() {
 		return postProcessor;
 	}
 
-	public void setPostProcessor(IXtext2EcorePostProcessor postProcessor) {
+	@Deprecated
+	public void setPostProcessor(org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor postProcessor) {
 		this.postProcessor = postProcessor;
 	}
 
@@ -198,6 +201,7 @@ public class XtextLinker extends Linker {
 			super.beforeEnsureIsLinked(obj, ref, producer);
 	}
 
+	@SuppressWarnings("deprecation")
 	protected Xtext2EcoreTransformer createTransformer(Grammar grammar, IDiagnosticConsumer consumer) {
 		final Xtext2EcoreTransformer transformer = new Xtext2EcoreTransformer(grammar);
 		transformer.setErrorAcceptor(new TransformationDiagnosticsProducer(consumer));
@@ -271,7 +275,7 @@ public class XtextLinker extends Linker {
 	@Inject
 	private PackageRemover packageRemover;
 
-	public static class PackageRemover extends EContentAdapter {
+	public static class PackageRemover extends NonRecursiveEContentAdapter {
 
 		@Inject
 		private IReferableElementsUnloader unloader;

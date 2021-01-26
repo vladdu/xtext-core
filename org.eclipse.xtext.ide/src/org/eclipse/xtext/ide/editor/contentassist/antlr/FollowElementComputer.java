@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.ide.editor.contentassist.antlr;
 
@@ -66,32 +67,18 @@ public class FollowElementComputer {
 	
 	public void computeFollowElements(Collection<FollowElement> followElements, final IFollowElementAcceptor followElementAcceptor) {
 		FollowElementCalculator calculator = feCalculatorProvider.get();
-		calculator.acceptor = new IFollowElementAcceptor(){
-			@Override
-			public void accept(AbstractElement element) {
-				ParserRule rule = GrammarUtil.containingParserRule(element);
-				if (rule == null || !GrammarUtil.isDatatypeRule(rule))
-					followElementAcceptor.accept(element);
-			}
+		calculator.acceptor = element -> {
+			ParserRule rule = GrammarUtil.containingParserRule(element);
+			if (rule == null || !GrammarUtil.isDatatypeRule(rule))
+				followElementAcceptor.accept(element);
 		};
 		for(FollowElement element: followElements) {
-			List<Integer> paramStack = element.getParamStack();
-			if (!paramStack.isEmpty()) {
-				calculator.setParameterConfig(paramStack.get(paramStack.size() - 1));
-			} else {
-				calculator.setParameterConfig(0);
-			}
 			computeFollowElements(calculator, element);
 		}
 	}
 	
 	public void computeFollowElements(Collection<FollowElement> followElements, final Collection<AbstractElement> result) {
-		computeFollowElements(followElements, new IFollowElementAcceptor(){
-			@Override
-			public void accept(AbstractElement element) {
-				result.add(element);
-			}
-		});
+		computeFollowElements(followElements, result::add);
 	}
 
 	protected void computeFollowElements(FollowElementCalculator calculator, FollowElement element) {
@@ -101,11 +88,16 @@ public class FollowElementComputer {
 	
 	protected void computeFollowElements(FollowElementCalculator calculator, FollowElement element, Multimap<Integer, List<AbstractElement>> visited) {
 		List<AbstractElement> currentState = Lists.newArrayList(element.getLocalTrace());
-		currentState.add(element.getGrammarElement());
+		if (currentState.isEmpty() || currentState.get(currentState.size() - 1) != element.getGrammarElement()) {
+			currentState.add(element.getGrammarElement());
+		}
 		if (!visited.put(element.getLookAhead(), currentState))
 			return;
 		if (element.getLookAhead() <= 1) {
+			List<Integer> paramStack = element.getParamStack();
+			int paramIndex = computeParamStackOffset(currentState, paramStack);
 			for(AbstractElement abstractElement: currentState) {
+				paramIndex = setParamConfigAndUpdateOffset(calculator, paramStack, paramIndex, abstractElement);
 				Assignment ass = EcoreUtil2.getContainerOfType(abstractElement, Assignment.class);
 				if (ass != null)
 					calculator.doSwitch(ass);
@@ -173,6 +165,42 @@ public class FollowElementComputer {
 				computeFollowElements(calculator, newElement, visited);
 			}
 		}
+	}
+
+	/**
+	 * @since 2.14
+	 */
+	protected int setParamConfigAndUpdateOffset(FollowElementCalculator calculator, List<Integer> paramStack, int paramIndex, AbstractElement abstractElement) {
+		if (paramIndex >= 0) {
+			calculator.setParameterConfig(paramStack.get(paramIndex));
+		} else {
+			calculator.setParameterConfig(0);
+		}
+		if (abstractElement instanceof RuleCall) {
+			RuleCall call = (RuleCall) abstractElement;
+			if (!call.getArguments().isEmpty()) {
+				paramIndex++;
+			}
+		}
+		return paramIndex;
+	}
+
+	/**
+	 * @since 2.14
+	 */
+	protected int computeParamStackOffset(List<AbstractElement> currentState, List<Integer> paramStack) {
+		int paramIndex = paramStack.size() - 1;
+		if (!paramStack.isEmpty()) {
+			for(AbstractElement abstractElement: currentState) {
+				if (abstractElement instanceof RuleCall) {
+					RuleCall call = (RuleCall) abstractElement;
+					if (!call.getArguments().isEmpty()) {
+						paramIndex--;
+					}
+				}
+			}
+		}
+		return paramIndex;
 	}
 
 	private boolean isAlternativeWithEmptyPath(AbstractElement abstractElement) {

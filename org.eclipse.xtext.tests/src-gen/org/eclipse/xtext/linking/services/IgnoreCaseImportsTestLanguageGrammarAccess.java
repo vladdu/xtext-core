@@ -14,11 +14,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class IgnoreCaseImportsTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class IgnoreCaseImportsTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.linking.IgnoreCaseImportsTestLanguage.Model");
@@ -28,12 +28,14 @@ public class IgnoreCaseImportsTestLanguageGrammarAccess extends AbstractGrammarE
 		private final Assignment cElementsAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final RuleCall cElementsElementParserRuleCall_1_0 = (RuleCall)cElementsAssignment_1.eContents().get(0);
 		
+		//@Override
 		//Model:
 		//	imports+=Import*
 		//	elements+=Element+;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//imports+=Import* elements+=Element+
+		//imports+=Import*
+		//elements+=Element+
 		public Group getGroup() { return cGroup; }
 		
 		//imports+=Import*
@@ -116,6 +118,7 @@ public class IgnoreCaseImportsTestLanguageGrammarAccess extends AbstractGrammarE
 	}
 
 	
+	//@Override
 	//Model:
 	//	imports+=Import*
 	//	elements+=Element+;

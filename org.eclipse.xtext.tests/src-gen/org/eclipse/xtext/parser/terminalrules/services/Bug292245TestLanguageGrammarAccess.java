@@ -15,11 +15,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug292245TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug292245TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.terminalrules.Bug292245TestLanguage.Model");
@@ -43,7 +43,9 @@ public class Bug292245TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	| 'TICK' tick+=Apostrophe+)*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//('FIX' fix+=Fix+ | 'ERROR' error+=Error+ | 'TICK' tick+=Apostrophe+)*
+		//('FIX' fix+=Fix+
+		//| 'ERROR' error+=Error+
+		//| 'TICK' tick+=Apostrophe+)*
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//'FIX' fix+=Fix+
@@ -160,7 +162,8 @@ public class Bug292245TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cCHARTerminalRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
 		private final RuleCall cWSTerminalRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
 		
-		////some unused char
+		//// some unused char
+		//
 		//Graphical:
 		//	CHAR | WS;
 		@Override public ParserRule getRule() { return rule; }
@@ -283,7 +286,8 @@ public class Bug292245TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		return getRehideAccess().getRule();
 	}
 	
-	////some unused char
+	//// some unused char
+	//
 	//Graphical:
 	//	CHAR | WS;
 	public GraphicalElements getGraphicalAccess() {

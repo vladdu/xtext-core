@@ -3085,7 +3085,7 @@ rule__ParserRule__Group__0__Impl
 :
 (
 	{ before(grammarAccess.getParserRuleAccess().getAnnotationsAssignment_0()); }
-	(rule__ParserRule__AnnotationsAssignment_0)?
+	(rule__ParserRule__AnnotationsAssignment_0)*
 	{ after(grammarAccess.getParserRuleAccess().getAnnotationsAssignment_0()); }
 )
 ;
@@ -6846,7 +6846,7 @@ rule__TerminalRule__Group__0__Impl
 :
 (
 	{ before(grammarAccess.getTerminalRuleAccess().getAnnotationsAssignment_0()); }
-	(rule__TerminalRule__AnnotationsAssignment_0)?
+	(rule__TerminalRule__AnnotationsAssignment_0)*
 	{ after(grammarAccess.getTerminalRuleAccess().getAnnotationsAssignment_0()); }
 )
 ;
@@ -7940,7 +7940,7 @@ rule__EnumRule__Group__0__Impl
 :
 (
 	{ before(grammarAccess.getEnumRuleAccess().getAnnotationsAssignment_0()); }
-	(rule__EnumRule__AnnotationsAssignment_0)?
+	(rule__EnumRule__AnnotationsAssignment_0)*
 	{ after(grammarAccess.getEnumRuleAccess().getAnnotationsAssignment_0()); }
 )
 ;
@@ -9874,9 +9874,9 @@ rule__EnumLiteralDeclaration__EnumLiteralAssignment_0
 	(
 		{ before(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralCrossReference_0_0()); }
 		(
-			{ before(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralIDTerminalRuleCall_0_0_1()); }
-			RULE_ID
-			{ after(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralIDTerminalRuleCall_0_0_1()); }
+			{ before(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralValidIDParserRuleCall_0_0_1()); }
+			ruleValidID
+			{ after(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralValidIDParserRuleCall_0_0_1()); }
 		)
 		{ after(grammarAccess.getEnumLiteralDeclarationAccess().getEnumLiteralEEnumLiteralCrossReference_0_0()); }
 	)

@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator;
 
@@ -12,7 +13,6 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -23,6 +23,8 @@ import java.util.Properties;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtend2.lib.StringConcatenationClient;
@@ -36,23 +38,24 @@ import org.eclipse.xtext.util.Modules2;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
-import org.eclipse.xtext.xtext.generator.IXtextGeneratorLanguage;
-import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming;
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory;
 import org.eclipse.xtext.xtext.generator.model.GeneratedJavaFileAccess;
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess;
 import org.eclipse.xtext.xtext.generator.model.JavaFileAccess;
-import org.eclipse.xtext.xtext.generator.model.StandaloneSetupAccess;
 import org.eclipse.xtext.xtext.generator.model.TypeReference;
 import org.eclipse.xtext.xtext.generator.model.annotations.IClassAnnotation;
 import org.eclipse.xtext.xtext.generator.model.annotations.SuppressWarningsAnnotation;
+import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig;
 
 /**
- * @noreference
+ * Templates for generating the common language infrastructure.
  */
 @Singleton
 @SuppressWarnings("all")
 public class XtextGeneratorTemplates {
+  @Inject
+  private CodeConfig codeConfig;
+  
   @Inject
   private FileAccessFactory fileAccessFactory;
   
@@ -62,8 +65,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createRuntimeSetup(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _runtimeSetup = this.naming.getRuntimeSetup(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -77,8 +80,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
-          String _simpleName = _runtimeSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeGenSetup = XtextGeneratorTemplates.this.naming.getRuntimeGenSetup(it);
@@ -91,8 +93,7 @@ public class XtextGeneratorTemplates {
           _builder.newLine();
           _builder.append("\t\t");
           _builder.append("new ");
-          TypeReference _runtimeSetup_1 = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
-          String _simpleName_1 = _runtimeSetup_1.getSimpleName();
+          String _simpleName_1 = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it).getSimpleName();
           _builder.append(_simpleName_1, "\t\t");
           _builder.append("().createInjectorAndDoEMFRegistration()");
           _builder.newLineIfNotEmpty();
@@ -118,8 +119,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
-          String _simpleName = _runtimeSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeGenSetup = XtextGeneratorTemplates.this.naming.getRuntimeGenSetup(it);
@@ -132,8 +132,7 @@ public class XtextGeneratorTemplates {
           _builder.newLine();
           _builder.append("\t\t");
           _builder.append("new ");
-          TypeReference _runtimeSetup_1 = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
-          String _simpleName_1 = _runtimeSetup_1.getSimpleName();
+          String _simpleName_1 = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it).getSimpleName();
           _builder.append(_simpleName_1, "\t\t");
           _builder.append("().createInjectorAndDoEMFRegistration();");
           _builder.newLineIfNotEmpty();
@@ -148,15 +147,18 @@ public class XtextGeneratorTemplates {
     }
   }
   
-  public JavaFileAccess createRuntimeGenSetup(final IXtextGeneratorLanguage langConfig) {
-    final Grammar it = langConfig.getGrammar();
-    TypeReference _runtimeGenSetup = this.naming.getRuntimeGenSetup(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_runtimeGenSetup);
-    StandaloneSetupAccess _runtimeGenSetup_1 = langConfig.getRuntimeGenSetup();
-    Set<TypeReference> _imports = _runtimeGenSetup_1.getImports();
+  @Deprecated
+  private static void addBackwardsCompabibleImportsTo(final IXtextGeneratorLanguage langConfig, final GeneratedJavaFileAccess file) {
+    Set<TypeReference> _imports = langConfig.getRuntimeGenSetup().getImports();
     for (final TypeReference type : _imports) {
       file.importType(type);
     }
+  }
+  
+  public JavaFileAccess createRuntimeGenSetup(final IXtextGeneratorLanguage langConfig) {
+    final Grammar it = langConfig.getGrammar();
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getRuntimeGenSetup(it));
+    XtextGeneratorTemplates.addBackwardsCompabibleImportsTo(langConfig, file);
     List<IClassAnnotation> _annotations = file.getAnnotations();
     SuppressWarningsAnnotation _suppressWarningsAnnotation = new SuppressWarningsAnnotation();
     _annotations.add(_suppressWarningsAnnotation);
@@ -164,8 +166,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public class ");
-        TypeReference _runtimeGenSetup = XtextGeneratorTemplates.this.naming.getRuntimeGenSetup(it);
-        String _simpleName = _runtimeGenSetup.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeGenSetup(it).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" implements ");
         _builder.append(ISetup.class);
@@ -181,8 +182,7 @@ public class XtextGeneratorTemplates {
         _builder.append(" createInjectorAndDoEMFRegistration() {");
         _builder.newLineIfNotEmpty();
         {
-          Grammar _grammar = langConfig.getGrammar();
-          EList<Grammar> _usedGrammars = _grammar.getUsedGrammars();
+          EList<Grammar> _usedGrammars = langConfig.getGrammar().getUsedGrammars();
           for(final Grammar usedGrammar : _usedGrammars) {
             _builder.append("\t\t");
             TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(usedGrammar);
@@ -192,22 +192,20 @@ public class XtextGeneratorTemplates {
           }
         }
         {
-          Grammar _grammar_1 = langConfig.getGrammar();
-          EList<Grammar> _usedGrammars_1 = _grammar_1.getUsedGrammars();
-          boolean _isEmpty = _usedGrammars_1.isEmpty();
+          boolean _isEmpty = langConfig.getGrammar().getUsedGrammars().isEmpty();
           if (_isEmpty) {
             _builder.append("\t\t");
             _builder.append("// register default ePackages");
             _builder.newLine();
             _builder.append("\t\t");
             _builder.append("if (!");
-            TypeReference _typeRef = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef, "\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey(\"ecore\"))");
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("\t");
-            TypeReference _typeRef_1 = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef_1 = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef_1, "\t\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(");
             _builder.newLineIfNotEmpty();
@@ -220,13 +218,13 @@ public class XtextGeneratorTemplates {
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("if (!");
-            TypeReference _typeRef_3 = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef_3 = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef_3, "\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey(\"xmi\"))");
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("\t");
-            TypeReference _typeRef_4 = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef_4 = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef_4, "\t\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(");
             _builder.newLineIfNotEmpty();
@@ -239,13 +237,13 @@ public class XtextGeneratorTemplates {
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("if (!");
-            TypeReference _typeRef_6 = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef_6 = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef_6, "\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey(\"xtextbin\"))");
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("\t");
-            TypeReference _typeRef_7 = TypeReference.typeRef("org.eclipse.emf.ecore.resource.Resource");
+            TypeReference _typeRef_7 = TypeReference.typeRef(Resource.class);
             _builder.append(_typeRef_7, "\t\t\t");
             _builder.append(".Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(");
             _builder.newLineIfNotEmpty();
@@ -257,7 +255,7 @@ public class XtextGeneratorTemplates {
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("if (!");
-            TypeReference _typeRef_8 = TypeReference.typeRef("org.eclipse.emf.ecore.EPackage");
+            TypeReference _typeRef_8 = TypeReference.typeRef(EPackage.class);
             _builder.append(_typeRef_8, "\t\t");
             _builder.append(".Registry.INSTANCE.containsKey(");
             _builder.append(XtextPackage.class, "\t\t");
@@ -265,7 +263,7 @@ public class XtextGeneratorTemplates {
             _builder.newLineIfNotEmpty();
             _builder.append("\t\t");
             _builder.append("\t");
-            TypeReference _typeRef_9 = TypeReference.typeRef("org.eclipse.emf.ecore.EPackage");
+            TypeReference _typeRef_9 = TypeReference.typeRef(EPackage.class);
             _builder.append(_typeRef_9, "\t\t\t");
             _builder.append(".Registry.INSTANCE.put(");
             _builder.append(XtextPackage.class, "\t\t\t");
@@ -315,8 +313,7 @@ public class XtextGeneratorTemplates {
         _builder.append(" injector) {");
         _builder.newLineIfNotEmpty();
         {
-          StandaloneSetupAccess _runtimeGenSetup_1 = langConfig.getRuntimeGenSetup();
-          List<StringConcatenationClient> _registrations = _runtimeGenSetup_1.getRegistrations();
+          List<StringConcatenationClient> _registrations = langConfig.getRuntimeGenSetup().getRegistrations();
           for(final StringConcatenationClient reg : _registrations) {
             _builder.append("\t\t");
             _builder.append(reg, "\t\t");
@@ -340,9 +337,7 @@ public class XtextGeneratorTemplates {
       if (((!it.getValue().isProvider()) && it.getValue().getStatements().isEmpty())) {
         _builder.append("bind");
       } else {
-        GuiceModuleAccess.BindValue _value = it.getValue();
-        List<Object> _statements = _value.getStatements();
-        boolean _isEmpty = _statements.isEmpty();
+        boolean _isEmpty = it.getValue().getStatements().isEmpty();
         if (_isEmpty) {
           _builder.append("provide");
         } else {
@@ -351,8 +346,7 @@ public class XtextGeneratorTemplates {
       }
     }
     String _elvis = null;
-    GuiceModuleAccess.BindKey _key = it.getKey();
-    String _name = _key.getName();
+    String _name = it.getKey().getName();
     String _replace = null;
     if (_name!=null) {
       _replace=_name.replace(".", "$");
@@ -360,9 +354,7 @@ public class XtextGeneratorTemplates {
     if (_replace != null) {
       _elvis = _replace;
     } else {
-      GuiceModuleAccess.BindKey _key_1 = it.getKey();
-      TypeReference _type = _key_1.getType();
-      String _simpleMethodName = this.getSimpleMethodName(_type);
+      String _simpleMethodName = this.getSimpleMethodName(it.getKey().getType());
       _elvis = _simpleMethodName;
     }
     _builder.append(_elvis);
@@ -375,13 +367,11 @@ public class XtextGeneratorTemplates {
   }
   
   private String getSimpleMethodName(final TypeReference type) {
-    List<String> _simpleNames = type.getSimpleNames();
-    String _join = IterableExtensions.join(_simpleNames, "$");
-    List<TypeReference> _typeArguments = type.getTypeArguments();
+    String _join = IterableExtensions.join(type.getSimpleNames(), "$");
     final Function1<TypeReference, CharSequence> _function = (TypeReference it) -> {
       return this.getSimpleMethodName(it);
     };
-    String _join_1 = IterableExtensions.<TypeReference>join(_typeArguments, "$", "$", "", _function);
+    String _join_1 = IterableExtensions.<TypeReference>join(type.getTypeArguments(), "$", "$", "", _function);
     return (_join + _join_1);
   }
   
@@ -396,14 +386,12 @@ public class XtextGeneratorTemplates {
             _builder.append(_contributedBy);
             _builder.newLineIfNotEmpty();
             {
-              GuiceModuleAccess.BindKey _key = it.getKey();
-              boolean _isSingleton = _key.isSingleton();
+              boolean _isSingleton = it.getKey().isSingleton();
               if (_isSingleton) {
                 _builder.append("@");
                 _builder.append(SingletonBinding.class);
                 {
-                  GuiceModuleAccess.BindKey _key_1 = it.getKey();
-                  boolean _isEagerSingleton = _key_1.isEagerSingleton();
+                  boolean _isEagerSingleton = it.getKey().isEagerSingleton();
                   if (_isEagerSingleton) {
                     _builder.append("(eager=true)");
                   }
@@ -413,18 +401,15 @@ public class XtextGeneratorTemplates {
             _builder.newLineIfNotEmpty();
             _builder.append("public ");
             {
-              GuiceModuleAccess.BindValue _value = it.getValue();
-              Object _expression = _value.getExpression();
+              Object _expression = it.getValue().getExpression();
               boolean _tripleEquals = (_expression == null);
               if (_tripleEquals) {
                 _builder.append("Class<? extends ");
-                GuiceModuleAccess.BindKey _key_2 = it.getKey();
-                TypeReference _type = _key_2.getType();
+                TypeReference _type = it.getKey().getType();
                 _builder.append(_type);
                 _builder.append(">");
               } else {
-                GuiceModuleAccess.BindKey _key_3 = it.getKey();
-                TypeReference _type_1 = _key_3.getType();
+                TypeReference _type_1 = it.getKey().getType();
                 _builder.append(_type_1);
               }
             }
@@ -436,16 +421,13 @@ public class XtextGeneratorTemplates {
             _builder.append("\t");
             _builder.append("return ");
             {
-              GuiceModuleAccess.BindValue _value_1 = it.getValue();
-              Object _expression_1 = _value_1.getExpression();
+              Object _expression_1 = it.getValue().getExpression();
               boolean _tripleNotEquals = (_expression_1 != null);
               if (_tripleNotEquals) {
-                GuiceModuleAccess.BindValue _value_2 = it.getValue();
-                Object _expression_2 = _value_2.getExpression();
+                Object _expression_2 = it.getValue().getExpression();
                 _builder.append(_expression_2, "\t");
               } else {
-                GuiceModuleAccess.BindValue _value_3 = it.getValue();
-                TypeReference _type_2 = _value_3.getType();
+                TypeReference _type_2 = it.getValue().getType();
                 _builder.append(_type_2, "\t");
                 _builder.append(".class");
               }
@@ -455,23 +437,19 @@ public class XtextGeneratorTemplates {
             _builder.append("}");
             _builder.newLine();
           } else {
-            GuiceModuleAccess.BindValue _value_4 = it.getValue();
-            List<Object> _statements = _value_4.getStatements();
-            boolean _isEmpty = _statements.isEmpty();
+            boolean _isEmpty = it.getValue().getStatements().isEmpty();
             if (_isEmpty) {
               _builder.append("// contributed by ");
               String _contributedBy_1 = it.getContributedBy();
               _builder.append(_contributedBy_1);
               _builder.newLineIfNotEmpty();
               {
-                GuiceModuleAccess.BindKey _key_4 = it.getKey();
-                boolean _isSingleton_1 = _key_4.isSingleton();
+                boolean _isSingleton_1 = it.getKey().isSingleton();
                 if (_isSingleton_1) {
                   _builder.append("@");
                   _builder.append(SingletonBinding.class);
                   {
-                    GuiceModuleAccess.BindKey _key_5 = it.getKey();
-                    boolean _isEagerSingleton_1 = _key_5.isEagerSingleton();
+                    boolean _isEagerSingleton_1 = it.getKey().isEagerSingleton();
                     if (_isEagerSingleton_1) {
                       _builder.append("(eager=true)");
                     }
@@ -481,22 +459,19 @@ public class XtextGeneratorTemplates {
               _builder.newLineIfNotEmpty();
               _builder.append("public ");
               {
-                GuiceModuleAccess.BindValue _value_5 = it.getValue();
-                Object _expression_3 = _value_5.getExpression();
+                Object _expression_3 = it.getValue().getExpression();
                 boolean _tripleEquals_1 = (_expression_3 == null);
                 if (_tripleEquals_1) {
                   _builder.append("Class<? extends ");
                   _builder.append(Provider.class);
                   _builder.append("<? extends ");
-                  GuiceModuleAccess.BindKey _key_6 = it.getKey();
-                  TypeReference _type_3 = _key_6.getType();
+                  TypeReference _type_3 = it.getKey().getType();
                   _builder.append(_type_3);
                   _builder.append(">>");
                 } else {
                   _builder.append(Provider.class);
                   _builder.append("<? extends ");
-                  GuiceModuleAccess.BindKey _key_7 = it.getKey();
-                  TypeReference _type_4 = _key_7.getType();
+                  TypeReference _type_4 = it.getKey().getType();
                   _builder.append(_type_4);
                   _builder.append(">");
                 }
@@ -509,16 +484,13 @@ public class XtextGeneratorTemplates {
               _builder.append("\t");
               _builder.append("return ");
               {
-                GuiceModuleAccess.BindValue _value_6 = it.getValue();
-                Object _expression_4 = _value_6.getExpression();
+                Object _expression_4 = it.getValue().getExpression();
                 boolean _tripleNotEquals_1 = (_expression_4 != null);
                 if (_tripleNotEquals_1) {
-                  GuiceModuleAccess.BindValue _value_7 = it.getValue();
-                  Object _expression_5 = _value_7.getExpression();
+                  Object _expression_5 = it.getValue().getExpression();
                   _builder.append(_expression_5, "\t");
                 } else {
-                  GuiceModuleAccess.BindValue _value_8 = it.getValue();
-                  TypeReference _type_5 = _value_8.getType();
+                  TypeReference _type_5 = it.getValue().getType();
                   _builder.append(_type_5, "\t");
                   _builder.append(".class");
                 }
@@ -540,9 +512,8 @@ public class XtextGeneratorTemplates {
               _builder.append(" binder) {");
               _builder.newLineIfNotEmpty();
               {
-                GuiceModuleAccess.BindValue _value_9 = it.getValue();
-                List<Object> _statements_1 = _value_9.getStatements();
-                for(final Object statement : _statements_1) {
+                List<Object> _statements = it.getValue().getStatements();
+                for(final Object statement : _statements) {
                   _builder.append("\t");
                   _builder.append(statement, "\t");
                   _builder.newLineIfNotEmpty();
@@ -560,8 +531,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createRuntimeModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _runtimeModule = this.naming.getRuntimeModule(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -575,8 +546,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _runtimeModule = XtextGeneratorTemplates.this.naming.getRuntimeModule(it);
-          String _simpleName = _runtimeModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeGenModule = XtextGeneratorTemplates.this.naming.getRuntimeGenModule(it);
@@ -602,8 +572,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _runtimeModule = XtextGeneratorTemplates.this.naming.getRuntimeModule(it);
-          String _simpleName = _runtimeModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeGenModule = XtextGeneratorTemplates.this.naming.getRuntimeGenModule(it);
@@ -621,8 +590,7 @@ public class XtextGeneratorTemplates {
   public JavaFileAccess createRuntimeGenModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
     TypeReference _elvis = null;
-    GuiceModuleAccess _runtimeGenModule = langConfig.getRuntimeGenModule();
-    TypeReference _superClass = _runtimeGenModule.getSuperClass();
+    TypeReference _superClass = langConfig.getRuntimeGenModule().getSuperClass();
     if (_superClass != null) {
       _elvis = _superClass;
     } else {
@@ -630,8 +598,7 @@ public class XtextGeneratorTemplates {
       _elvis = _runtimeDefaultModule;
     }
     final TypeReference superClass = _elvis;
-    TypeReference _runtimeGenModule_1 = this.naming.getRuntimeGenModule(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_runtimeGenModule_1);
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getRuntimeGenModule(it));
     file.setImportNestedTypeThreshold(JavaFileAccess.DONT_IMPORT_NESTED_TYPES);
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
@@ -640,8 +607,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append(" ");
         _builder.append("* Manual modifications go to {@link ");
-        TypeReference _runtimeModule = XtextGeneratorTemplates.this.naming.getRuntimeModule(it);
-        String _simpleName = _runtimeModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeModule(it).getSimpleName();
         _builder.append(_simpleName, " ");
         _builder.append("}.");
         _builder.newLineIfNotEmpty();
@@ -658,8 +624,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public abstract class ");
-        TypeReference _runtimeGenModule = XtextGeneratorTemplates.this.naming.getRuntimeGenModule(it);
-        String _simpleName = _runtimeGenModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getRuntimeGenModule(it).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" extends ");
         _builder.append(superClass);
@@ -682,9 +647,7 @@ public class XtextGeneratorTemplates {
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t");
         _builder.append("properties = tryBindProperties(binder, \"");
-        Grammar _grammar = langConfig.getGrammar();
-        String _name = _grammar.getName();
-        String _replaceAll = _name.replaceAll("\\.", "/");
+        String _replaceAll = langConfig.getGrammar().getName().replaceAll("\\.", "/");
         _builder.append(_replaceAll, "\t\t");
         _builder.append(".properties\");");
         _builder.newLineIfNotEmpty();
@@ -707,9 +670,8 @@ public class XtextGeneratorTemplates {
         _builder.append(".named(");
         _builder.append(Constants.class, "\t\t");
         _builder.append(".LANGUAGE_NAME)).toInstance(\"");
-        Grammar _grammar_1 = langConfig.getGrammar();
-        String _name_1 = _grammar_1.getName();
-        _builder.append(_name_1, "\t\t");
+        String _name = langConfig.getGrammar().getName();
+        _builder.append(_name, "\t\t");
         _builder.append("\");");
         _builder.newLineIfNotEmpty();
         _builder.append("\t");
@@ -731,8 +693,7 @@ public class XtextGeneratorTemplates {
         _builder.append(".named(");
         _builder.append(Constants.class, "\t\t\t");
         _builder.append(".FILE_EXTENSIONS)).toInstance(\"");
-        List<String> _fileExtensions = langConfig.getFileExtensions();
-        String _join = IterableExtensions.join(_fileExtensions, ",");
+        String _join = IterableExtensions.join(langConfig.getFileExtensions(), ",");
         _builder.append(_join, "\t\t\t");
         _builder.append("\");");
         _builder.newLineIfNotEmpty();
@@ -742,8 +703,7 @@ public class XtextGeneratorTemplates {
         _builder.append("\t");
         _builder.newLine();
         {
-          GuiceModuleAccess _runtimeGenModule_1 = langConfig.getRuntimeGenModule();
-          Set<GuiceModuleAccess.Binding> _bindings = _runtimeGenModule_1.getBindings();
+          Set<GuiceModuleAccess.Binding> _bindings = langConfig.getRuntimeGenModule().getBindings();
           for(final GuiceModuleAccess.Binding binding : _bindings) {
             _builder.append("\t");
             StringConcatenationClient _createBindingMethod = XtextGeneratorTemplates.this.createBindingMethod(binding);
@@ -764,8 +724,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createIdeModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _genericIdeModule = this.naming.getGenericIdeModule(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -779,8 +739,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _genericIdeModule = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it);
-          String _simpleName = _genericIdeModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _genericIdeGenModule = XtextGeneratorTemplates.this.naming.getGenericIdeGenModule(it);
@@ -806,8 +765,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _genericIdeModule = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it);
-          String _simpleName = _genericIdeModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _genericIdeGenModule = XtextGeneratorTemplates.this.naming.getGenericIdeGenModule(it);
@@ -825,8 +783,7 @@ public class XtextGeneratorTemplates {
   public JavaFileAccess createIdeGenModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
     TypeReference _elvis = null;
-    GuiceModuleAccess _ideGenModule = langConfig.getIdeGenModule();
-    TypeReference _superClass = _ideGenModule.getSuperClass();
+    TypeReference _superClass = langConfig.getIdeGenModule().getSuperClass();
     if (_superClass != null) {
       _elvis = _superClass;
     } else {
@@ -834,8 +791,7 @@ public class XtextGeneratorTemplates {
       _elvis = _genericIdeDefaultModule;
     }
     final TypeReference superClass = _elvis;
-    TypeReference _genericIdeGenModule = this.naming.getGenericIdeGenModule(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_genericIdeGenModule);
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getGenericIdeGenModule(it));
     file.setImportNestedTypeThreshold(JavaFileAccess.DONT_IMPORT_NESTED_TYPES);
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
@@ -844,8 +800,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append(" ");
         _builder.append("* Manual modifications go to {@link ");
-        TypeReference _genericIdeModule = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it);
-        String _simpleName = _genericIdeModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeModule(it).getSimpleName();
         _builder.append(_simpleName, " ");
         _builder.append("}.");
         _builder.newLineIfNotEmpty();
@@ -862,8 +817,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public abstract class ");
-        TypeReference _genericIdeGenModule = XtextGeneratorTemplates.this.naming.getGenericIdeGenModule(it);
-        String _simpleName = _genericIdeGenModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeGenModule(it).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" extends ");
         _builder.append(superClass);
@@ -871,8 +825,7 @@ public class XtextGeneratorTemplates {
         _builder.newLineIfNotEmpty();
         _builder.newLine();
         {
-          GuiceModuleAccess _ideGenModule = langConfig.getIdeGenModule();
-          Set<GuiceModuleAccess.Binding> _bindings = _ideGenModule.getBindings();
+          Set<GuiceModuleAccess.Binding> _bindings = langConfig.getIdeGenModule().getBindings();
           for(final GuiceModuleAccess.Binding binding : _bindings) {
             _builder.append("\t");
             StringConcatenationClient _createBindingMethod = XtextGeneratorTemplates.this.createBindingMethod(binding);
@@ -893,8 +846,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createIdeSetup(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _genericIdeSetup = this.naming.getGenericIdeSetup(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -908,8 +861,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _genericIdeSetup = XtextGeneratorTemplates.this.naming.getGenericIdeSetup(it);
-          String _simpleName = _genericIdeSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
@@ -956,8 +908,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _genericIdeSetup = XtextGeneratorTemplates.this.naming.getGenericIdeSetup(it);
-          String _simpleName = _genericIdeSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getGenericIdeSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
@@ -1001,8 +952,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createEclipsePluginModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _eclipsePluginModule = this.naming.getEclipsePluginModule(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -1019,8 +970,7 @@ public class XtextGeneratorTemplates {
           _builder.append(FinalFieldsConstructor.class);
           _builder.newLineIfNotEmpty();
           _builder.append("class ");
-          TypeReference _eclipsePluginModule = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it);
-          String _simpleName = _eclipsePluginModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _eclipsePluginGenModule = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it);
@@ -1046,8 +996,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _eclipsePluginModule = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it);
-          String _simpleName = _eclipsePluginModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _eclipsePluginGenModule = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it);
@@ -1057,8 +1006,7 @@ public class XtextGeneratorTemplates {
           _builder.newLine();
           _builder.append("\t");
           _builder.append("public ");
-          TypeReference _eclipsePluginModule_1 = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it);
-          String _simpleName_1 = _eclipsePluginModule_1.getSimpleName();
+          String _simpleName_1 = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it).getSimpleName();
           _builder.append(_simpleName_1, "\t");
           _builder.append("(");
           TypeReference _typeRef = TypeReference.typeRef("org.eclipse.ui.plugin.AbstractUIPlugin");
@@ -1082,8 +1030,7 @@ public class XtextGeneratorTemplates {
   public JavaFileAccess createEclipsePluginGenModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
     TypeReference _elvis = null;
-    GuiceModuleAccess _eclipsePluginGenModule = langConfig.getEclipsePluginGenModule();
-    TypeReference _superClass = _eclipsePluginGenModule.getSuperClass();
+    TypeReference _superClass = langConfig.getEclipsePluginGenModule().getSuperClass();
     if (_superClass != null) {
       _elvis = _superClass;
     } else {
@@ -1091,8 +1038,7 @@ public class XtextGeneratorTemplates {
       _elvis = _eclipsePluginDefaultModule;
     }
     final TypeReference superClass = _elvis;
-    TypeReference _eclipsePluginGenModule_1 = this.naming.getEclipsePluginGenModule(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_eclipsePluginGenModule_1);
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getEclipsePluginGenModule(it));
     file.setImportNestedTypeThreshold(JavaFileAccess.DONT_IMPORT_NESTED_TYPES);
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
@@ -1101,8 +1047,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append(" ");
         _builder.append("* Manual modifications go to {@link ");
-        TypeReference _eclipsePluginModule = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it);
-        String _simpleName = _eclipsePluginModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getEclipsePluginModule(it).getSimpleName();
         _builder.append(_simpleName, " ");
         _builder.append("}.");
         _builder.newLineIfNotEmpty();
@@ -1119,8 +1064,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public abstract class ");
-        TypeReference _eclipsePluginGenModule = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it);
-        String _simpleName = _eclipsePluginGenModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" extends ");
         _builder.append(superClass);
@@ -1129,8 +1073,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append("\t");
         _builder.append("public ");
-        TypeReference _eclipsePluginGenModule_1 = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it);
-        String _simpleName_1 = _eclipsePluginGenModule_1.getSimpleName();
+        String _simpleName_1 = XtextGeneratorTemplates.this.naming.getEclipsePluginGenModule(it).getSimpleName();
         _builder.append(_simpleName_1, "\t");
         _builder.append("(");
         TypeReference _typeRef = TypeReference.typeRef("org.eclipse.ui.plugin.AbstractUIPlugin");
@@ -1146,8 +1089,7 @@ public class XtextGeneratorTemplates {
         _builder.append("\t");
         _builder.newLine();
         {
-          GuiceModuleAccess _eclipsePluginGenModule_2 = langConfig.getEclipsePluginGenModule();
-          Set<GuiceModuleAccess.Binding> _bindings = _eclipsePluginGenModule_2.getBindings();
+          Set<GuiceModuleAccess.Binding> _bindings = langConfig.getEclipsePluginGenModule().getBindings();
           for(final GuiceModuleAccess.Binding binding : _bindings) {
             _builder.append("\t");
             StringConcatenationClient _createBindingMethod = XtextGeneratorTemplates.this.createBindingMethod(binding);
@@ -1166,139 +1108,10 @@ public class XtextGeneratorTemplates {
     return file;
   }
   
-  public JavaFileAccess createIdeaModule(final IXtextGeneratorLanguage langConfig) {
-    final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
-      TypeReference _ideaModule = this.naming.getIdeaModule(it);
-      StringConcatenationClient _client = new StringConcatenationClient() {
-        @Override
-        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-          _builder.append("/**");
-          _builder.newLine();
-          _builder.append(" ");
-          _builder.append("* Use this class to register components to be used within IntelliJ IDEA.");
-          _builder.newLine();
-          _builder.append(" ");
-          _builder.append("*/");
-          _builder.newLine();
-          _builder.append("class ");
-          TypeReference _ideaModule = XtextGeneratorTemplates.this.naming.getIdeaModule(it);
-          String _simpleName = _ideaModule.getSimpleName();
-          _builder.append(_simpleName);
-          _builder.append(" extends ");
-          TypeReference _ideaGenModule = XtextGeneratorTemplates.this.naming.getIdeaGenModule(it);
-          _builder.append(_ideaGenModule);
-          _builder.append(" {");
-          _builder.newLineIfNotEmpty();
-          _builder.append("}");
-          _builder.newLine();
-        }
-      };
-      return this.fileAccessFactory.createXtendFile(_ideaModule, _client);
-    } else {
-      TypeReference _ideaModule_1 = this.naming.getIdeaModule(it);
-      StringConcatenationClient _client_1 = new StringConcatenationClient() {
-        @Override
-        protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-          _builder.append("/**");
-          _builder.newLine();
-          _builder.append(" ");
-          _builder.append("* Use this class to register components to be used within IntelliJ IDEA.");
-          _builder.newLine();
-          _builder.append(" ");
-          _builder.append("*/");
-          _builder.newLine();
-          _builder.append("public class ");
-          TypeReference _ideaModule = XtextGeneratorTemplates.this.naming.getIdeaModule(it);
-          String _simpleName = _ideaModule.getSimpleName();
-          _builder.append(_simpleName);
-          _builder.append(" extends ");
-          TypeReference _ideaGenModule = XtextGeneratorTemplates.this.naming.getIdeaGenModule(it);
-          _builder.append(_ideaGenModule);
-          _builder.append(" {");
-          _builder.newLineIfNotEmpty();
-          _builder.append("}");
-          _builder.newLine();
-        }
-      };
-      return this.fileAccessFactory.createJavaFile(_ideaModule_1, _client_1);
-    }
-  }
-  
-  public JavaFileAccess createIdeaGenModule(final IXtextGeneratorLanguage langConfig) {
-    final Grammar it = langConfig.getGrammar();
-    TypeReference _elvis = null;
-    GuiceModuleAccess _ideaGenModule = langConfig.getIdeaGenModule();
-    TypeReference _superClass = _ideaGenModule.getSuperClass();
-    if (_superClass != null) {
-      _elvis = _superClass;
-    } else {
-      TypeReference _ideaDefaultModule = this.naming.getIdeaDefaultModule(it);
-      _elvis = _ideaDefaultModule;
-    }
-    final TypeReference superClass = _elvis;
-    TypeReference _ideaGenModule_1 = this.naming.getIdeaGenModule(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_ideaGenModule_1);
-    file.setImportNestedTypeThreshold(JavaFileAccess.DONT_IMPORT_NESTED_TYPES);
-    StringConcatenationClient _client = new StringConcatenationClient() {
-      @Override
-      protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-        _builder.append("/**");
-        _builder.newLine();
-        _builder.append(" ");
-        _builder.append("* Manual modifications go to {@link ");
-        TypeReference _ideaModule = XtextGeneratorTemplates.this.naming.getIdeaModule(it);
-        String _simpleName = _ideaModule.getSimpleName();
-        _builder.append(_simpleName, " ");
-        _builder.append("}.");
-        _builder.newLineIfNotEmpty();
-        _builder.append(" ");
-        _builder.append("*/");
-        _builder.newLine();
-      }
-    };
-    file.setTypeComment(_client);
-    List<IClassAnnotation> _annotations = file.getAnnotations();
-    SuppressWarningsAnnotation _suppressWarningsAnnotation = new SuppressWarningsAnnotation();
-    _annotations.add(_suppressWarningsAnnotation);
-    StringConcatenationClient _client_1 = new StringConcatenationClient() {
-      @Override
-      protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
-        _builder.append("public abstract class ");
-        TypeReference _ideaGenModule = XtextGeneratorTemplates.this.naming.getIdeaGenModule(it);
-        String _simpleName = _ideaGenModule.getSimpleName();
-        _builder.append(_simpleName);
-        _builder.append(" extends ");
-        _builder.append(superClass);
-        _builder.append(" {");
-        _builder.newLineIfNotEmpty();
-        _builder.append("\t");
-        _builder.newLine();
-        {
-          GuiceModuleAccess _ideaGenModule_1 = langConfig.getIdeaGenModule();
-          Set<GuiceModuleAccess.Binding> _bindings = _ideaGenModule_1.getBindings();
-          for(final GuiceModuleAccess.Binding binding : _bindings) {
-            _builder.append("\t");
-            StringConcatenationClient _createBindingMethod = XtextGeneratorTemplates.this.createBindingMethod(binding);
-            _builder.append(_createBindingMethod, "\t");
-            _builder.newLineIfNotEmpty();
-            _builder.append("\t");
-            _builder.newLine();
-          }
-        }
-        _builder.append("}");
-        _builder.newLine();
-      }
-    };
-    file.setContent(_client_1);
-    return file;
-  }
-  
   public JavaFileAccess createWebModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _webModule = this.naming.getWebModule(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -1312,8 +1125,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _webModule = XtextGeneratorTemplates.this.naming.getWebModule(it);
-          String _simpleName = _webModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getWebModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _webGenModule = XtextGeneratorTemplates.this.naming.getWebGenModule(it);
@@ -1339,8 +1151,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _webModule = XtextGeneratorTemplates.this.naming.getWebModule(it);
-          String _simpleName = _webModule.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getWebModule(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _webGenModule = XtextGeneratorTemplates.this.naming.getWebGenModule(it);
@@ -1358,8 +1169,7 @@ public class XtextGeneratorTemplates {
   public JavaFileAccess createWebGenModule(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
     TypeReference _elvis = null;
-    GuiceModuleAccess _webGenModule = langConfig.getWebGenModule();
-    TypeReference _superClass = _webGenModule.getSuperClass();
+    TypeReference _superClass = langConfig.getWebGenModule().getSuperClass();
     if (_superClass != null) {
       _elvis = _superClass;
     } else {
@@ -1367,8 +1177,7 @@ public class XtextGeneratorTemplates {
       _elvis = _webDefaultModule;
     }
     final TypeReference superClass = _elvis;
-    TypeReference _webGenModule_1 = this.naming.getWebGenModule(it);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_webGenModule_1);
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getWebGenModule(it));
     file.setImportNestedTypeThreshold(JavaFileAccess.DONT_IMPORT_NESTED_TYPES);
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
@@ -1377,8 +1186,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append(" ");
         _builder.append("* Manual modifications go to {@link ");
-        TypeReference _webModule = XtextGeneratorTemplates.this.naming.getWebModule(it);
-        String _simpleName = _webModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getWebModule(it).getSimpleName();
         _builder.append(_simpleName, " ");
         _builder.append("}.");
         _builder.newLineIfNotEmpty();
@@ -1395,8 +1203,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public abstract class ");
-        TypeReference _webGenModule = XtextGeneratorTemplates.this.naming.getWebGenModule(it);
-        String _simpleName = _webGenModule.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getWebGenModule(it).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" extends ");
         _builder.append(superClass);
@@ -1404,8 +1211,7 @@ public class XtextGeneratorTemplates {
         _builder.newLineIfNotEmpty();
         _builder.newLine();
         {
-          GuiceModuleAccess _webGenModule_1 = langConfig.getWebGenModule();
-          Set<GuiceModuleAccess.Binding> _bindings = _webGenModule_1.getBindings();
+          Set<GuiceModuleAccess.Binding> _bindings = langConfig.getWebGenModule().getBindings();
           for(final GuiceModuleAccess.Binding binding : _bindings) {
             _builder.append("\t");
             StringConcatenationClient _createBindingMethod = XtextGeneratorTemplates.this.createBindingMethod(binding);
@@ -1426,8 +1232,8 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createWebSetup(final IXtextGeneratorLanguage langConfig) {
     final Grammar it = langConfig.getGrammar();
-    boolean _isGenerateXtendStubs = langConfig.isGenerateXtendStubs();
-    if (_isGenerateXtendStubs) {
+    boolean _isPreferXtendStubs = this.codeConfig.isPreferXtendStubs();
+    if (_isPreferXtendStubs) {
       TypeReference _webSetup = this.naming.getWebSetup(it);
       StringConcatenationClient _client = new StringConcatenationClient() {
         @Override
@@ -1441,8 +1247,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("class ");
-          TypeReference _webSetup = XtextGeneratorTemplates.this.naming.getWebSetup(it);
-          String _simpleName = _webSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getWebSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
@@ -1496,8 +1301,7 @@ public class XtextGeneratorTemplates {
           _builder.append("*/");
           _builder.newLine();
           _builder.append("public class ");
-          TypeReference _webSetup = XtextGeneratorTemplates.this.naming.getWebSetup(it);
-          String _simpleName = _webSetup.getSimpleName();
+          String _simpleName = XtextGeneratorTemplates.this.naming.getWebSetup(it).getSimpleName();
           _builder.append(_simpleName);
           _builder.append(" extends ");
           TypeReference _runtimeSetup = XtextGeneratorTemplates.this.naming.getRuntimeSetup(it);
@@ -1545,8 +1349,7 @@ public class XtextGeneratorTemplates {
   
   public JavaFileAccess createEclipsePluginExecutableExtensionFactory(final IXtextGeneratorLanguage langConfig, final IXtextGeneratorLanguage activatorLanguage) {
     final Grammar grammar = langConfig.getGrammar();
-    TypeReference _eclipsePluginExecutableExtensionFactory = this.naming.getEclipsePluginExecutableExtensionFactory(grammar);
-    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(_eclipsePluginExecutableExtensionFactory);
+    final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(this.naming.getEclipsePluginExecutableExtensionFactory(grammar));
     StringConcatenationClient _client = new StringConcatenationClient() {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
@@ -1568,8 +1371,7 @@ public class XtextGeneratorTemplates {
       @Override
       protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
         _builder.append("public class ");
-        TypeReference _eclipsePluginExecutableExtensionFactory = XtextGeneratorTemplates.this.naming.getEclipsePluginExecutableExtensionFactory(grammar);
-        String _simpleName = _eclipsePluginExecutableExtensionFactory.getSimpleName();
+        String _simpleName = XtextGeneratorTemplates.this.naming.getEclipsePluginExecutableExtensionFactory(grammar).getSimpleName();
         _builder.append(_simpleName);
         _builder.append(" extends ");
         TypeReference _typeRef = TypeReference.typeRef("org.eclipse.xtext.ui.guice.AbstractGuiceAwareExecutableExtensionFactory");
@@ -1588,9 +1390,12 @@ public class XtextGeneratorTemplates {
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t");
         _builder.append("return ");
+        TypeReference _typeRef_2 = TypeReference.typeRef("org.osgi.framework.FrameworkUtil");
+        _builder.append(_typeRef_2, "\t\t");
+        _builder.append(".getBundle(");
         TypeReference _eclipsePluginActivator = XtextGeneratorTemplates.this.naming.getEclipsePluginActivator();
         _builder.append(_eclipsePluginActivator, "\t\t");
-        _builder.append(".getInstance().getBundle();");
+        _builder.append(".class);");
         _builder.newLineIfNotEmpty();
         _builder.append("\t");
         _builder.append("}");
@@ -1606,24 +1411,25 @@ public class XtextGeneratorTemplates {
         _builder.append(" getInjector() {");
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t");
-        _builder.append("return ");
         TypeReference _eclipsePluginActivator_1 = XtextGeneratorTemplates.this.naming.getEclipsePluginActivator();
         _builder.append(_eclipsePluginActivator_1, "\t\t");
-        _builder.append(".getInstance().getInjector(");
+        _builder.append(" activator = ");
         TypeReference _eclipsePluginActivator_2 = XtextGeneratorTemplates.this.naming.getEclipsePluginActivator();
         _builder.append(_eclipsePluginActivator_2, "\t\t");
+        _builder.append(".getInstance();");
+        _builder.newLineIfNotEmpty();
+        _builder.append("\t\t");
+        _builder.append("return activator != null ? activator.getInjector(");
+        TypeReference _eclipsePluginActivator_3 = XtextGeneratorTemplates.this.naming.getEclipsePluginActivator();
+        _builder.append(_eclipsePluginActivator_3, "\t\t");
         _builder.append(".");
-        Grammar _grammar = langConfig.getGrammar();
-        String _name = _grammar.getName();
-        String _upperCase = _name.toUpperCase();
-        String _replaceAll = _upperCase.replaceAll("\\.", "_");
+        String _replaceAll = langConfig.getGrammar().getName().toUpperCase().replaceAll("\\.", "_");
         _builder.append(_replaceAll, "\t\t");
-        _builder.append(");");
+        _builder.append(") : null;");
         _builder.newLineIfNotEmpty();
         _builder.append("\t");
         _builder.append("}");
         _builder.newLine();
-        _builder.append("\t");
         _builder.newLine();
         _builder.append("}");
         _builder.newLine();
@@ -1633,7 +1439,7 @@ public class XtextGeneratorTemplates {
     return file;
   }
   
-  public JavaFileAccess createEclipsePluginActivator(final List<? extends IXtextGeneratorLanguage> langConfigs) {
+  public JavaFileAccess createEclipsePluginActivator(final IXtextProjectConfig projectConfig, final List<? extends IXtextGeneratorLanguage> langConfigs) {
     final TypeReference activator = this.naming.getEclipsePluginActivator();
     final GeneratedJavaFileAccess file = this.fileAccessFactory.createGeneratedJavaFile(activator);
     StringConcatenationClient _client = new StringConcatenationClient() {
@@ -1665,18 +1471,20 @@ public class XtextGeneratorTemplates {
         _builder.append(" {");
         _builder.newLineIfNotEmpty();
         _builder.newLine();
+        _builder.append("\t");
+        _builder.append("public static final String PLUGIN_ID = \"");
+        String _name = projectConfig.getEclipsePlugin().getName();
+        _builder.append(_name, "\t");
+        _builder.append("\";");
+        _builder.newLineIfNotEmpty();
         {
           for(final IXtextGeneratorLanguage lang : langConfigs) {
             _builder.append("\t");
             _builder.append("public static final String ");
-            Grammar _grammar = lang.getGrammar();
-            String _name = _grammar.getName();
-            String _upperCase = _name.toUpperCase();
-            String _replaceAll = _upperCase.replaceAll("\\.", "_");
+            String _replaceAll = lang.getGrammar().getName().toUpperCase().replaceAll("\\.", "_");
             _builder.append(_replaceAll, "\t");
             _builder.append(" = \"");
-            Grammar _grammar_1 = lang.getGrammar();
-            String _name_1 = _grammar_1.getName();
+            String _name_1 = lang.getGrammar().getName();
             _builder.append(_name_1, "\t");
             _builder.append("\";");
             _builder.newLineIfNotEmpty();
@@ -1817,19 +1625,19 @@ public class XtextGeneratorTemplates {
         _builder.append("try {");
         _builder.newLine();
         _builder.append("\t\t\t");
-        _builder.append(Module.class, "\t\t\t");
+        _builder.append(com.google.inject.Module.class, "\t\t\t");
         _builder.append(" runtimeModule = getRuntimeModule(language);");
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t\t");
-        _builder.append(Module.class, "\t\t\t");
+        _builder.append(com.google.inject.Module.class, "\t\t\t");
         _builder.append(" sharedStateModule = getSharedStateModule();");
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t\t");
-        _builder.append(Module.class, "\t\t\t");
+        _builder.append(com.google.inject.Module.class, "\t\t\t");
         _builder.append(" uiModule = getUiModule(language);");
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t\t");
-        _builder.append(Module.class, "\t\t\t");
+        _builder.append(com.google.inject.Module.class, "\t\t\t");
         _builder.append(" mergedModule = ");
         _builder.append(Modules2.class, "\t\t\t");
         _builder.append(".mixin(runtimeModule, sharedStateModule, uiModule);");
@@ -1860,16 +1668,15 @@ public class XtextGeneratorTemplates {
         _builder.append("\t");
         _builder.newLine();
         _builder.append("\t");
-        _builder.append("protected Module getRuntimeModule(String grammar) {");
-        _builder.newLine();
+        _builder.append("protected ");
+        _builder.append(com.google.inject.Module.class, "\t");
+        _builder.append(" getRuntimeModule(String grammar) {");
+        _builder.newLineIfNotEmpty();
         {
           for(final IXtextGeneratorLanguage lang_1 : langConfigs) {
             _builder.append("\t\t");
             _builder.append("if (");
-            Grammar _grammar_2 = lang_1.getGrammar();
-            String _name_2 = _grammar_2.getName();
-            String _upperCase_1 = _name_2.toUpperCase();
-            String _replaceAll_1 = _upperCase_1.replaceAll("\\.", "_");
+            String _replaceAll_1 = lang_1.getGrammar().getName().toUpperCase().replaceAll("\\.", "_");
             _builder.append(_replaceAll_1, "\t\t");
             _builder.append(".equals(grammar)) {");
             _builder.newLineIfNotEmpty();
@@ -1895,17 +1702,14 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append("\t");
         _builder.append("protected ");
-        _builder.append(Module.class, "\t");
+        _builder.append(com.google.inject.Module.class, "\t");
         _builder.append(" getUiModule(String grammar) {");
         _builder.newLineIfNotEmpty();
         {
           for(final IXtextGeneratorLanguage lang_2 : langConfigs) {
             _builder.append("\t\t");
             _builder.append("if (");
-            Grammar _grammar_3 = lang_2.getGrammar();
-            String _name_3 = _grammar_3.getName();
-            String _upperCase_2 = _name_3.toUpperCase();
-            String _replaceAll_2 = _upperCase_2.replaceAll("\\.", "_");
+            String _replaceAll_2 = lang_2.getGrammar().getName().toUpperCase().replaceAll("\\.", "_");
             _builder.append(_replaceAll_2, "\t\t");
             _builder.append(".equals(grammar)) {");
             _builder.newLineIfNotEmpty();
@@ -1931,7 +1735,7 @@ public class XtextGeneratorTemplates {
         _builder.newLine();
         _builder.append("\t");
         _builder.append("protected ");
-        _builder.append(Module.class, "\t");
+        _builder.append(com.google.inject.Module.class, "\t");
         _builder.append(" getSharedStateModule() {");
         _builder.newLineIfNotEmpty();
         _builder.append("\t\t");
@@ -1942,6 +1746,8 @@ public class XtextGeneratorTemplates {
         _builder.newLineIfNotEmpty();
         _builder.append("\t");
         _builder.append("}");
+        _builder.newLine();
+        _builder.append("\t");
         _builder.newLine();
         _builder.append("\t");
         _builder.newLine();

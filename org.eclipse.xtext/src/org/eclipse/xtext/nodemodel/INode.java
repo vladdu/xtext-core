@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.nodemodel;
 
@@ -156,6 +157,7 @@ public interface INode {
 	/**
 	 * Returns the parsed text that is covered by this node (including hidden tokens). The result is never <code>null</code>
 	 * but may be empty.
+	 * @throws IllegalStateException if the text is not available. A possible reason is, that the node is not part of a valid node model.
 	 * @return the parsed text that is covered by this node (including hidden tokens). Never <code>null</code>.
 	 */
 	String getText();

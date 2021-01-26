@@ -1070,6 +1070,17 @@ ruleSingleCrossReference returns [EObject current=null]
 							lv_name_1_2,
 							"org.eclipse.xtext.common.Terminals.ID");
 					}
+					    |
+					lv_name_1_3='kw5'
+					{
+						newLeafNode(lv_name_1_3, grammarAccess.getSingleCrossReferenceAccess().getNameKw5Keyword_1_0_2());
+					}
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getSingleCrossReferenceRule());
+						}
+						setWithLastConsumed($current, "name", lv_name_1_3, null);
+					}
 				)
 			)
 		)
@@ -1148,6 +1159,25 @@ ruleSingleCrossReference returns [EObject current=null]
 					otherlv_9=RULE_ID
 					{
 						newLeafNode(otherlv_9, grammarAccess.getSingleCrossReferenceAccess().getRef4SingleCrossReferenceCrossReference_5_1_0());
+					}
+				)
+			)
+		)?
+		(
+			otherlv_10='kw5'
+			{
+				newLeafNode(otherlv_10, grammarAccess.getSingleCrossReferenceAccess().getKw5Keyword_6_0());
+			}
+			(
+				(
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getSingleCrossReferenceRule());
+						}
+					}
+					otherlv_11='kw5'
+					{
+						newLeafNode(otherlv_11, grammarAccess.getSingleCrossReferenceAccess().getRef5SingleCrossReferenceCrossReference_6_1_0());
 					}
 				)
 			)
@@ -1236,7 +1266,7 @@ ruleBooleanAlternativeLiteral returns [EObject current=null]
 						if ($current==null) {
 							$current = createModelElement(grammarAccess.getBooleanAlternativeLiteralRule());
 						}
-						setWithLastConsumed($current, "isTrue", true, "kw2");
+						setWithLastConsumed($current, "isTrue", lv_isTrue_2_0 != null, "kw2");
 					}
 				)
 			)
@@ -1599,7 +1629,7 @@ ruleBooleanValues returns [EObject current=null]
 					if ($current==null) {
 						$current = createModelElement(grammarAccess.getBooleanValuesRule());
 					}
-					setWithLastConsumed($current, "val1", true, "kw1");
+					setWithLastConsumed($current, "val1", lv_val1_2_0 != null, "kw1");
 				}
 			)
 		)?
@@ -1616,7 +1646,7 @@ ruleBooleanValues returns [EObject current=null]
 					setWithLastConsumed(
 						$current,
 						"val2",
-						true,
+						lv_val2_3_0 != null,
 						"org.eclipse.xtext.serializer.SyntacticSequencerTestLanguage.BOOLEAN_TERMINAL_ID");
 				}
 			)
@@ -1634,7 +1664,7 @@ ruleBooleanValues returns [EObject current=null]
 					set(
 						$current,
 						"val3",
-						true,
+						lv_val3_4_0 != null,
 						"org.eclipse.xtext.serializer.SyntacticSequencerTestLanguage.BooleanDatatypeID");
 					afterParserOrEnumRuleCall();
 				}

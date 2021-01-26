@@ -1,9 +1,10 @@
 /**
  * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator;
 
@@ -17,7 +18,6 @@ import org.eclipse.xtext.generator.InMemoryFileSystemAccess;
 import org.eclipse.xtext.tests.AbstractXtextTests;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
-import org.eclipse.xtext.xtext.generator.DefaultGeneratorModule;
 import org.eclipse.xtext.xtext.generator.model.IXtextGeneratorFileSystemAccess;
 import org.eclipse.xtext.xtext.generator.parser.antlr.AntlrDebugGrammarGenerator;
 import org.eclipse.xtext.xtext.generator.parser.antlr.AntlrOptions;
@@ -246,15 +246,13 @@ public class AntlrGeneratorFragmentTest extends AbstractXtextTests {
   
   protected void asserTranslatesToDebugGrammar(final CharSequence xtextGrammar, final String expectedDebugGrammar) {
     try {
-      String _string = xtextGrammar.toString();
-      EObject _model = super.getModel(_string);
+      EObject _model = super.getModel(xtextGrammar.toString());
       final Grammar grammar = ((Grammar) _model);
       DefaultGeneratorModule _defaultGeneratorModule = new DefaultGeneratorModule();
       final Injector injector = Guice.createInjector(_defaultGeneratorModule);
       final AntlrGeneratorFragmentTest.InMemFSA inMem = new AntlrGeneratorFragmentTest.InMemFSA();
       final AntlrOptions options = new AntlrOptions();
-      AntlrDebugGrammarGenerator _instance = injector.<AntlrDebugGrammarGenerator>getInstance(AntlrDebugGrammarGenerator.class);
-      _instance.generate(grammar, options, inMem);
+      injector.<AntlrDebugGrammarGenerator>getInstance(AntlrDebugGrammarGenerator.class).generate(grammar, options, inMem);
       Assert.assertEquals(expectedDebugGrammar, IterableExtensions.<Object>head(inMem.getAllFiles().values()).toString());
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);

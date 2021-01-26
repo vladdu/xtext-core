@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug443221TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug443221TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.antlr.Bug443221TestLanguage.Model");
@@ -47,7 +47,14 @@ public class Bug443221TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	'DollarSign';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{Model} 'dummy' name=ID '_' '_dummy_' '__dummy__' '$__dummy__' '$' 'DollarSign'
+		//{Model}
+		//'dummy' name=ID
+		//'_'
+		//'_dummy_'
+		//'__dummy__'
+		//'$__dummy__'
+		//'$'
+		//'DollarSign'
 		public Group getGroup() { return cGroup; }
 		
 		//{Model}

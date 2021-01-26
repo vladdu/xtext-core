@@ -1,14 +1,20 @@
 /*******************************************************************************
- * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2011, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.parser.terminalrules;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
+import org.eclipse.xtext.parser.IEncodingProvider;
 import org.eclipse.xtext.parser.terminalrules.unicode.AbstractString;
 import org.eclipse.xtext.parser.terminalrules.unicode.GString;
 import org.eclipse.xtext.parser.terminalrules.unicode.Model;
@@ -16,6 +22,7 @@ import org.eclipse.xtext.parser.terminalrules.unicode.QuotedString;
 import org.eclipse.xtext.parser.terminalrules.unicode.UnicodeFactory;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.tests.AbstractXtextTests;
+import org.eclipse.xtext.util.StringInputStream;
 import org.junit.Test;
 
 /**
@@ -31,6 +38,21 @@ public class UnicodeTest extends AbstractXtextTests {
 	public void setUp() throws Exception {
 		super.setUp();
 		with(UnicodeTestLanguageStandaloneSetup.class);
+		IEncodingProvider.Runtime encodingProvider = get(IEncodingProvider.Runtime.class);
+		encodingProvider.setDefaultEncoding(getCharsetForTest().name());
+	}
+	
+	protected Charset getCharsetForTest() {
+		return StandardCharsets.ISO_8859_1;
+	}
+
+	@Override
+	protected InputStream getAsStream(String model) {
+		try {
+			return new StringInputStream(model, getCharsetForTest().name());
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("Encoding " + getCharsetForTest().name() +" not found.", e);
+		}
 	}
 
 	@Test public void testParse() throws Exception {
@@ -69,7 +91,7 @@ public class UnicodeTest extends AbstractXtextTests {
 		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		resource.save(outputStream, null);
-		String textualModel = new String(outputStream.toByteArray());
+		String textualModel = new String(outputStream.toByteArray(), getCharsetForTest());
 		assertEquals(doubleQuote(UMLAUTS + " \"" + UMLAUTS + "\" \"" + QUOTED_UMLAUTS + "\" \"" + MIXED_UMLAUTS + "\""), textualModel); 
 	}
 	

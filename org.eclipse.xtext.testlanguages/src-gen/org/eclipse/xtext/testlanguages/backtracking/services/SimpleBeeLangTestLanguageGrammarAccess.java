@@ -12,11 +12,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class DelegateModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.testlanguages.backtracking.SimpleBeeLangTestLanguage.DelegateModel");
@@ -105,12 +105,9 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	//Unit:
 	//	{Unit} documentation=DOCUMENTATION?
 	//	'unit' name=ID? ('version' version=ID)? ('implements' implements+=SimpleTypeRef (',' implements+=SimpleTypeRef)*)?
-	//	'{' (('source' ':' sourceLocation=Path ';')?
-	//	& ('output' ':' outputLocation=Path ';')?
-	//	& ('provides' ':' providedCapabilities+=ProvidedCapability ';')*
-	//	& ('requires' ':' requiredCapabilities+=AliasedRequiredCapability ';')*
-	//	& ('requires' 'env' ':' metaRequiredCapabilities+=RequiredCapability ';')*
-	//	& functions+=Function*)
+	//	'{' (('source' ':' sourceLocation=Path ';')? & ('output' ':' outputLocation=Path ';')? & ('provides' ':'
+	//	providedCapabilities+=ProvidedCapability ';')* & ('requires' ':' requiredCapabilities+=AliasedRequiredCapability ';'
+	//	)* & ('requires' 'env' ':' metaRequiredCapabilities+=RequiredCapability ';')* & functions+=Function*)
 	//	'}';
 	public BeeLangTestLanguageGrammarAccess.UnitElements getUnitAccess() {
 		return gaBeeLangTestLanguage.getUnitAccess();
@@ -121,8 +118,8 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	}
 	
 	//ProvidedCapability:
-	//	{ProvidedCapability} (nameSpace=ID | "unit") ('{' (('when' ':' condExpr=Expression ';')?
-	//	& "name" ':' name=ID ';' & ("version" ':' version=ID ';')?)
+	//	{ProvidedCapability} (nameSpace=ID | "unit") ('{' (('when' ':' condExpr=Expression ';')? & "name" ':' name=ID ';' &
+	//	("version" ':' version=ID ';')?)
 	//	'}')?;
 	public BeeLangTestLanguageGrammarAccess.ProvidedCapabilityElements getProvidedCapabilityAccess() {
 		return gaBeeLangTestLanguage.getProvidedCapabilityAccess();
@@ -133,11 +130,8 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	}
 	
 	//AliasedRequiredCapability:
-	//	(nameSpace=ID | "unit") name=ID ("as" alias=ID)? ('{' (('when' ':' condExpr=Expression ';')?
-	//	& (greedy?="greedy" ';')?
-	//	& ("requires-min" ':' min=INT ';')?
-	//	& ("requires-max" ':' max=INT ';')?
-	//	& ("version" ':' versionRange=ID ';')?)
+	//	(nameSpace=ID | "unit") name=ID ("as" alias=ID)? ('{' (('when' ':' condExpr=Expression ';')? & (greedy?="greedy" ';')
+	//	? & ("requires-min" ':' min=INT ';')? & ("requires-max" ':' max=INT ';')? & ("version" ':' versionRange=ID ';')?)
 	//	'}');
 	public BeeLangTestLanguageGrammarAccess.AliasedRequiredCapabilityElements getAliasedRequiredCapabilityAccess() {
 		return gaBeeLangTestLanguage.getAliasedRequiredCapabilityAccess();
@@ -148,11 +142,9 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	}
 	
 	//RequiredCapability:
-	//	{RequiredCapability} (nameSpace=ID | "unit") name=ID ('{' (('when' ':' condExpr=Expression ';')?
-	//	& (greedy?="greedy" ';')?
-	//	& ("requires-min" ':' min=INT ';')?
-	//	& ("requires-max" ':' max=INT ';')?
-	//	& ("version" ':' versionRange=ID ';')?)
+	//	{RequiredCapability} (nameSpace=ID | "unit") name=ID ('{' (('when' ':' condExpr=Expression ';')? & (greedy?="greedy"
+	//	';')? & ("requires-min" ':' min=INT ';')? & ("requires-max" ':' max=INT ';')? & ("version" ':' versionRange=ID ';')?
+	//	)
 	//	'}');
 	public BeeLangTestLanguageGrammarAccess.RequiredCapabilityElements getRequiredCapabilityAccess() {
 		return gaBeeLangTestLanguage.getRequiredCapabilityAccess();
@@ -476,8 +468,8 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	
 	//InfixExpression Expression:
 	//	CallExpression ({CallFeature.funcExpr=current} "." name=ID "(" parameterList=ParameterList? ")" |
-	//	{AtExpression.objExpr=current} '[' indexExpr=Expression ']' | {FeatureExpression.objExpr=current} "."
-	//	featureName=ID)*;
+	//	{AtExpression.objExpr=current} '[' indexExpr=Expression ']' | {FeatureExpression.objExpr=current} "." featureName=ID
+	//	)*;
 	public BeeLangTestLanguageGrammarAccess.InfixExpressionElements getInfixExpressionAccess() {
 		return gaBeeLangTestLanguage.getInfixExpressionAccess();
 	}
@@ -567,10 +559,9 @@ public class SimpleBeeLangTestLanguageGrammarAccess extends AbstractGrammarEleme
 	}
 	
 	//FeatureCall Expression:
-	//	OperationCall
-	//	// Removed (see BeeLang rev 1333)
-	//	//	| ({CallFeature} "." name=ID  "(" (parameterList = ParameterList)? ")")
-	//	//	| ({FeatureExpression} "." featureName=ID)
+	//	OperationCall// Removed (see BeeLang rev 1333)
+	////	| ({CallFeature} "." name=ID  "(" (parameterList = ParameterList)? ")")
+	////	| ({FeatureExpression} "." featureName=ID)
 	//;
 	public BeeLangTestLanguageGrammarAccess.FeatureCallElements getFeatureCallAccess() {
 		return gaBeeLangTestLanguage.getFeatureCallAccess();

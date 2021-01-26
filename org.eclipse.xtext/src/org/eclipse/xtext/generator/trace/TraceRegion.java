@@ -1,12 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2012 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2012, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.xtext.util.TextRegionWithLineInformation;
@@ -45,7 +47,15 @@ public class TraceRegion extends AbstractStatefulTraceRegion {
  		}
 	}
 	
+	/**
+	 * @deprecated use {link {@link #TraceRegion(int, int, int, int, boolean, Collection, AbstractTraceRegion)} instead.
+	 */
+	@Deprecated
 	public TraceRegion(int myOffset, int myLength, int myLineNumber, int myEndLineNumber, boolean useForDebugging, List<ILocationData> allLocationData, AbstractTraceRegion parent) {
+		this(myOffset, myLength, myLineNumber, myEndLineNumber, useForDebugging, (Collection<ILocationData>) allLocationData, parent);
+	}
+	
+	public TraceRegion(int myOffset, int myLength, int myLineNumber, int myEndLineNumber, boolean useForDebugging, Collection<? extends ILocationData> allLocationData, AbstractTraceRegion parent) {
 		super(new TextRegionWithLineInformation(myOffset, myLength, myLineNumber, myEndLineNumber), useForDebugging, Lists.newArrayList(allLocationData), parent);
 		if (parent == null) {
 			for(ILocationData locationData: allLocationData) {

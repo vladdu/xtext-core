@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext;
 
@@ -299,8 +300,7 @@ public class GrammarUtil {
 	public static boolean isDatatypeRuleCall(EObject grammarElement) {
 		if (grammarElement instanceof RuleCall) {
 			AbstractRule calledRule = ((RuleCall) grammarElement).getRule();
-			return calledRule != null && calledRule instanceof ParserRule
-					&& calledRule.getType() != null && calledRule.getType().getClassifier() instanceof EDataType;
+			return calledRule != null && isDatatypeRule(calledRule);
 		}
 		return false;
 	}

@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class PartialParserTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class SomeContainerElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.testlanguages.PartialParserTestLanguage.SomeContainer");
@@ -42,7 +42,8 @@ public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarEleme
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'container' name=ID '{' (nested+=Nested | content+=Content)* '}'
+		//'container' name=ID '{' (nested+=Nested | content+=Content)*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'container'
@@ -90,7 +91,9 @@ public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarEleme
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'nested' '{' nested+=SomeContainer+ '}'
+		//'nested' '{'
+		//nested+=SomeContainer+
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'nested'
@@ -146,7 +149,9 @@ public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarEleme
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'children' '{' children+=Child (',' children+=Child)* '}'
+		//'children' '{'
+		//children+=Child (',' children+=Child)*
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
 		//'children'
@@ -221,14 +226,19 @@ public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarEleme
 		private final Keyword cRightCurlyBracketKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		
 		//AbstractChildren:
+		//	/* SuppressWarnings[SpacesInKeyword] */
 		//	'abstract children' '{'
 		//	abstractChildren+=AbstractChild+
 		//	'}';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'abstract children' '{' abstractChildren+=AbstractChild+ '}'
+		///* SuppressWarnings[SpacesInKeyword] */
+		//'abstract children' '{'
+		//abstractChildren+=AbstractChild+
+		//'}'
 		public Group getGroup() { return cGroup; }
 		
+		///* SuppressWarnings[SpacesInKeyword] */
 		//'abstract children'
 		public Keyword getAbstractChildrenKeyword_0() { return cAbstractChildrenKeyword_0; }
 		
@@ -493,6 +503,7 @@ public class PartialParserTestLanguageGrammarAccess extends AbstractGrammarEleme
 	}
 	
 	//AbstractChildren:
+	//	/* SuppressWarnings[SpacesInKeyword] */
 	//	'abstract children' '{'
 	//	abstractChildren+=AbstractChild+
 	//	'}';

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.regionaccess;
 
@@ -40,4 +41,14 @@ public interface IHiddenRegionPart extends ITextSegment {
 	 *         current {@link IHiddenRegionPart} is the first element inside its {@link IHiddenRegion}.
 	 */
 	IHiddenRegionPart getPreviousHiddenPart();
+
+	/**
+	 * @see IHiddenRegionPartAssociator for custom behaviour.
+	 * 
+	 * @since 2.14
+	 * 
+	 * @return A hint whether the whitespace or comment belongs to the previous or next semantic element or neither of
+	 *         them.
+	 */
+	HiddenRegionPartAssociation getAssociation();
 }

@@ -15,11 +15,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class SubTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class SubTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class SubMainElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.generator.ecore.SubTestLanguage.SubMain");
@@ -63,6 +63,7 @@ public class SubTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
 		private final Assignment cNameAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final RuleCall cNameIDTerminalRuleCall_1_0 = (RuleCall)cNameAssignment_1.eContents().get(0);
 		
+		//@Override
 		//AnotherSuperMain:
 		//	"ups" name=ID;
 		@Override public ParserRule getRule() { return rule; }
@@ -142,6 +143,7 @@ public class SubTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
 		return getSubMainAccess().getRule();
 	}
 	
+	//@Override
 	//AnotherSuperMain:
 	//	"ups" name=ID;
 	public AnotherSuperMainElements getAnotherSuperMainAccess() {

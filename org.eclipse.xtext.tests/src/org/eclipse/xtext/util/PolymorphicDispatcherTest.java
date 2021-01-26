@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.util;
@@ -15,10 +16,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
@@ -94,8 +99,8 @@ public class PolymorphicDispatcherTest extends Assert {
 		PolymorphicDispatcher<String> dispatcher = new PolymorphicDispatcher<String>("label", Lists.newArrayList(first,
 				second));
 
-		assertEquals("Integer_first_3", dispatcher.invoke(new Integer(3)));
-		assertEquals("Number_from_superclass_3", dispatcher.invoke(new Long(3)));
+		assertEquals("Integer_first_3", dispatcher.invoke(Integer.valueOf(3)));
+		assertEquals("Number_from_superclass_3", dispatcher.invoke(Long.valueOf(3)));
 		assertEquals("BigInteger_3", dispatcher.invoke(BigInteger.valueOf(3)));
 		assertEquals("Object_foo", dispatcher.invoke("foo"));
 	}
@@ -133,7 +138,7 @@ public class PolymorphicDispatcherTest extends Assert {
 		};
 		PolymorphicDispatcher<String> dispatcher = new PolymorphicDispatcher<String>("label", Lists.newArrayList(o1));
 
-		assertEquals("Integer_3", dispatcher.invoke(new Integer(3)));
+		assertEquals("Integer_3", dispatcher.invoke(Integer.valueOf(3)));
 	}
 
 	@Test public void testDifferentParamLength() throws Exception {
@@ -157,9 +162,9 @@ public class PolymorphicDispatcherTest extends Assert {
 						return null;
 					}
 				});
-		assertEquals("Object_3", dispatcher.invoke(new Integer(3)));
-		assertNull("Integer_3_4", dispatcher.invoke(new Long(3), 4));
-		assertEquals("Integer_3_4", dispatcher.invoke(new Integer(3), 4));
+		assertEquals("Object_3", dispatcher.invoke(Integer.valueOf(3)));
+		assertNull("Integer_3_4", dispatcher.invoke(Long.valueOf(3), 4));
+		assertEquals("Integer_3_4", dispatcher.invoke(Integer.valueOf(3), 4));
 		assertEquals("Object_3", dispatcher.invoke(BigInteger.valueOf(3)));
 		assertEquals("Number_3_foo", dispatcher.invoke(BigInteger.valueOf(3), "foo"));
 	}
@@ -182,6 +187,42 @@ public class PolymorphicDispatcherTest extends Assert {
 		} catch (IllegalStateException e) {
 			// ignore
 		}
+	}
+	
+	interface A {}
+	interface B {}
+	interface CB extends B {}
+	class DCBA implements A, CB, E {}
+	interface E {}
+	
+	@Test public void testAmbiguous2() throws Exception {
+		Object o1 = new Object() {
+			String label(A i) {
+				return "A";
+			}
+			String label(B b) {
+				return "B";
+			}
+			String label(CB cb) {
+				return "CB";
+			}
+			String label(E e) {
+				return "E";
+			}
+		};
+		PolymorphicDispatcher<String> dispatcher = new PolymorphicDispatcher<String>("label", Lists.newArrayList(o1)) {
+			@Override
+			protected String handleAmbigousMethods(List<MethodDesc> result, Object... params) {
+				List<String> p = new ArrayList<>();
+				for(MethodDesc md:result) {
+					p.add(md.getParameterTypes()[0].getSimpleName());
+				}
+				Collections.sort(p);
+				return Joiner.on(", ").join(p);
+			}
+		};
+		String string = dispatcher.invoke(new DCBA());
+		assertEquals("A, CB, E", string);
 	}
 
 	@Test public void testNullParams() throws Exception {
@@ -233,7 +274,7 @@ public class PolymorphicDispatcherTest extends Assert {
 			}
 		};
 		PolymorphicDispatcher<String> dispatcher = new PolymorphicDispatcher<String>("label", Lists.newArrayList(o1));
-		assertEquals("Integer_17", dispatcher.invoke(new Integer(17)));
+		assertEquals("Integer_17", dispatcher.invoke(Integer.valueOf(17)));
 		assertEquals("Number_42", dispatcher.invoke(BigInteger.valueOf(42)));
 	}
 
@@ -261,7 +302,7 @@ public class PolymorphicDispatcherTest extends Assert {
 					}
 				});
 
-		assertEquals("Integer_17", dispatcher.invoke(new Integer(17)));
+		assertEquals("Integer_17", dispatcher.invoke(Integer.valueOf(17)));
 		assertEquals("Number_42", dispatcher.invoke(BigInteger.valueOf(42)));
 	}
 

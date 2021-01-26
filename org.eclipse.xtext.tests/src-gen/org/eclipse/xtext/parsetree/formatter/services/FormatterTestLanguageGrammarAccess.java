@@ -20,12 +20,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractEnumRuleElementFinder;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class FormatterTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class FormatterTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class RootElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.formatter.FormatterTestLanguage.Root");
@@ -47,7 +46,7 @@ public class FormatterTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"test"
 		public Keyword getTestKeyword_0() { return cTestKeyword_0; }
 		
-		//TestLinewrap | TestIndentation | TestLinewrapMinMax | WrappingDataTypeTest
+		//(TestLinewrap | TestIndentation | TestLinewrapMinMax | WrappingDataTypeTest)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//TestLinewrap
@@ -86,7 +85,7 @@ public class FormatterTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//(Decl | Assign | Meth | FqnObj | FqnRef | Enumeration | SuppressedHidden "post" | Space | Datatypes) ";"
 		public Group getGroup() { return cGroup; }
 		
-		//Decl | Assign | Meth | FqnObj | FqnRef | Enumeration | SuppressedHidden "post" | Space | Datatypes
+		//(Decl | Assign | Meth | FqnObj | FqnRef | Enumeration | SuppressedHidden "post" | Space | Datatypes)
 		public Alternatives getAlternatives_0() { return cAlternatives_0; }
 		
 		//Decl
@@ -788,7 +787,7 @@ public class FormatterTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		public RuleCall getIDTerminalRuleCall() { return cIDTerminalRuleCall; }
 	}
 	
-	public class Enum1Elements extends AbstractEnumRuleElementFinder {
+	public class Enum1Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.formatter.FormatterTestLanguage.Enum1");
 		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
 		private final EnumLiteralDeclaration cLit1EnumLiteralDeclaration_0 = (EnumLiteralDeclaration)cAlternatives.eContents().get(0);

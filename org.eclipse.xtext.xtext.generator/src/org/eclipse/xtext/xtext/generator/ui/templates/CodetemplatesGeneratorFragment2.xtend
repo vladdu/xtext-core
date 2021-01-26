@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.ui.templates
 
@@ -32,6 +33,14 @@ import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
  * @author Christian Schneider - Initial contribution and API
  */
 class CodetemplatesGeneratorFragment2 extends AbstractXtextGeneratorFragment {
+	
+	static class Disabled extends CodetemplatesGeneratorFragment2 {
+		
+		override void generate() {
+			// no nothing
+		}
+		
+	}
 
 	@Inject
 	ContentAssistGrammarNaming caNaming
@@ -87,8 +96,7 @@ class CodetemplatesGeneratorFragment2 extends AbstractXtextGeneratorFragment {
 	}
 	
 	private def StringConcatenationClient getGenPartialContentAssistParser() '''
-		public class «grammar.partialContentAssistParserClass.simpleName» extends «caNaming.getParserClass(grammar)» implements «
-				"org.eclipse.xtext.ide.editor.partialEditing.IPartialEditingContentAssistParser".typeRef()» {
+		public class «grammar.partialContentAssistParserClass.simpleName» extends «caNaming.getParserClass(grammar)» {
 		
 			private «AbstractRule» rule;
 		

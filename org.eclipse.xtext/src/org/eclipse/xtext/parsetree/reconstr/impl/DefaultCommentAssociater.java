@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2018 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.parsetree.reconstr.impl;
 
@@ -42,7 +43,7 @@ public class DefaultCommentAssociater extends AbstractCommentAssociater {
 
 	/**
 	 * This implementation associates each comment with the next following semantic token's EObject, except for the
-	 * case, where a line of the document end by a semantic element followed by a comment. Then, the the comment is
+	 * case, where a line of the document ends by a semantic element followed by a comment. Then, the comment is
 	 * associated with this preceding semantic token.
 	 */
 	protected void associateCommentsWithSemanticEObjects(Map<ILeafNode, EObject> mapping, ICompositeNode rootNode) {

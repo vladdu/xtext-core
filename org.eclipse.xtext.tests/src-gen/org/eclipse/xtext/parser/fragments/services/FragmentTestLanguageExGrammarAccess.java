@@ -12,11 +12,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class FragmentTestLanguageExGrammarAccess extends AbstractGrammarElementFinder {
+public class FragmentTestLanguageExGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ParserRuleFragmentsExElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.fragments.FragmentTestLanguageEx.ParserRuleFragmentsEx");
@@ -94,9 +94,9 @@ public class FragmentTestLanguageExGrammarAccess extends AbstractGrammarElementF
 	//	{ParserRuleFragments} ('#1' element=PRFNamed
 	//	| '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
 	//	| '#4' element=PRFNamedWithAction
-	//	//  | '#5' element=PRFNamedWithActionInFragment
-	//	//  | '#6' element=PRFNamedWithActionInFragment2
-	//	//  | '#7' element=PRFNamedWithActionInFragment3
+	////  | '#5' element=PRFNamedWithActionInFragment
+	////  | '#6' element=PRFNamedWithActionInFragment2
+	////  | '#7' element=PRFNamedWithActionInFragment3
 	//	| '#8' element=PRFNamedWithFQN
 	//	| '#9' element=PRFWithPredicate
 	//	| '#10' element=PRFNamedRecursive

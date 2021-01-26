@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace.internal;
 
@@ -205,7 +206,11 @@ public abstract class AbstractTraceForURIProvider<SomeFile, Trace extends Abstra
 			
 			@Override
 			public AbstractTraceRegion getTraceRegion() {
-				return cachedTraces.getTraceRegion(persistedTrace);
+				AbstractTraceRegion traceRegion = cachedTraces.getTraceRegion(persistedTrace);
+				if (traceRegion == null) {
+					throw new TraceNotFoundException();
+				}
+				return traceRegion;
 			}
 		});
 		return result;
@@ -225,38 +230,37 @@ public abstract class AbstractTraceForURIProvider<SomeFile, Trace extends Abstra
 	
 	public Trace getTraceToTarget(final SomeFile sourceFile, final AbsoluteURI absoluteSourceResource, final IProjectConfig projectConfig) {
 		final List<PersistedTrace> traceFiles = findInverseTraceFiles(sourceFile);
-		if (!traceFiles.isEmpty()) {
-			Trace result = newAbstractTrace(sourceFile);
-			result.setTraceToSource(false);
-			final IResourceServiceProvider serviceProvider = getServiceProvider(absoluteSourceResource);
-			final ITraceURIConverter traceURIConverter = serviceProvider.get(ITraceURIConverter.class);
-			result.setTraceRegionProvider(new ITraceRegionProvider() {
-				@Override
-				public AbstractTraceRegion getTraceRegion() {
-					List<AbstractTraceRegion> result = newArrayList();
-					SourceRelativeURI sourceUriForTrace = traceURIConverter.getURIForTrace(projectConfig, absoluteSourceResource);
-					for (PersistedTrace traceFile : traceFiles) {
-						AbsoluteURI generatedFileURI = getGeneratedLocation(traceFile);
-						if (generatedFileURI == null) {
-							throw new TraceNotFoundException();
-						}
-						AbstractTraceRegion traceRegion = cachedTraces.getTraceRegion(traceFile);
-						if (projectConfig != null) {
-							
-							SourceRelativeURI generatedUriForTrace = getGeneratedUriForTrace(projectConfig, absoluteSourceResource, generatedFileURI, traceURIConverter);
-							if(sourceUriForTrace != null && generatedUriForTrace != null) {
-								result.addAll(traceRegion.invertFor(sourceUriForTrace, generatedUriForTrace));
-							}
-						}
-					}
-					if (result.isEmpty()) 
-						throw new TraceNotFoundException();
-					return AbstractTraceRegion.mergedFrom(result);
-				}
-			});
-			return result;
+		if (traceFiles.isEmpty() || projectConfig == null) {
+			return null;
 		}
-		return null;
+
+		Trace result = newAbstractTrace(sourceFile);
+		result.setTraceToSource(false);
+		final IResourceServiceProvider serviceProvider = getServiceProvider(absoluteSourceResource);
+		final ITraceURIConverter traceURIConverter = serviceProvider.get(ITraceURIConverter.class);
+		result.setTraceRegionProvider(new ITraceRegionProvider() {
+			@Override
+			public AbstractTraceRegion getTraceRegion() {
+				List<AbstractTraceRegion> result = newArrayList();
+				SourceRelativeURI sourceUriForTrace = traceURIConverter.getURIForTrace(projectConfig, absoluteSourceResource);
+				for (PersistedTrace traceFile : traceFiles) {
+					AbsoluteURI generatedFileURI = getGeneratedLocation(traceFile);
+					if (generatedFileURI == null) {
+						throw new TraceNotFoundException();
+					}
+					AbstractTraceRegion traceRegion = cachedTraces.getTraceRegion(traceFile);
+
+					SourceRelativeURI generatedUriForTrace = getGeneratedUriForTrace(projectConfig, absoluteSourceResource, generatedFileURI, traceURIConverter);
+					if(sourceUriForTrace != null && generatedUriForTrace != null) {
+						result.addAll(traceRegion.invertFor(sourceUriForTrace, generatedUriForTrace));
+					}
+				}
+				if (result.isEmpty()) 
+					throw new TraceNotFoundException();
+				return AbstractTraceRegion.mergedFrom(result);
+			}
+		});
+		return result;
 	}
 	
 	protected SourceRelativeURI getGeneratedUriForTrace(IProjectConfig projectConfig, AbsoluteURI absoluteSourceResource, AbsoluteURI generatedFileURI, ITraceURIConverter traceURIConverter) {

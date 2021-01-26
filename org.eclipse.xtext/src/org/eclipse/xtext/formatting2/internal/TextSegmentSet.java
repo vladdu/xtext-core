@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.internal;
 
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.xtext.formatting2.IMerger;
@@ -24,20 +26,26 @@ public abstract class TextSegmentSet<T> implements Iterable<T> {
 
 	private final Function<? super T, ? extends ITextSegment> regionGetter;
 	private final Function<? super T, String> titleGetter;
-	private final IdentityHashMap<T, RegionTrace> traces = new IdentityHashMap<T, RegionTrace>();
+	private final IdentityHashMap<T, RegionTrace> traces;
 
 	public TextSegmentSet(Function<? super T, ? extends ITextSegment> region, Function<? super T, String> title) {
+		this(region, title, true);
+	}
+
+	public TextSegmentSet(Function<? super T, ? extends ITextSegment> region, Function<? super T, String> title,
+			boolean trace) {
 		super();
 		this.regionGetter = region;
 		this.titleGetter = title;
+		this.traces = trace ? new IdentityHashMap<T, RegionTrace>() : null;
 	}
 
-	public void add(T segment) throws ConflictingRegionsException {
+	public void add(T segment) throws ConflictingRegionsException, RegionTraceMissingException {
 		add(segment, null);
 	}
 
 	public abstract void add(T segment, IMerger<T> merger) throws ConflictingRegionsException;
-	
+
 	public abstract T get(T segment);
 
 	protected ITextSegment getRegion(T t) {
@@ -52,11 +60,16 @@ public abstract class TextSegmentSet<T> implements Iterable<T> {
 		return titleGetter.apply(t);
 	}
 
+	@Deprecated
 	public IdentityHashMap<T, RegionTrace> getTraces() {
 		return traces;
 	}
 
-	protected void handleConflict(List<T> conflicts, Exception cause) throws ConflictingRegionsException {
+	protected void handleConflict(List<T> conflicts, Exception cause)
+			throws ConflictingRegionsException, RegionTraceMissingException {
+		if (traces == null) {
+			throw new RegionTraceMissingException(cause);
+		}
 		List<RegionTrace> causes = Lists.newArrayList();
 		for (T t : conflicts) {
 			RegionTrace exception = traces.get(t);
@@ -83,6 +96,13 @@ public abstract class TextSegmentSet<T> implements Iterable<T> {
 		return isConflict(getRegion(t1), getRegion(t2));
 	}
 
+	public abstract Iterator<T> iteratorAfter(T segment);
+
+	/**
+	 * @since 2.13
+	 */
+	public abstract Iterable<T> reverseIterable();
+
 	@Override
 	public String toString() {
 		TextRegionsToString toString = new TextRegionsToString();
@@ -90,5 +110,11 @@ public abstract class TextSegmentSet<T> implements Iterable<T> {
 		for (T t : this)
 			toString.add(getRegion(t), getTitle(t));
 		return toString.toString();
+	}
+
+	protected void trace(T segment) {
+		if (traces != null) {
+			traces.put(segment, new RegionTrace(getTitle(segment), getRegion(segment)));
+		}
 	}
 }

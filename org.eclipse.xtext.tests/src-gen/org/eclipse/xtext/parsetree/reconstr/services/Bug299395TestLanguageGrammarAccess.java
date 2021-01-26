@@ -16,11 +16,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug299395TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug299395TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parsetree.reconstr.Bug299395TestLanguage.Model");
@@ -52,13 +52,19 @@ public class Bug299395TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	']')* ('subModel' subModel=SubModel)?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{Model} ('{' strings+=STRING? '}')* ('[' (keys+=STRING values+=STRING)* ']')* ('subModel' subModel=SubModel)?
+		//{Model} ('{'
+		//strings+=STRING?
+		//'}')* ('[' (keys+=STRING
+		//values+=STRING)*
+		//']')* ('subModel' subModel=SubModel)?
 		public Group getGroup() { return cGroup; }
 		
 		//{Model}
 		public Action getModelAction_0() { return cModelAction_0; }
 		
-		//('{' strings+=STRING? '}')*
+		//('{'
+		//strings+=STRING?
+		//'}')*
 		public Group getGroup_1() { return cGroup_1; }
 		
 		//'{'
@@ -73,13 +79,16 @@ public class Bug299395TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//'}'
 		public Keyword getRightCurlyBracketKeyword_1_2() { return cRightCurlyBracketKeyword_1_2; }
 		
-		//('[' (keys+=STRING values+=STRING)* ']')*
+		//('[' (keys+=STRING
+		//values+=STRING)*
+		//']')*
 		public Group getGroup_2() { return cGroup_2; }
 		
 		//'['
 		public Keyword getLeftSquareBracketKeyword_2_0() { return cLeftSquareBracketKeyword_2_0; }
 		
-		//(keys+=STRING values+=STRING)*
+		//(keys+=STRING
+		//values+=STRING)*
 		public Group getGroup_2_1() { return cGroup_2_1; }
 		
 		//keys+=STRING
@@ -125,13 +134,17 @@ public class Bug299395TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	strings+=STRING?)*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{SubModel} ('1' '2' strings+=STRING?)*
+		//{SubModel} ('1'
+		//'2'
+		//strings+=STRING?)*
 		public Group getGroup() { return cGroup; }
 		
 		//{SubModel}
 		public Action getSubModelAction_0() { return cSubModelAction_0; }
 		
-		//('1' '2' strings+=STRING?)*
+		//('1'
+		//'2'
+		//strings+=STRING?)*
 		public Group getGroup_1() { return cGroup_1; }
 		
 		//'1'

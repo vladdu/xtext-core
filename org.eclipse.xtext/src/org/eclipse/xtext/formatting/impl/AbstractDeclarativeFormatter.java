@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting.impl;
 
@@ -13,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
@@ -33,6 +35,8 @@ import com.google.inject.Singleton;
  * @author Moritz Eysholdt - Initial contribution and API
  */
 public abstract class AbstractDeclarativeFormatter extends BaseFormatter {
+
+	private static final Logger log = Logger.getLogger(AbstractDeclarativeFormatter.class);
 
 	@Singleton
 	protected static class ConfigStore {
@@ -71,6 +75,8 @@ public abstract class AbstractDeclarativeFormatter extends BaseFormatter {
 	public ITokenStream createFormatterStream(EObject context, String indent, ITokenStream out, boolean preserveWhitespaces) {
 		if(context != null && context.eResource() != null && context.eResource().getURI() != null) {
 			contextResourceURI = EcoreUtil2.getPlatformResourceOrNormalizedURI(context).trimFragment();
+		} else if (context != null && context.eResource() == null) {
+			log.error("Model has no XtextResource. This is likely to cause follow-up errors");
 		}
 		return new FormattingConfigBasedStream(out, indent, getConfig(), createMatcher(), hiddenTokenHelper,
 				preserveWhitespaces);

@@ -15,11 +15,11 @@ import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug289515TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug289515TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.antlr.Bug289515TestLanguage.Model");
@@ -58,7 +58,12 @@ public class Bug289515TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	| '6' value='%%';
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'1' value="%" | '2' value='%' | '3' value="\\%" | '4' value='\\%' | '5' value="%%" | '6' value='%%'
+		//'1' value="%"
+		//| '2' value='%'
+		//| '3' value="\\%"
+		//| '4' value='\\%'
+		//| '5' value="%%"
+		//| '6' value='%%'
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//'1' value="%"

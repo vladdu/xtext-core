@@ -19,12 +19,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractEnumRuleElementFinder;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class AssignmentFinderTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.AssignmentFinderTestLanguage.Model");
@@ -71,13 +70,13 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 		private final RuleCall cCrossRefCrossRefParserRuleCall_9_1_0 = (RuleCall)cCrossRefAssignment_9_1.eContents().get(0);
 		
 		//Model:
-		//	"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool |
-		//	"#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07" mixedValue=MixedValue |
-		//	"#08" containmentRef=ContainmentRef | "#09" crossRef=CrossRef;
+		//	"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool
+		//	| "#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07"
+		//	mixedValue=MixedValue | "#08" containmentRef=ContainmentRef | "#09" crossRef=CrossRef;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool |
-		//"#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07" mixedValue=MixedValue |
+		//"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool
+		//| "#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07" mixedValue=MixedValue |
 		//"#08" containmentRef=ContainmentRef | "#09" crossRef=CrossRef
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
@@ -570,7 +569,7 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//Terminal2
 		public RuleCall getNameTerminal2TerminalRuleCall_0_0_1() { return cNameTerminal2TerminalRuleCall_0_0_1; }
 		
-		//crossRef=[CrossRef|Terminal1] | crossRef=[CrossRef|Terminal2]
+		//(crossRef=[CrossRef|Terminal1] | crossRef=[CrossRef|Terminal2])
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//crossRef=[CrossRef|Terminal1]
@@ -592,7 +591,7 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 		public RuleCall getCrossRefCrossRefTerminal2TerminalRuleCall_1_1_0_1() { return cCrossRefCrossRefTerminal2TerminalRuleCall_1_1_0_1; }
 	}
 	
-	public class Enum1Elements extends AbstractEnumRuleElementFinder {
+	public class Enum1Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.AssignmentFinderTestLanguage.Enum1");
 		private final EnumLiteralDeclaration cLit1EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cLit1Lit1Keyword_0 = (Keyword)cLit1EnumLiteralDeclaration.eContents().get(0);
@@ -607,7 +606,7 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//"lit1"
 		public Keyword getLit1Lit1Keyword_0() { return cLit1Lit1Keyword_0; }
 	}
-	public class Enum2Elements extends AbstractEnumRuleElementFinder {
+	public class Enum2Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.AssignmentFinderTestLanguage.Enum2");
 		private final EnumLiteralDeclaration cLit2EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cLit2Lit2Keyword_0 = (Keyword)cLit2EnumLiteralDeclaration.eContents().get(0);
@@ -622,7 +621,7 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 		//"lit2"
 		public Keyword getLit2Lit2Keyword_0() { return cLit2Lit2Keyword_0; }
 	}
-	public class Enum3Elements extends AbstractEnumRuleElementFinder {
+	public class Enum3Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.AssignmentFinderTestLanguage.Enum3");
 		private final EnumLiteralDeclaration cLit3EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cLit3Lit3Keyword_0 = (Keyword)cLit3EnumLiteralDeclaration.eContents().get(0);
@@ -718,9 +717,9 @@ public class AssignmentFinderTestLanguageGrammarAccess extends AbstractGrammarEl
 
 	
 	//Model:
-	//	"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool |
-	//	"#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07" mixedValue=MixedValue |
-	//	"#08" containmentRef=ContainmentRef | "#09" crossRef=CrossRef;
+	//	"#00" keywordVal=KeywordVal | "#01" terminalVal=TerminalVal | "#02" enumVal=EnumVal | "#03" keywordBool=KeywordBool
+	//	| "#04" terminalBool=TerminalBool | "#05" enumBool=EnumBool | "#06" mixedBool=MixedBool | "#07"
+	//	mixedValue=MixedValue | "#08" containmentRef=ContainmentRef | "#09" crossRef=CrossRef;
 	public ModelElements getModelAccess() {
 		return pModel;
 	}

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator
 
@@ -17,6 +18,9 @@ import org.eclipse.xtext.xtext.generator.xbase.XbaseUsageDetector
 import static extension org.eclipse.xtext.GrammarUtil.*
 import static extension org.eclipse.xtext.xtext.generator.model.TypeReference.*
 
+/**
+ * The ImplicitFragment is added in the first slot to all language configurations.
+ */
 package class ImplicitFragment extends AbstractStubGeneratingFragment {
 	
 	@Inject extension XbaseUsageDetector
@@ -30,7 +34,7 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 			])
 			
 			if (generateXtendStub) {
-				projectConfig.runtime.manifest.requiredBundles += 'org.eclipse.xtend.lib'
+				projectConfig.runtime.manifest.requiredBundles += 'org.eclipse.xtend.lib;bundle-version="'+projectConfig.runtime.xtendLibVersionLowerBound+'"'
 			}
 			
 			projectConfig.runtime.manifest.importedPackages.add('org.apache.log4j')
@@ -42,7 +46,7 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 			])
 			
 			if (generateXtendStub) {
-				projectConfig.eclipsePlugin.manifest.requiredBundles += 'org.eclipse.xtend.lib'
+				projectConfig.eclipsePlugin.manifest.requiredBundles += 'org.eclipse.xtend.lib;bundle-version="'+projectConfig.runtime.xtendLibVersionLowerBound+'"'
 			}
 			
 			projectConfig.eclipsePlugin.manifest.importedPackages.add('org.apache.log4j')
@@ -55,10 +59,9 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 		val StringConcatenationClient expression = '''«'org.eclipse.xtext.ui.shared.Access'.typeRef».getJavaProjectsState()'''
 		val bindingFactory = new GuiceModuleAccess.BindingFactory()
 			.addTypeToProviderInstance(IAllContainersState.typeRef, expression)
+		
 		if (inheritsXbase(grammar)) {
-			bindingFactory.addTypeToType('org.eclipse.xtext.ui.editor.XtextEditor'.typeRef,
-					'org.eclipse.xtext.xbase.ui.editor.XbaseEditor'.typeRef)
-				.addTypeToType('org.eclipse.xtext.ui.editor.model.XtextDocumentProvider'.typeRef,
+			bindingFactory.addTypeToType('org.eclipse.xtext.ui.editor.model.XtextDocumentProvider'.typeRef,
 					'org.eclipse.xtext.xbase.ui.editor.XbaseDocumentProvider'.typeRef)
 				.addTypeToType('org.eclipse.xtext.ui.generator.trace.OpenGeneratedFileHandler'.typeRef,
 					'org.eclipse.xtext.xbase.ui.generator.trace.XbaseOpenGeneratedFileHandler'.typeRef)
@@ -95,11 +98,11 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 			<handler
 				class="«eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.ui.editor.handler.ValidateActionHandler"
 				commandId="«name».validate">
-			<activeWhen>
-				<reference
+				<activeWhen>
+					<reference
 						definitionId="«name».Editor.opened">
-				</reference>
-			</activeWhen>
+					</reference>
+				</activeWhen>
 			</handler>
 			<!-- copy qualified name -->
 			<handler
@@ -188,38 +191,38 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 		</extension>
 		<extension
 			point="org.eclipse.ui.commands">
-		<command
+			<command
 				description="Trigger expensive validation"
 				id="«name».validate"
 				name="Validate">
-		</command>
-		<!-- copy qualified name -->
-		<command
+			</command>
+			<!-- copy qualified name -->
+			<command
 				id="org.eclipse.xtext.ui.editor.copyqualifiedname.EditorCopyQualifiedName"
 				categoryId="org.eclipse.ui.category.edit"
 				description="Copy the qualified name for the selected element"
 				name="Copy Qualified Name">
-		</command>
-		<command
+			</command>
+			<command
 				id="org.eclipse.xtext.ui.editor.copyqualifiedname.OutlineCopyQualifiedName"
 				categoryId="org.eclipse.ui.category.edit"
 				description="Copy the qualified name for the selected element"
 				name="Copy Qualified Name">
-		</command>
+			</command>
 		</extension>
 		<extension point="org.eclipse.ui.menus">
 			<menuContribution
 				locationURI="popup:#TextEditorContext?after=group.edit">
-				 <command
-					 commandId="«name».validate"
-					 style="push"
-					 tooltip="Trigger expensive validation">
-				<visibleWhen checkEnabled="false">
-					<reference
-						definitionId="«name».Editor.opened">
-					</reference>
-				</visibleWhen>
-			</command>
+				<command
+					commandId="«name».validate"
+					style="push"
+					tooltip="Trigger expensive validation">
+					<visibleWhen checkEnabled="false">
+						<reference
+							definitionId="«name».Editor.opened">
+						</reference>
+					</visibleWhen>
+				</command>
 			</menuContribution>
 			<!-- copy qualified name -->
 			<menuContribution locationURI="popup:#TextEditorContext?after=copy">
@@ -272,6 +275,15 @@ package class ImplicitFragment extends AbstractStubGeneratingFragment {
 					</reference>
 				</activeWhen>
 			</handler>
+		</extension>
+		<extension point="org.eclipse.core.contenttype.contentTypes">
+			<content-type
+				base-type="org.eclipse.core.runtime.text"
+				file-extensions="«language.fileExtensions.join(",")»"
+				id="«name».contenttype"
+				name="«it.simpleName» File"
+				priority="normal">
+			</content-type>
 		</extension>
 	'''
 	

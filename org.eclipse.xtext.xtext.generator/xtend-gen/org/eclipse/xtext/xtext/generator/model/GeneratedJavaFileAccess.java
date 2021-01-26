@@ -2,6 +2,7 @@ package org.eclipse.xtext.xtext.generator.model;
 
 import com.google.common.collect.Iterables;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtend2.lib.StringConcatenation;
@@ -11,10 +12,11 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xtext.generator.CodeConfig;
-import org.eclipse.xtext.xtext.generator.model.JavaFileAccess;
-import org.eclipse.xtext.xtext.generator.model.TypeReference;
 import org.eclipse.xtext.xtext.generator.model.annotations.IClassAnnotation;
 
+/**
+ * A specialized Java file generator used for classes in the 'src-gen' folder.
+ */
 @SuppressWarnings("all")
 public class GeneratedJavaFileAccess extends JavaFileAccess {
   private CharSequence typeComment;
@@ -53,23 +55,21 @@ public class GeneratedJavaFileAccess extends JavaFileAccess {
   public CharSequence getContent() {
     CharSequence _xblockexpression = null;
     {
-      Iterable<IClassAnnotation> _classAnnotations = this.getClassAnnotations();
       final Consumer<IClassAnnotation> _function = (IClassAnnotation it) -> {
         this.importType(it.getAnnotationImport());
       };
-      _classAnnotations.forEach(_function);
+      this.getClassAnnotations().forEach(_function);
       _xblockexpression = super.getContent();
     }
     return _xblockexpression;
   }
   
-  private Iterable<IClassAnnotation> getClassAnnotations() {
-    List<IClassAnnotation> _classAnnotations = this.codeConfig.getClassAnnotations();
+  private Set<IClassAnnotation> getClassAnnotations() {
     final Function1<IClassAnnotation, Boolean> _function = (IClassAnnotation it) -> {
       return Boolean.valueOf(it.appliesTo(this));
     };
-    Iterable<IClassAnnotation> _filter = IterableExtensions.<IClassAnnotation>filter(_classAnnotations, _function);
-    return Iterables.<IClassAnnotation>concat(this.annotations, _filter);
+    Iterable<IClassAnnotation> _filter = IterableExtensions.<IClassAnnotation>filter(this.codeConfig.getClassAnnotations(), _function);
+    return IterableExtensions.<IClassAnnotation>toSet(Iterables.<IClassAnnotation>concat(this.annotations, _filter));
   }
   
   @Override
@@ -78,7 +78,7 @@ public class GeneratedJavaFileAccess extends JavaFileAccess {
     _builder.append(this.typeComment);
     _builder.newLineIfNotEmpty();
     {
-      Iterable<IClassAnnotation> _classAnnotations = this.getClassAnnotations();
+      Set<IClassAnnotation> _classAnnotations = this.getClassAnnotations();
       for(final IClassAnnotation annot : _classAnnotations) {
         CharSequence _generate = annot.generate();
         _builder.append(_generate);

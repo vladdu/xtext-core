@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2013 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2013, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.tests;
 
@@ -28,7 +29,12 @@ public class TestErrorAcceptor extends Assert implements ErrorAcceptor {
 
 				@Override
 				public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-					return "toString".equals(method.getName()) ? "ANY_EOBJECT" : null;
+					if ("toString".equals(method.getName())) {
+						return "ANY_EOBJECT";
+					} else if ("equals".equals(method.getName()) && args.length == 1) {
+						return args[0] instanceof EObject;
+					}
+					return null;
 				}
 			});
 

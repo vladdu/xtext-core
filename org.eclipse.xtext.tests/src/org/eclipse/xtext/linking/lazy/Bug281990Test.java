@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.linking.lazy;
 
@@ -20,6 +21,9 @@ import org.eclipse.xtext.testing.logging.LoggingTester.LogCapture;
 import org.eclipse.xtext.tests.AbstractXtextTests;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.junit.Test;
+
+import com.google.inject.Binder;
+import com.google.inject.name.Names;
 
 /**
  * @author Sven Efftinge - Initial contribution and API
@@ -42,6 +46,13 @@ public class Bug281990Test extends AbstractXtextTests {
 			public Class<? extends IScopeProvider> bindIScopeProvider() {
 				return org.eclipse.xtext.linking.lazy.Bug281990Test.RecursiveScopeProvider.class;
 			}
+			
+			@Override
+			public void configure(Binder binder) {
+				super.configure(binder);
+				binder.bindConstant().annotatedWith(Names.named(LazyLinkingResource.CYCLIC_LINKING_DECTECTION_COUNTER_LIMIT)).to(0);
+			}
+			
 		});
 		new LazyLinkingTestLanguageStandaloneSetup().register(getInjector());
 	}

@@ -3,8 +3,6 @@ package org.eclipse.xtext.xtext;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Map;
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ContentHandler;
@@ -12,7 +10,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.Grammar;
 import org.eclipse.xtext.XtextStandaloneSetup;
-import org.eclipse.xtext.parser.IParseResult;
 import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
@@ -68,6 +65,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("| name=\'name\';");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -98,6 +96,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("name=ID child=Rule<arg>;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -153,6 +152,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("name=ID child=MyParameterizedRule<arg>;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -178,6 +178,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("name=ID;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -203,6 +204,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("(name+=ID)*;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -236,6 +238,7 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("super;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
@@ -243,16 +246,11 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
   private void doTestSerialization(final String model, final String expectedModel) throws Exception {
     final XtextResource resource = this.getResourceFromString(model);
     Assert.assertTrue(resource.getErrors().isEmpty());
-    IParseResult _parseResult = resource.getParseResult();
-    EObject _rootASTElement = _parseResult.getRootASTElement();
+    EObject _rootASTElement = resource.getParseResult().getRootASTElement();
     final Grammar g = ((Grammar) _rootASTElement);
     Assert.assertNotNull(g);
     final OutputStream outputStream = new ByteArrayOutputStream();
-    SaveOptions.Builder _newBuilder = SaveOptions.newBuilder();
-    SaveOptions.Builder _format = _newBuilder.format();
-    SaveOptions _options = _format.getOptions();
-    Map<Object, Object> _optionsMap = _options.toOptionsMap();
-    resource.save(outputStream, _optionsMap);
+    resource.save(outputStream, SaveOptions.newBuilder().format().getOptions().toOptionsMap());
     final String serializedModel = outputStream.toString();
     Assert.assertEquals(LineDelimiters.toPlatform(expectedModel), serializedModel);
   }
@@ -298,21 +296,16 @@ public class XtextGrammarSerializationTest extends AbstractXtextTests {
     _builder_1.newLine();
     _builder_1.append("\t");
     _builder_1.append("name=ID;");
+    _builder_1.newLine();
     final String expectedModel = _builder_1.toString();
     this.doTestSerialization(model, expectedModel);
   }
   
   public void _testXtestSerializationSelfTest() throws Exception {
-    XtextResourceSet _get = this.<XtextResourceSet>get(XtextResourceSet.class);
-    URI _createURI = URI.createURI("myfile.xtext");
-    Resource res = _get.createResource(_createURI, 
+    Resource res = this.<XtextResourceSet>get(XtextResourceSet.class).createResource(URI.createURI("myfile.xtext"), 
       ContentHandler.UNSPECIFIED_CONTENT_TYPE);
-    EList<EObject> _contents = res.getContents();
-    XtextGrammarAccess _get_1 = this.<XtextGrammarAccess>get(XtextGrammarAccess.class);
-    Grammar _grammar = _get_1.getGrammar();
-    _contents.add(_grammar);
+    res.getContents().add(this.<XtextGrammarAccess>get(XtextGrammarAccess.class).getGrammar());
     OutputStream outputStream = new ByteArrayOutputStream();
-    Map<Object, Object> _emptyMap = Collections.<Object, Object>emptyMap();
-    res.save(outputStream, _emptyMap);
+    res.save(outputStream, Collections.<Object, Object>emptyMap());
   }
 }

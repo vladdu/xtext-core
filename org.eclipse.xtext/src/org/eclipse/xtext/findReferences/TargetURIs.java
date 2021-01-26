@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.findReferences;
 
@@ -17,7 +18,7 @@ import com.google.inject.ImplementedBy;
 
 /**
  * Encapsulate the searched data. Clients may choose to attach more information to the 
- * target URIs by means of {@link #putUserData(Key, Object)}. This information can be obtain
+ * target URIs by means of {@link #putUserData(Key, Object)}. This information can be obtained
  * in later processing steps to optimize the reference lookup.
  * 
  * If different clients (e.g. different languages) try to share user data, they have to agree on

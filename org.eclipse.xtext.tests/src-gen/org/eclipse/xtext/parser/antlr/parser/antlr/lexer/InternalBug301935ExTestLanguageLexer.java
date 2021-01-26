@@ -77,10 +77,10 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
         try {
             int _type = RULE_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalBug301935ExTestLanguageLexer.g:20:9: ( ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
-            // InternalBug301935ExTestLanguageLexer.g:20:11: ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            // InternalBug301935ExTestLanguageLexer.g:18:9: ( ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+            // InternalBug301935ExTestLanguageLexer.g:18:11: ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
             {
-            // InternalBug301935ExTestLanguageLexer.g:20:11: ( '^' )?
+            // InternalBug301935ExTestLanguageLexer.g:18:11: ( '^' )?
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -89,7 +89,7 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
             }
             switch (alt1) {
                 case 1 :
-                    // InternalBug301935ExTestLanguageLexer.g:20:11: '^'
+                    // InternalBug301935ExTestLanguageLexer.g:18:11: '^'
                     {
                     match('^'); 
 
@@ -107,7 +107,7 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // InternalBug301935ExTestLanguageLexer.g:20:40: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            // InternalBug301935ExTestLanguageLexer.g:18:40: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
             loop2:
             do {
                 int alt2=2;
@@ -156,10 +156,10 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
         try {
             int _type = RULE_WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalBug301935ExTestLanguageLexer.g:22:9: ( ( ' ' | '\\t' )+ )
-            // InternalBug301935ExTestLanguageLexer.g:22:11: ( ' ' | '\\t' )+
+            // InternalBug301935ExTestLanguageLexer.g:20:9: ( ( ' ' | '\\t' )+ )
+            // InternalBug301935ExTestLanguageLexer.g:20:11: ( ' ' | '\\t' )+
             {
-            // InternalBug301935ExTestLanguageLexer.g:22:11: ( ' ' | '\\t' )+
+            // InternalBug301935ExTestLanguageLexer.g:20:11: ( ' ' | '\\t' )+
             int cnt3=0;
             loop3:
             do {
@@ -213,8 +213,8 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
         try {
             int _type = RULE_ANY_OTHER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalBug301935ExTestLanguageLexer.g:24:16: ( . )
-            // InternalBug301935ExTestLanguageLexer.g:24:18: .
+            // InternalBug301935ExTestLanguageLexer.g:22:16: ( . )
+            // InternalBug301935ExTestLanguageLexer.g:22:18: .
             {
             matchAny(); 
 
@@ -287,19 +287,22 @@ public class InternalBug301935ExTestLanguageLexer extends Lexer {
         "\1\uffff\1\1\1\2\1\uffff\1\3\1\4\1\5\1\1\1\2\1\3\1\4";
     static final String DFA4_specialS =
         "\1\0\12\uffff}>";
-    static final String[] DFA4_transitionS = {
-            "\11\6\1\5\1\1\2\6\1\2\22\6\1\5\40\6\32\4\3\6\1\3\1\4\1\6\32\4\uff85\6",
-            "",
-            "",
-            "\32\11\4\uffff\1\11\1\uffff\32\11",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-    };
+    static final String[] DFA4_transitionS = DFA4_transitionS_.DFA4_transitionS;
+    private static final class DFA4_transitionS_ {
+        static final String[] DFA4_transitionS = {
+                "\11\6\1\5\1\1\2\6\1\2\22\6\1\5\40\6\32\4\3\6\1\3\1\4\1\6\32\4\uff85\6",
+                "",
+                "",
+                "\32\11\4\uffff\1\11\1\uffff\32\11",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+        };
+    }
 
     static final short[] DFA4_eot = DFA.unpackEncodedString(DFA4_eotS);
     static final short[] DFA4_eof = DFA.unpackEncodedString(DFA4_eofS);

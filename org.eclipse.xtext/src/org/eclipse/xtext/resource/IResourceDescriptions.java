@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource;
 
@@ -13,6 +14,7 @@ import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
 
@@ -42,6 +44,16 @@ public interface IResourceDescriptions extends ISelectable {
 	interface IContextAware extends IResourceDescriptions {
 
 		void setContext(Notifier ctx);
+	}
+	
+	/**
+	 * A resource set aware instance {@link IResourceDescriptions}.
+	 * 
+	 * @since 2.17
+	 */
+	interface IResourceSetAware extends IResourceDescriptions {
+
+		ResourceSet getResourceSet();
 	}
 
 	class NullImpl implements IResourceDescriptions {

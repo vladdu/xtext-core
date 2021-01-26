@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.testing.smoketest.internal;
 
@@ -15,7 +16,7 @@ import org.eclipse.xtext.testing.XtextRunner;
 import org.eclipse.xtext.testing.smoketest.IgnoredBySmokeTest;
 import org.eclipse.xtext.testing.smoketest.ScenarioProcessor;
 import org.junit.Ignore;
-import org.junit.internal.AssumptionViolatedException;
+import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.FrameworkMethod;
@@ -61,6 +62,7 @@ public abstract class AbstractScenarioRunner extends XtextRunner {
 		}
 	}
 
+	@Override
 	protected boolean isIgnored(final FrameworkMethod method) {
 		if (method.getAnnotation(Ignore.class) != null) {
 			return true;

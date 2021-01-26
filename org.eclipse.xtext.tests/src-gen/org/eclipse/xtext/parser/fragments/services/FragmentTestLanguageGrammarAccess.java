@@ -18,11 +18,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class FragmentTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class FragmentTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ParserRuleFragmentsElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.fragments.FragmentTestLanguage.ParserRuleFragments");
@@ -70,32 +70,40 @@ public class FragmentTestLanguageGrammarAccess extends AbstractGrammarElementFin
 		//	{ParserRuleFragments} ('#1' element=PRFNamed
 		//	| '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
 		//	| '#4' element=PRFNamedWithAction
-		//	//  | '#5' element=PRFNamedWithActionInFragment
-		//	//  | '#6' element=PRFNamedWithActionInFragment2
-		//	//  | '#7' element=PRFNamedWithActionInFragment3
+		////  | '#5' element=PRFNamedWithActionInFragment
+		////  | '#6' element=PRFNamedWithActionInFragment2
+		////  | '#7' element=PRFNamedWithActionInFragment3
 		//	| '#8' element=PRFNamedWithFQN
 		//	| '#9' element=PRFWithPredicate
 		//	| '#10' element=PRFNamedRecursive
 		//	| '#11' element=PRFNamedRecursiveFragment);
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{ParserRuleFragments} ('#1' element=PRFNamed | '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
-		//| '#4' element=PRFNamedWithAction //  | '#5' element=PRFNamedWithActionInFragment
+		//{ParserRuleFragments} ('#1' element=PRFNamed
+		//| '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
+		//| '#4' element=PRFNamedWithAction
+		////  | '#5' element=PRFNamedWithActionInFragment
 		////  | '#6' element=PRFNamedWithActionInFragment2
 		////  | '#7' element=PRFNamedWithActionInFragment3
-		//| '#8' element=PRFNamedWithFQN | '#9' element=PRFWithPredicate | '#10' element=PRFNamedRecursive | '#11'
-		//element=PRFNamedRecursiveFragment)
+		//| '#8' element=PRFNamedWithFQN
+		//| '#9' element=PRFWithPredicate
+		//| '#10' element=PRFNamedRecursive
+		//| '#11' element=PRFNamedRecursiveFragment)
 		public Group getGroup() { return cGroup; }
 		
 		//{ParserRuleFragments}
 		public Action getParserRuleFragmentsAction_0() { return cParserRuleFragmentsAction_0; }
 		
-		//'#1' element=PRFNamed | '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst | '#4'
-		//element=PRFNamedWithAction //  | '#5' element=PRFNamedWithActionInFragment
+		//('#1' element=PRFNamed
+		//| '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
+		//| '#4' element=PRFNamedWithAction
+		////  | '#5' element=PRFNamedWithActionInFragment
 		////  | '#6' element=PRFNamedWithActionInFragment2
 		////  | '#7' element=PRFNamedWithActionInFragment3
-		//| '#8' element=PRFNamedWithFQN | '#9' element=PRFWithPredicate | '#10' element=PRFNamedRecursive | '#11'
-		//element=PRFNamedRecursiveFragment
+		//| '#8' element=PRFNamedWithFQN
+		//| '#9' element=PRFWithPredicate
+		//| '#10' element=PRFNamedRecursive
+		//| '#11' element=PRFNamedRecursiveFragment)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//'#1' element=PRFNamed
@@ -461,7 +469,7 @@ public class FragmentTestLanguageGrammarAccess extends AbstractGrammarElementFin
 		//=> ('-' PRFNamedRef)?
 		public Group getGroup_1() { return cGroup_1; }
 		
-		//'-' PRFNamedRef
+		//('-' PRFNamedRef)
 		public Group getGroup_1_0() { return cGroup_1_0; }
 		
 		//'-'
@@ -792,9 +800,9 @@ public class FragmentTestLanguageGrammarAccess extends AbstractGrammarElementFin
 	//	{ParserRuleFragments} ('#1' element=PRFNamed
 	//	| '#2' element=PRFNamed '->' ref=[PRFNamed] | '#3' element=PRFNamedRefFirst
 	//	| '#4' element=PRFNamedWithAction
-	//	//  | '#5' element=PRFNamedWithActionInFragment
-	//	//  | '#6' element=PRFNamedWithActionInFragment2
-	//	//  | '#7' element=PRFNamedWithActionInFragment3
+	////  | '#5' element=PRFNamedWithActionInFragment
+	////  | '#6' element=PRFNamedWithActionInFragment2
+	////  | '#7' element=PRFNamedWithActionInFragment3
 	//	| '#8' element=PRFNamedWithFQN
 	//	| '#9' element=PRFWithPredicate
 	//	| '#10' element=PRFNamedRecursive

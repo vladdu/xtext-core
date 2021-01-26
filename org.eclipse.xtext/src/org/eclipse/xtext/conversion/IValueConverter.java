@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.conversion;
@@ -62,10 +63,12 @@ public interface IValueConverter<Type> {
 	 * that is converted, may implement this interface. The framework will
 	 * set the rule according to the annotation of the method that provides
 	 * the value converter.
-	 * 
-	 * @throws IllegalArgumentException if the rule doesn't match the expectation of the value converter
 	 */
 	interface RuleSpecific {
+		
+		/**
+		 * @throws IllegalArgumentException if the rule doesn't match the expectation of the value converter
+		 */
 		void setRule(AbstractRule rule) throws IllegalArgumentException;
 	}
 }

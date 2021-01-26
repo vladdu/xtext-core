@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -15,6 +16,7 @@ import org.eclipse.xtext.Grammar;
 import org.eclipse.xtext.GrammarUtil;
 import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.ParserRule;
+import org.eclipse.xtext.util.OnChangeEvictingCache;
 import org.junit.Test;
 
 import com.google.common.collect.Iterators;
@@ -42,7 +44,7 @@ public class KeywordInspectorTest extends AbstractXtextInspectorTest {
 	public void validateRule(AbstractRule rule) {
 		assertNotNull("rule", rule);
 		warnings.clear();
-		KeywordInspector inspector = new KeywordInspector(this);
+		KeywordInspector inspector = new KeywordInspector(this, new OnChangeEvictingCache());
 		Iterator<Keyword> keywords = Iterators.filter(EcoreUtil.getAllContents(rule, true), Keyword.class);
 		while(keywords.hasNext())
 			inspector.inspectKeywordHidesTerminalRule(keywords.next());

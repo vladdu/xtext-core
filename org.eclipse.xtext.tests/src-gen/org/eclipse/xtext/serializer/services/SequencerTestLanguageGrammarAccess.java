@@ -21,12 +21,11 @@ import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.UnorderedGroup;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractEnumRuleElementFinder;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class SequencerTestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.SequencerTestLanguage.Model");
@@ -108,18 +107,19 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//	x11=SingleKeywordsOrID | x12=SingleTerminals | x10=MultiKeywords | x11=MultiKeywordsOrID | x12=MultiTerminals |
 		//	x13=SingleEnum | x14=SingleCrossReference | x15=SingleContainmentReference | x19=DependentAlternative1 |
 		//	x20=DependentAlternative2 | x21=Optional | x22=Float | x23=UnorderedAlternative | x24=UnorderedGroup |
-		//	x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 | x28=OptionalDouble | x29=NullValueGenerated |
-		//	x30=NullValueInterpreted | x31=NullCrossRefGenerated | x32=NullCrossRefInterpreted | x33=FragmentCaller |
+		//	x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 | x28=OptionalDouble | x29=NullValueGenerated
+		//	| x30=NullValueInterpreted | x31=NullCrossRefGenerated | x32=NullCrossRefInterpreted | x33=FragmentCaller |
 		//	x34=ParameterCaller | x35=ParameterDelegation;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//x1=SimpleGroup | x2=SimpleAlternative | x3=SimpleMultiplicities | x4=GroupMultiplicities | x5=AlternativeMultiplicities
-		//| x6=List1 | x7=List2 | x8=AltList1 | x9=AltList2 | x10=SingleKeywords | x11=SingleKeywordsOrID | x12=SingleTerminals |
-		//x10=MultiKeywords | x11=MultiKeywordsOrID | x12=MultiTerminals | x13=SingleEnum | x14=SingleCrossReference |
-		//x15=SingleContainmentReference | x19=DependentAlternative1 | x20=DependentAlternative2 | x21=Optional | x22=Float |
-		//x23=UnorderedAlternative | x24=UnorderedGroup | x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 |
-		//x28=OptionalDouble | x29=NullValueGenerated | x30=NullValueInterpreted | x31=NullCrossRefGenerated |
-		//x32=NullCrossRefInterpreted | x33=FragmentCaller | x34=ParameterCaller | x35=ParameterDelegation
+		//x1=SimpleGroup | x2=SimpleAlternative | x3=SimpleMultiplicities | x4=GroupMultiplicities |
+		//x5=AlternativeMultiplicities | x6=List1 | x7=List2 | x8=AltList1 | x9=AltList2 | x10=SingleKeywords |
+		//x11=SingleKeywordsOrID | x12=SingleTerminals | x10=MultiKeywords | x11=MultiKeywordsOrID | x12=MultiTerminals |
+		//x13=SingleEnum | x14=SingleCrossReference | x15=SingleContainmentReference | x19=DependentAlternative1 |
+		//x20=DependentAlternative2 | x21=Optional | x22=Float | x23=UnorderedAlternative | x24=UnorderedGroup |
+		//x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 | x28=OptionalDouble | x29=NullValueGenerated |
+		//x30=NullValueInterpreted | x31=NullCrossRefGenerated | x32=NullCrossRefInterpreted | x33=FragmentCaller |
+		//x34=ParameterCaller | x35=ParameterDelegation
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//x1=SimpleGroup
@@ -387,7 +387,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#2"
 		public Keyword getNumberSignDigitTwoKeyword_0() { return cNumberSignDigitTwoKeyword_0; }
 		
-		//"kw1" val1=ID | "kw2" val2=ID
+		//("kw1" val1=ID | "kw2" val2=ID)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//"kw1" val1=ID
@@ -794,7 +794,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#8"
 		public Keyword getNumberSignDigitEightKeyword_0() { return cNumberSignDigitEightKeyword_0; }
 		
-		//val1=ID val2=ID | "kw1" val1=ID val3=ID | "kw2" val1=ID val4=ID?
+		//(val1=ID val2=ID | "kw1" val1=ID val3=ID | "kw2" val1=ID val4=ID?)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//val1=ID val2=ID
@@ -879,7 +879,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#9"
 		public Keyword getNumberSignDigitNineKeyword_0() { return cNumberSignDigitNineKeyword_0; }
 		
-		//val1+=ID val2=ID | "kw" val1+=ID ("," val1+=ID)* val3=ID
+		//(val1+=ID val2=ID | "kw" val1+=ID ("," val1+=ID)* val3=ID)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//val1+=ID val2=ID
@@ -1114,7 +1114,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//ID3
 		public RuleCall getNameID3TerminalRuleCall_1_0_2() { return cNameID3TerminalRuleCall_1_0_2; }
 		
-		//ref=[SingleCrossReference|ID1] | ref=[SingleCrossReference|ID2] | ref=[SingleCrossReference|ID3]
+		//(ref=[SingleCrossReference|ID1] | ref=[SingleCrossReference|ID2] | ref=[SingleCrossReference|ID3])
 		public Alternatives getAlternatives_2() { return cAlternatives_2; }
 		
 		//ref=[SingleCrossReference|ID1]
@@ -1155,7 +1155,8 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cChildSingleContainmentReferenceChild3ParserRuleCall_1_0_2 = (RuleCall)cChildAlternatives_1_0.eContents().get(2);
 		
 		//SingleContainmentReference:
-		//	"#15" child=(SingleContainmentReferenceChild1 | SingleContainmentReferenceChild2 | SingleContainmentReferenceChild3);
+		//	"#15" child=(SingleContainmentReferenceChild1 | SingleContainmentReferenceChild2 | SingleContainmentReferenceChild3)
+		//;
 		@Override public ParserRule getRule() { return rule; }
 		
 		//"#15" child=(SingleContainmentReferenceChild1 | SingleContainmentReferenceChild2 | SingleContainmentReferenceChild3)
@@ -1352,7 +1353,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#19"
 		public Keyword getNumberSignDigitOneDigitNineKeyword_0() { return cNumberSignDigitOneDigitNineKeyword_0; }
 		
-		//val=ID | val=ID flag?="kw1"
+		//(val=ID | val=ID flag?="kw1")
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//val=ID
@@ -1402,7 +1403,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#20"
 		public Keyword getNumberSignDigitTwoDigitZeroKeyword_0() { return cNumberSignDigitTwoDigitZeroKeyword_0; }
 		
-		//val+=ID val+=ID+ | val+=ID+ flag?="kw1"
+		//(val+=ID val+=ID+ | val+=ID+ flag?="kw1")
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//val+=ID val+=ID+
@@ -1639,7 +1640,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"#24"
 		public Keyword getNumberSignDigitTwoDigitFourKeyword_0() { return cNumberSignDigitTwoDigitFourKeyword_0; }
 		
-		//val1=ID & val2=INT & val3=UnorderedGroupVal & val4=UnorderedGroupValDelegate
+		//(val1=ID & val2=INT & val3=UnorderedGroupVal & val4=UnorderedGroupValDelegate)
 		public UnorderedGroup getUnorderedGroup_1() { return cUnorderedGroup_1; }
 		
 		//val1=ID
@@ -1755,7 +1756,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//{UnorderedGroupOptional}
 		public Action getUnorderedGroupOptionalAction_1() { return cUnorderedGroupOptionalAction_1; }
 		
-		//("kw1" val1=ID)? & ("kw2" va2=ID)? & ("kw3" val3=ID)?
+		//(("kw1" val1=ID)? & ("kw2" va2=ID)? & ("kw3" val3=ID)?)
 		public UnorderedGroup getUnorderedGroup_2() { return cUnorderedGroup_2; }
 		
 		//("kw1" val1=ID)?
@@ -1820,7 +1821,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//{UnorderedGroupBoolean}
 		public Action getUnorderedGroupBooleanAction_1() { return cUnorderedGroupBooleanAction_1; }
 		
-		//val1?='kw1'? & val2?='kw2'? & val3?='kw3'?
+		//(val1?='kw1'? & val2?='kw2'? & val3?='kw3'?)
 		public UnorderedGroup getUnorderedGroup_2() { return cUnorderedGroup_2; }
 		
 		//val1?='kw1'?
@@ -1873,11 +1874,12 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cVal6IDTerminalRuleCall_4_3_1_0 = (RuleCall)cVal6Assignment_4_3_1.eContents().get(0);
 		
 		//Complex1:
-		//	'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6"
-		//	val6+=ID)*;
+		//	'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6" val6+=ID)
+		//	*;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6" val6+=ID)*
+		//'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6" val6+=ID)
+		//*
 		public Group getGroup() { return cGroup; }
 		
 		//'#27'
@@ -2231,67 +2233,67 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cPParameterizedParserRuleCall_1_3_1_0 = (RuleCall)cPAssignment_1_3_1.eContents().get(0);
 		
 		//ParameterCaller:
-		//	"#34" ("kw1" p=Parameterized<true,true> | "kw2" p=Parameterized<true,false> | "kw3" p=Parameterized<false,true> |
-		//	"kw4" p=Parameterized<false,false>);
+		//	"#34" ("kw1" p=Parameterized<true, true> | "kw2" p=Parameterized<true, false> | "kw3" p=Parameterized<false, true> |
+		//	"kw4" p=Parameterized<false, false>);
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"#34" ("kw1" p=Parameterized<true,true> | "kw2" p=Parameterized<true,false> | "kw3" p=Parameterized<false,true> | "kw4"
-		//p=Parameterized<false,false>)
+		//"#34" ("kw1" p=Parameterized<true, true> | "kw2" p=Parameterized<true, false> | "kw3" p=Parameterized<false, true> |
+		//"kw4" p=Parameterized<false, false>)
 		public Group getGroup() { return cGroup; }
 		
 		//"#34"
 		public Keyword getNumberSignDigitThreeDigitFourKeyword_0() { return cNumberSignDigitThreeDigitFourKeyword_0; }
 		
-		//"kw1" p=Parameterized<true,true> | "kw2" p=Parameterized<true,false> | "kw3" p=Parameterized<false,true> | "kw4"
-		//p=Parameterized<false,false>
+		//("kw1" p=Parameterized<true, true> | "kw2" p=Parameterized<true, false> | "kw3" p=Parameterized<false, true> | "kw4"
+		//p=Parameterized<false, false>)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
-		//"kw1" p=Parameterized<true,true>
+		//"kw1" p=Parameterized<true, true>
 		public Group getGroup_1_0() { return cGroup_1_0; }
 		
 		//"kw1"
 		public Keyword getKw1Keyword_1_0_0() { return cKw1Keyword_1_0_0; }
 		
-		//p=Parameterized<true,true>
+		//p=Parameterized<true, true>
 		public Assignment getPAssignment_1_0_1() { return cPAssignment_1_0_1; }
 		
-		//Parameterized<true,true>
+		//Parameterized<true, true>
 		public RuleCall getPParameterizedParserRuleCall_1_0_1_0() { return cPParameterizedParserRuleCall_1_0_1_0; }
 		
-		//"kw2" p=Parameterized<true,false>
+		//"kw2" p=Parameterized<true, false>
 		public Group getGroup_1_1() { return cGroup_1_1; }
 		
 		//"kw2"
 		public Keyword getKw2Keyword_1_1_0() { return cKw2Keyword_1_1_0; }
 		
-		//p=Parameterized<true,false>
+		//p=Parameterized<true, false>
 		public Assignment getPAssignment_1_1_1() { return cPAssignment_1_1_1; }
 		
-		//Parameterized<true,false>
+		//Parameterized<true, false>
 		public RuleCall getPParameterizedParserRuleCall_1_1_1_0() { return cPParameterizedParserRuleCall_1_1_1_0; }
 		
-		//"kw3" p=Parameterized<false,true>
+		//"kw3" p=Parameterized<false, true>
 		public Group getGroup_1_2() { return cGroup_1_2; }
 		
 		//"kw3"
 		public Keyword getKw3Keyword_1_2_0() { return cKw3Keyword_1_2_0; }
 		
-		//p=Parameterized<false,true>
+		//p=Parameterized<false, true>
 		public Assignment getPAssignment_1_2_1() { return cPAssignment_1_2_1; }
 		
-		//Parameterized<false,true>
+		//Parameterized<false, true>
 		public RuleCall getPParameterizedParserRuleCall_1_2_1_0() { return cPParameterizedParserRuleCall_1_2_1_0; }
 		
-		//"kw4" p=Parameterized<false,false>
+		//"kw4" p=Parameterized<false, false>
 		public Group getGroup_1_3() { return cGroup_1_3; }
 		
 		//"kw4"
 		public Keyword getKw4Keyword_1_3_0() { return cKw4Keyword_1_3_0; }
 		
-		//p=Parameterized<false,false>
+		//p=Parameterized<false, false>
 		public Assignment getPAssignment_1_3_1() { return cPAssignment_1_3_1; }
 		
-		//Parameterized<false,false>
+		//Parameterized<false, false>
 		public RuleCall getPParameterizedParserRuleCall_1_3_1_0() { return cPParameterizedParserRuleCall_1_3_1_0; }
 	}
 	public class ParameterizedElements extends AbstractParserRuleElementFinder {
@@ -2311,10 +2313,10 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cV3IDTerminalRuleCall_1_2_1_0 = (RuleCall)cV3Assignment_1_2_1.eContents().get(0);
 		
 		//Parameterized <P, Q>:
-		//	<P> "kwp1" v1=ID | <!P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?;
+		//	<P> "kwp1" v1=ID | <! P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//<P> "kwp1" v1=ID | <!P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?
+		//<P> "kwp1" v1=ID | <! P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//<P> "kwp1" v1=ID
@@ -2329,7 +2331,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//ID
 		public RuleCall getV1IDTerminalRuleCall_0_1_0() { return cV1IDTerminalRuleCall_0_1_0; }
 		
-		//<!P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?
+		//<! P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?
 		public Group getGroup_1() { return cGroup_1; }
 		
 		//"kwp2"
@@ -2368,40 +2370,40 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cPDelegationParserRuleCall_1_1_1_0 = (RuleCall)cPAssignment_1_1_1.eContents().get(0);
 		
 		//ParameterDelegation:
-		//	"#35" ("kw1" p=Delegation<true,true> | "kw2" p=Delegation<true,false>);
+		//	"#35" ("kw1" p=Delegation<true, true> | "kw2" p=Delegation<true, false>);
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"#35" ("kw1" p=Delegation<true,true> | "kw2" p=Delegation<true,false>)
+		//"#35" ("kw1" p=Delegation<true, true> | "kw2" p=Delegation<true, false>)
 		public Group getGroup() { return cGroup; }
 		
 		//"#35"
 		public Keyword getNumberSignDigitThreeDigitFiveKeyword_0() { return cNumberSignDigitThreeDigitFiveKeyword_0; }
 		
-		//"kw1" p=Delegation<true,true> | "kw2" p=Delegation<true,false>
+		//("kw1" p=Delegation<true, true> | "kw2" p=Delegation<true, false>)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
-		//"kw1" p=Delegation<true,true>
+		//"kw1" p=Delegation<true, true>
 		public Group getGroup_1_0() { return cGroup_1_0; }
 		
 		//"kw1"
 		public Keyword getKw1Keyword_1_0_0() { return cKw1Keyword_1_0_0; }
 		
-		//p=Delegation<true,true>
+		//p=Delegation<true, true>
 		public Assignment getPAssignment_1_0_1() { return cPAssignment_1_0_1; }
 		
-		//Delegation<true,true>
+		//Delegation<true, true>
 		public RuleCall getPDelegationParserRuleCall_1_0_1_0() { return cPDelegationParserRuleCall_1_0_1_0; }
 		
-		//"kw2" p=Delegation<true,false>
+		//"kw2" p=Delegation<true, false>
 		public Group getGroup_1_1() { return cGroup_1_1; }
 		
 		//"kw2"
 		public Keyword getKw2Keyword_1_1_0() { return cKw2Keyword_1_1_0; }
 		
-		//p=Delegation<true,false>
+		//p=Delegation<true, false>
 		public Assignment getPAssignment_1_1_1() { return cPAssignment_1_1_1; }
 		
-		//Delegation<true,false>
+		//Delegation<true, false>
 		public RuleCall getPDelegationParserRuleCall_1_1_1_0() { return cPDelegationParserRuleCall_1_1_1_0; }
 	}
 	public class DelegationElements extends AbstractParserRuleElementFinder {
@@ -2424,16 +2426,16 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final RuleCall cRc2DelegationParserRuleCall_1_2_1_0 = (RuleCall)cRc2Assignment_1_2_1.eContents().get(0);
 		
 		//Delegation <D, P>:
-		//	<!D> (<P> p=ID | <!P> np=INT) | <D> "kwd" Delegation<false,P> ({DelegationA.left=current} rc2=Delegation<false,P>)?;
+		//	<! D> (<P> p=ID | <! P> np=INT) | <D> "kwd" Delegation<false, P> ({DelegationA.left=current} rc2=Delegation<false, P>)?;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//<!D> (<P> p=ID | <!P> np=INT) | <D> "kwd" Delegation<false,P> ({DelegationA.left=current} rc2=Delegation<false,P>)?
+		//<! D> (<P> p=ID | <! P> np=INT) | <D> "kwd" Delegation<false, P> ({DelegationA.left=current} rc2=Delegation<false, P>)?
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
-		//<!D> (<P> p=ID | <!P> np=INT)
+		//<! D> (<P> p=ID | <! P> np=INT)
 		public Group getGroup_0() { return cGroup_0; }
 		
-		//<P> p=ID | <!P> np=INT
+		//(<P> p=ID | <! P> np=INT)
 		public Alternatives getAlternatives_0_0() { return cAlternatives_0_0; }
 		
 		//<P> p=ID
@@ -2445,7 +2447,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//ID
 		public RuleCall getPIDTerminalRuleCall_0_0_0_0_0() { return cPIDTerminalRuleCall_0_0_0_0_0; }
 		
-		//<!P> np=INT
+		//<! P> np=INT
 		public Group getGroup_0_0_1() { return cGroup_0_0_1; }
 		
 		//np=INT
@@ -2454,29 +2456,29 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//INT
 		public RuleCall getNpINTTerminalRuleCall_0_0_1_0_0() { return cNpINTTerminalRuleCall_0_0_1_0_0; }
 		
-		//<D> "kwd" Delegation<false,P> ({DelegationA.left=current} rc2=Delegation<false,P>)?
+		//<D> "kwd" Delegation<false, P> ({DelegationA.left=current} rc2=Delegation<false, P>)?
 		public Group getGroup_1() { return cGroup_1; }
 		
 		//"kwd"
 		public Keyword getKwdKeyword_1_0() { return cKwdKeyword_1_0; }
 		
-		//Delegation<false,P>
+		//Delegation<false, P>
 		public RuleCall getDelegationParserRuleCall_1_1() { return cDelegationParserRuleCall_1_1; }
 		
-		//({DelegationA.left=current} rc2=Delegation<false,P>)?
+		//({DelegationA.left=current} rc2=Delegation<false, P>)?
 		public Group getGroup_1_2() { return cGroup_1_2; }
 		
 		//{DelegationA.left=current}
 		public Action getDelegationALeftAction_1_2_0() { return cDelegationALeftAction_1_2_0; }
 		
-		//rc2=Delegation<false,P>
+		//rc2=Delegation<false, P>
 		public Assignment getRc2Assignment_1_2_1() { return cRc2Assignment_1_2_1; }
 		
-		//Delegation<false,P>
+		//Delegation<false, P>
 		public RuleCall getRc2DelegationParserRuleCall_1_2_1_0() { return cRc2DelegationParserRuleCall_1_2_1_0; }
 	}
 	
-	public class DefEnum1Elements extends AbstractEnumRuleElementFinder {
+	public class DefEnum1Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.SequencerTestLanguage.DefEnum1");
 		private final EnumLiteralDeclaration cKw1EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cKw1Kw1Keyword_0 = (Keyword)cKw1EnumLiteralDeclaration.eContents().get(0);
@@ -2491,7 +2493,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"kw1"
 		public Keyword getKw1Kw1Keyword_0() { return cKw1Kw1Keyword_0; }
 	}
-	public class DefEnum2Elements extends AbstractEnumRuleElementFinder {
+	public class DefEnum2Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.SequencerTestLanguage.DefEnum2");
 		private final EnumLiteralDeclaration cKw2EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cKw2Kw2Keyword_0 = (Keyword)cKw2EnumLiteralDeclaration.eContents().get(0);
@@ -2506,7 +2508,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 		//"kw2"
 		public Keyword getKw2Kw2Keyword_0() { return cKw2Kw2Keyword_0; }
 	}
-	public class DefEnum3Elements extends AbstractEnumRuleElementFinder {
+	public class DefEnum3Elements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.serializer.SequencerTestLanguage.DefEnum3");
 		private final EnumLiteralDeclaration cKw3EnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
 		private final Keyword cKw3Kw3Keyword_0 = (Keyword)cKw3EnumLiteralDeclaration.eContents().get(0);
@@ -2679,8 +2681,8 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	//	x11=SingleKeywordsOrID | x12=SingleTerminals | x10=MultiKeywords | x11=MultiKeywordsOrID | x12=MultiTerminals |
 	//	x13=SingleEnum | x14=SingleCrossReference | x15=SingleContainmentReference | x19=DependentAlternative1 |
 	//	x20=DependentAlternative2 | x21=Optional | x22=Float | x23=UnorderedAlternative | x24=UnorderedGroup |
-	//	x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 | x28=OptionalDouble | x29=NullValueGenerated |
-	//	x30=NullValueInterpreted | x31=NullCrossRefGenerated | x32=NullCrossRefInterpreted | x33=FragmentCaller |
+	//	x25=UnorderedGroupOptional | x26=UnorderedGroupBoolean | x27=Complex1 | x28=OptionalDouble | x29=NullValueGenerated
+	//	| x30=NullValueInterpreted | x31=NullCrossRefGenerated | x32=NullCrossRefInterpreted | x33=FragmentCaller |
 	//	x34=ParameterCaller | x35=ParameterDelegation;
 	public ModelElements getModelAccess() {
 		return pModel;
@@ -2880,7 +2882,8 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//SingleContainmentReference:
-	//	"#15" child=(SingleContainmentReferenceChild1 | SingleContainmentReferenceChild2 | SingleContainmentReferenceChild3);
+	//	"#15" child=(SingleContainmentReferenceChild1 | SingleContainmentReferenceChild2 | SingleContainmentReferenceChild3)
+	//;
 	public SingleContainmentReferenceElements getSingleContainmentReferenceAccess() {
 		return pSingleContainmentReference;
 	}
@@ -3091,8 +3094,8 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//Complex1:
-	//	'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6"
-	//	val6+=ID)*;
+	//	'#27' {Complex1} ("kw1" val1=ID)? ("kw2" val2=ID)? ("kw3" val3+=ID | "kw4" val4+=ID | "kw5" val5+=ID | "kw6" val6+=ID)
+	//	*;
 	public Complex1Elements getComplex1Access() {
 		return pComplex1;
 	}
@@ -3192,8 +3195,8 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//ParameterCaller:
-	//	"#34" ("kw1" p=Parameterized<true,true> | "kw2" p=Parameterized<true,false> | "kw3" p=Parameterized<false,true> |
-	//	"kw4" p=Parameterized<false,false>);
+	//	"#34" ("kw1" p=Parameterized<true, true> | "kw2" p=Parameterized<true, false> | "kw3" p=Parameterized<false, true> |
+	//	"kw4" p=Parameterized<false, false>);
 	public ParameterCallerElements getParameterCallerAccess() {
 		return pParameterCaller;
 	}
@@ -3203,7 +3206,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//Parameterized <P, Q>:
-	//	<P> "kwp1" v1=ID | <!P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?;
+	//	<P> "kwp1" v1=ID | <! P> "kwp2" v2=ID (<Q> "kwp3" v3=ID)?;
 	public ParameterizedElements getParameterizedAccess() {
 		return pParameterized;
 	}
@@ -3213,7 +3216,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//ParameterDelegation:
-	//	"#35" ("kw1" p=Delegation<true,true> | "kw2" p=Delegation<true,false>);
+	//	"#35" ("kw1" p=Delegation<true, true> | "kw2" p=Delegation<true, false>);
 	public ParameterDelegationElements getParameterDelegationAccess() {
 		return pParameterDelegation;
 	}
@@ -3223,7 +3226,7 @@ public class SequencerTestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 	
 	//Delegation <D, P>:
-	//	<!D> (<P> p=ID | <!P> np=INT) | <D> "kwd" Delegation<false,P> ({DelegationA.left=current} rc2=Delegation<false,P>)?;
+	//	<! D> (<P> p=ID | <! P> np=INT) | <D> "kwd" Delegation<false, P> ({DelegationA.left=current} rc2=Delegation<false, P>)?;
 	public DelegationElements getDelegationAccess() {
 		return pDelegation;
 	}

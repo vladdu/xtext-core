@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2018 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.linking.impl;
 
@@ -21,7 +22,6 @@ import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.IScopeProvider;
-import org.eclipse.xtext.scoping.impl.AbstractGlobalScopeDelegatingScopeProvider;
 import org.eclipse.xtext.scoping.impl.IDelegatingScopeProvider;
 
 import com.google.inject.Inject;
@@ -67,13 +67,7 @@ public class DefaultLinkingService extends AbstractLinkingService {
 	}
 	
 	protected void unRegisterImportedNamesAdapter(IScopeProvider scopeProvider) {
-		if (scopeProvider instanceof AbstractGlobalScopeDelegatingScopeProvider) {
-			AbstractGlobalScopeDelegatingScopeProvider provider = (AbstractGlobalScopeDelegatingScopeProvider) scopeProvider;
-			provider.setWrapper(null);
-		} else if (scopeProvider instanceof IDelegatingScopeProvider) {
-			IDelegatingScopeProvider delegatingScopeProvider = (IDelegatingScopeProvider) scopeProvider;
-			unRegisterImportedNamesAdapter(delegatingScopeProvider.getDelegate());
-		}
+		IDelegatingScopeProvider.setWrapper(scopeProvider, null);
 	}
 
 	protected void registerImportedNamesAdapter(EObject context) {
@@ -81,14 +75,8 @@ public class DefaultLinkingService extends AbstractLinkingService {
 	}
 	
 	protected void registerImportedNamesAdapter(IScopeProvider scopeProvider, EObject context) {
-		if (scopeProvider instanceof AbstractGlobalScopeDelegatingScopeProvider) {
-			AbstractGlobalScopeDelegatingScopeProvider provider = (AbstractGlobalScopeDelegatingScopeProvider) scopeProvider;
-			ImportedNamesAdapter adapter = getImportedNamesAdapter(context);
-			provider.setWrapper(adapter);
-		} else if (scopeProvider instanceof IDelegatingScopeProvider) {
-			IDelegatingScopeProvider delegatingScopeProvider = (IDelegatingScopeProvider) scopeProvider;
-			registerImportedNamesAdapter(delegatingScopeProvider.getDelegate(), context);
-		}
+		ImportedNamesAdapter adapter = getImportedNamesAdapter(context);
+		IDelegatingScopeProvider.setWrapper(scopeProvider, adapter);
 	}
 
 	protected ImportedNamesAdapter getImportedNamesAdapter(EObject context) {
@@ -118,6 +106,11 @@ public class DefaultLinkingService extends AbstractLinkingService {
 			logger.debug("before getLinkedObjects: node: '" + crossRefString + "'");
 		}
 		final IScope scope = getScope(context, ref);
+		if (scope == null) {
+			throw new AssertionError(
+					"Scope provider " + scopeProvider.getClass().getName() + " must not return null for context "
+							+ context + ", reference " + ref + "! Consider to return IScope.NULLSCOPE instead.");
+		}
 		final QualifiedName qualifiedLinkName = qualifiedNameConverter.toQualifiedName(crossRefString);
 		final IEObjectDescription eObjectDescription = scope.getSingleElement(qualifiedLinkName);
 		if (logger.isDebugEnabled()) {

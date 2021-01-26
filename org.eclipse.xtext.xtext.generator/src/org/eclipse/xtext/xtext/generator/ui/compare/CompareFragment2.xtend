@@ -1,19 +1,22 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.ui.compare
 
 import com.google.inject.Inject
+import com.google.inject.name.Names
+import org.eclipse.xtend2.lib.StringConcatenationClient
+import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 import org.eclipse.xtext.xtext.generator.XtextGeneratorNaming
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess
 import org.eclipse.xtext.xtext.generator.model.TypeReference
 
 import static extension org.eclipse.xtext.GrammarUtil.*
-import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment
 
 /**
  * Contributes the registration of compare infrastructure. 
@@ -31,12 +34,13 @@ class CompareFragment2 extends AbstractXtextGeneratorFragment {
 				"org.eclipse.compare", "org.eclipse.xtext.ui"
 			]
 		}
-
+		val StringConcatenationClient statement =
+			'''binder.bind(«String».class).annotatedWith(«Names».named(«new TypeReference("org.eclipse.xtext.ui.UIBindings")».COMPARE_VIEWER_TITLE)).toInstance("«grammar.simpleName» Compare");'''
 		new GuiceModuleAccess.BindingFactory()
 				.addTypeToType(
 					new TypeReference("org.eclipse.compare.IViewerCreator"),
 					new TypeReference("org.eclipse.xtext.ui.compare.DefaultViewerCreator")
-				).contributeTo(language.eclipsePluginGenModule);
+				).addConfiguredBinding("CompareViewerTitle", statement).contributeTo(language.eclipsePluginGenModule);
 
 		if (projectConfig.eclipsePlugin?.pluginXml !== null) {
 			projectConfig.eclipsePlugin.pluginXml.entries += '''
@@ -45,12 +49,18 @@ class CompareFragment2 extends AbstractXtextGeneratorFragment {
 					class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
 					extensions="«language.fileExtensions.join(",")»">
 				</viewer>
+				<contentTypeBinding
+					contentTypeId="«grammar.name».contenttype"
+					contentViewerId="«grammar.name».compare.contentViewers" />
 			</extension>
 			<extension point="org.eclipse.compare.contentMergeViewers">
 				<viewer id="«grammar.name».compare.contentMergeViewers"
 					class="«grammar.eclipsePluginExecutableExtensionFactory»:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
 					extensions="«language.fileExtensions.join(",")»" label="«grammar.simpleName» Compare">
 				</viewer>
+				<contentTypeBinding
+					contentTypeId="«grammar.name».contenttype"
+					contentMergeViewerId="«grammar.name».compare.contentMergeViewers" />
 			</extension>
 			<extension point="org.eclipse.ui.editors.documentProviders">
 				<provider id="«grammar.name».editors.documentProviders"

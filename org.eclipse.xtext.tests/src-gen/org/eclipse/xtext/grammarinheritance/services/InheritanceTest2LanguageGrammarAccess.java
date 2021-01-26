@@ -15,11 +15,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class InheritanceTest2LanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class InheritanceTest2LanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.grammarinheritance.InheritanceTest2Language.Model");
@@ -34,6 +34,7 @@ public class InheritanceTest2LanguageGrammarAccess extends AbstractGrammarElemen
 		private final RuleCall cIdsFQNParserRuleCall_4_0 = (RuleCall)cIdsAssignment_4.eContents().get(0);
 		private final Keyword cRightCurlyBracketKeyword_5 = (Keyword)cGroup.eContents().get(5);
 		
+		//@Override
 		//Model:
 		//	"model" name=ID "{"
 		//	elements+=Element*
@@ -41,7 +42,10 @@ public class InheritanceTest2LanguageGrammarAccess extends AbstractGrammarElemen
 		//	"}";
 		@Override public ParserRule getRule() { return rule; }
 		
-		//"model" name=ID "{" elements+=Element* ids+=FQN "}"
+		//"model" name=ID "{"
+		//elements+=Element*
+		//ids+=FQN
+		//"}"
 		public Group getGroup() { return cGroup; }
 		
 		//"model"
@@ -130,6 +134,7 @@ public class InheritanceTest2LanguageGrammarAccess extends AbstractGrammarElemen
 	}
 
 	
+	//@Override
 	//Model:
 	//	"model" name=ID "{"
 	//	elements+=Element*
@@ -153,6 +158,7 @@ public class InheritanceTest2LanguageGrammarAccess extends AbstractGrammarElemen
 		return getElementAccess().getRule();
 	}
 	
+	//@Override
 	//terminal ID:
 	//	'a'..'z'+;
 	public TerminalRule getIDRule() {

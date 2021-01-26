@@ -1,13 +1,17 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.formatting2.regionaccess.internal
 
 import com.google.inject.Inject
+
+import static extension org.eclipse.xtext.util.Strings.*
+import static extension org.eclipse.xtext.tests.LineDelimiters.toUnix
 import javax.inject.Provider
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.formatting2.debug.TextRegionAccessToString
@@ -23,6 +27,10 @@ import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.eclipse.xtext.formatting2.regionaccess.ITextRegionAccess
+import org.eclipse.xtext.formatting2.regionaccess.IHiddenRegion
+import org.eclipse.xtext.formatting2.regionaccess.ISequentialRegion
+import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegion
 
 /**
  * @author Moritz Eysholdt - Initial contribution and API
@@ -49,7 +57,7 @@ class RegionAccessBuilderTest {
 		'''
 	}
 	
-	@Test def void testMultiWhitespace() {
+	@Test def void testMultiWhitespace1() {
 		'''
 			1 /**/ foo
 		'''.toString.trim === '''
@@ -57,8 +65,26 @@ class RegionAccessBuilderTest {
 			     B Simple'foo' Root
 			 0 1  S "1"        Simple:'1'
 			 1    H " "        Whitespace:TerminalRule'WS'
-			        "/**/"     Comment:TerminalRule'ML_COMMENT'
+			        "/**/"     Comment:TerminalRule'ML_COMMENT' Association:CONTAINER
 			   6    " "        Whitespace:TerminalRule'WS'
+			 7 3  S "foo"      Simple:name=ID
+			     E Simple'foo' Root
+			10 0 H
+		'''
+	}
+	
+	@Test def void testMultiWhitespace2() {
+		'''
+			1
+			/**/
+			foo
+		'''.toString.trim.toUnixLineSeparator === '''
+			 0 0 H
+			     B Simple'foo' Root
+			 0 1  S "1"        Simple:'1'
+			 1    H "\n"       Whitespace:TerminalRule'WS'
+			        "/**/"     Comment:TerminalRule'ML_COMMENT' Association:NEXT
+			   6    "\n"       Whitespace:TerminalRule'WS'
 			 7 3  S "foo"      Simple:name=ID
 			     E Simple'foo' Root
 			10 0 H
@@ -654,6 +680,28 @@ class RegionAccessBuilderTest {
 			14 0 H
 		'''
 	}
+	
+	@Test def void testComments1() {
+		'''
+			/*xxxx*/
+			8
+			/*aaaaa*/
+			c
+			// last
+		'''.toString.toUnix.trim === '''
+			 0    H "/*xxxx*/" Comment:TerminalRule'ML_COMMENT' Association:NEXT
+			    9   "\n"       Whitespace:TerminalRule'WS'
+			      B ValueList'[c]' Root
+			 9  1  S "8"        Root:'8'
+			10     H "\n"       Whitespace:TerminalRule'WS'
+			         "/*aaa..." Comment:TerminalRule'ML_COMMENT' Association:NEXT
+			   11    "\n"       Whitespace:TerminalRule'WS'
+			21  1  S "c"        ValueList:name+=ID
+			      E ValueList'[c]' Root
+			22    H "\n"       Whitespace:TerminalRule'WS'
+			    8   "// last"  Comment:TerminalRule'SL_COMMENT' Association:CONTAINER
+		'''
+	}
 
 	private def ===(CharSequence file, CharSequence expectation) {
 		val exp = expectation.toString
@@ -661,8 +709,42 @@ class RegionAccessBuilderTest {
 		validationTestHelper.assertNoErrors(obj)
 		val access1 = obj.createFromNodeModel
 		val access2 = obj.serializeToRegions
-		Assert.assertEquals(exp, new TextRegionAccessToString().withRegionAccess(access1).cfg() + "\n")
-		Assert.assertEquals(exp, new TextRegionAccessToString().withRegionAccess(access2).cfg() + "\n")
+		assertToStringDoesNotCrash(access1)
+		assertToStringDoesNotCrash(access2)
+		assertLinesAreConsistent(access1)
+		assertLinesAreConsistent(access2)
+		
+		val tra1 = new TextRegionAccessToString().withRegionAccess(access1).cfg() + "\n"
+		val tra2 = new TextRegionAccessToString().withRegionAccess(access2).cfg() + "\n"
+		
+		Assert.assertEquals(exp.toPlatformLineSeparator, tra1.toPlatformLineSeparator)
+		Assert.assertEquals(exp.toPlatformLineSeparator, tra2.toPlatformLineSeparator)
+	}
+	
+	private def assertLinesAreConsistent(ITextRegionAccess access) {
+		val lines = access.regionForDocument.lineRegions.map[offset +":" + length].toSet
+		val text = access.regionForDocument.text
+		for(var i = 0; i < text.length; i++) {
+			val line = access.regionForLineAtOffset(i)
+			val lineStr = line.offset + ":" + line.length
+			Assert.assertTrue(lines.contains(lineStr))
+		}
+	}
+
+	private def assertToStringDoesNotCrash(ITextRegionAccess access) {
+		var current = access.regionForRootEObject.previousHiddenRegion as ISequentialRegion
+		while (current !== null) {
+			Assert.assertNotNull(current.toString)
+			switch current {
+				IHiddenRegion: {
+					current = current.nextSemanticRegion
+				}
+				ISemanticRegion: {
+					Assert.assertNotNull(current.EObjectRegion.toString)
+					current = current.nextHiddenRegion
+				}
+			}
+		}
 	}
 
 	private def TextRegionAccessToString cfg(TextRegionAccessToString toStr) {

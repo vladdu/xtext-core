@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource;
 
@@ -40,7 +41,7 @@ public interface IResourceDescription extends ISelectable {
 	Iterable<IEObjectDescription> getExportedObjects();
 
 	/**
-	 * @return the list of names the described resource depends depends on.
+	 * @return the list of names the described resource depends on.
 	 */
 	Iterable<QualifiedName> getImportedNames();
 	
@@ -84,7 +85,7 @@ public interface IResourceDescription extends ISelectable {
 		 * @param deltas List of deltas to check. May not be <code>null</code>.
 		 * @param candidate The description to check. May not be <code>null</code>.
 		 * @param context The current context of the batch operation. May not be <code>null</code>.
-		 * @return whether the condidate is affected by any of the given changes.
+		 * @return whether the candidate is affected by any of the given changes.
 		 * @throws IllegalArgumentException
 		 *             if this manager is not responsible for the given candidate.
 		 */
@@ -107,7 +108,7 @@ public interface IResourceDescription extends ISelectable {
 			 * callers of this method are expected to pass in all deltas, even if they don't have changed {@link IEObjectDescription}s
 			 * @param candidate The description to check. May not be <code>null</code>.
 			 * @param context The current context of the batch operation. May not be <code>null</code>.
-			 * @return whether the condidate is affected by any of the given changes.
+			 * @return whether the candidate is affected by any of the given changes.
 			 * @throws IllegalArgumentException
 			 *             if this manager is not responsible for the given candidate.
 			 */
@@ -120,7 +121,7 @@ public interface IResourceDescription extends ISelectable {
 
 	/**
 	 * A delta describing the differences between two versions of the same {@link IResourceDescription}. Instances have
-	 * to follow the rule :
+	 * to follow the rule:
 	 * <p>
 	 * <code>getNew()==null || getOld()==null || getOld().getURI().equals(getNew().getURI())</code>
 	 * </p>
@@ -163,9 +164,9 @@ public interface IResourceDescription extends ISelectable {
 
 			/**
 			 * Add a listener to the event source. Listeners will not be added twice. Subsequent calls to
-			 * {@link #addListener(Listener)} will not affect the number of events that the listener receives.
-			 * {@link #removeListener(Listener)} will remove the listener immediately independently from the number of
-			 * invocations of {@link #addListener(Listener)} for the given listener.
+			 * {@link #addListener} will not affect the number of events that the listener receives.
+			 * {@link #removeListener} will remove the listener immediately independently from the number of
+			 * invocations of {@link #addListener} for the given listener.
 			 * 
 			 * @param listener
 			 *            the listener to be registered. May not be <code>null</code>.
@@ -173,9 +174,9 @@ public interface IResourceDescription extends ISelectable {
 			void addListener(Listener listener);
 
 			/**
-			 * Immediately removes a registered listener from the source. However if {@link #removeListener(Listener)}
+			 * Immediately removes a registered listener from the source. However if {@link #removeListener}
 			 * is called during a notification, the removed listener will still receive the event. If the listener has
-			 * not been registered before, the {@link #removeListener(Listener)} does nothing.
+			 * not been registered before, the {@link #removeListener} does nothing.
 			 * 
 			 * @param listener
 			 *            the listener to be removed. May not be <code>null</code>.
@@ -200,7 +201,7 @@ public interface IResourceDescription extends ISelectable {
 
 			/**
 			 * <p>
-			 * The source will invoce this method to announce changed resource. The event will never be
+			 * The source will invoke this method to announce changed resources. The event will never be
 			 * <code>null</code>. However, it may contain an empty list of deltas.
 			 * </p>
 			 * <p>

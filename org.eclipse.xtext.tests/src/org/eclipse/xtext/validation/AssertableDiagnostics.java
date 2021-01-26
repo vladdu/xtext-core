@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.validation;
 
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.emf.common.util.Diagnostic;
-import org.eclipse.xtext.validation.AbstractValidationDiagnostic;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -38,9 +38,11 @@ public class AssertableDiagnostics {
 	protected class DiagnosticTreeIterator implements Iterable<Diagnostic>, Iterator<Diagnostic> {
 
 		private ArrayList<Iterator<Diagnostic>> iteratorStack = new ArrayList<Iterator<Diagnostic>>();
+		private final Diagnostic root;
 
 		public DiagnosticTreeIterator(Diagnostic root) {
 			super();
+			this.root = root;
 			iteratorStack.add(root.getChildren().iterator());
 		}
 
@@ -53,7 +55,7 @@ public class AssertableDiagnostics {
 
 		@Override
 		public Iterator<Diagnostic> iterator() {
-			return this;
+			return new DiagnosticTreeIterator(root);
 		}
 
 		@Override

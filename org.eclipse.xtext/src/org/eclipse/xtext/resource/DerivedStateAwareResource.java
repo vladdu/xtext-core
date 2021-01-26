@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2011 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource;
 
@@ -113,6 +114,7 @@ public class DerivedStateAwareResource extends StorageAwareResource {
 	/**
 	 * @since 2.8
 	 */
+	@Override
 	/*@Override only for emf 2.11. We build with 2.10.2 add Override for 2.9*/
 	@SuppressWarnings("all")
 	protected List<EObject> getUnloadingContents() {
@@ -247,7 +249,8 @@ public class DerivedStateAwareResource extends StorageAwareResource {
 							newFullyInitialized = false;
 							operationCanceledManager.propagateAsErrorIfCancelException(e);
 						}
-						throw Throwables.propagate(e);
+						Throwables.throwIfUnchecked(e);
+						throw new RuntimeException(e);
 					}
 				}
 			} catch (RuntimeException e) {
@@ -278,7 +281,8 @@ public class DerivedStateAwareResource extends StorageAwareResource {
 			if (operationCanceledManager.isOperationCanceledException(e)) {
 				throw new IllegalStateException("IDerivedStateComputer#discardDerivedState should not check whether the current operation is canceled.", e);
 			}
-			throw Throwables.propagate(e);
+			Throwables.throwIfUnchecked(e);
+			throw new RuntimeException(e);
 		}
 	}
 	

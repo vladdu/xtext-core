@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2014, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.testing.formatter;
 
@@ -92,10 +93,14 @@ public class FormatterTestHelper {
 		String document = req.getToBeFormatted().toString();
 		XtextResource parsed = parse(document);
 		if (req.isAllowSyntaxErrors()) {
-			request.setExceptionHandler(ExceptionAcceptor.IGNORING);
+			if (request.getExplicitExceptionHandler() == null) {
+				request.setExceptionHandler(ExceptionAcceptor.IGNORING);
+			}
 		} else {
 			assertNoSyntaxErrors(parsed);
-			request.setExceptionHandler(ExceptionAcceptor.THROWING);
+			if (request.getExplicitExceptionHandler() == null) {
+				request.setExceptionHandler(ExceptionAcceptor.THROWING);
+			}
 		}
 		request.setTextRegionAccess(createRegionAccess(parsed, req));
 		if (request.getPreferences() == null)

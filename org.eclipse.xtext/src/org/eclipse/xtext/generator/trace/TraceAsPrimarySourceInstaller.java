@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2012 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
@@ -35,7 +36,7 @@ public class TraceAsPrimarySourceInstaller implements ITraceToBytecodeInstaller 
 		private final int[] target2source;
 
 		public XtextClassAdapter(ClassVisitor cv, String sourceFile, int[] target2source, boolean hideSyntheticVariables) {
-			super(Opcodes.ASM5, cv);
+			super(Opcodes.ASM9, cv);
 			this.sourceFile = sourceFile;
 			this.target2source = target2source;
 			this.hideSyntheticVariables = hideSyntheticVariables;
@@ -69,7 +70,7 @@ public class TraceAsPrimarySourceInstaller implements ITraceToBytecodeInstaller 
 		private XtextClassAdapter context;
 
 		public XtextMethodAdapter(XtextClassAdapter context, MethodVisitor delegate) {
-			super(Opcodes.ASM5, delegate);
+			super(Opcodes.ASM9, delegate);
 			this.context = context;
 		}
 

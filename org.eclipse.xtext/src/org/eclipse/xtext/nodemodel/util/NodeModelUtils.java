@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2010, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.nodemodel.util;
 
@@ -29,6 +30,7 @@ import org.eclipse.xtext.nodemodel.ILeafNode;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.SyntaxErrorMessage;
 import org.eclipse.xtext.nodemodel.impl.AbstractNode;
+import org.eclipse.xtext.nodemodel.impl.CompositeNode;
 import org.eclipse.xtext.nodemodel.impl.InternalNodeModelUtils;
 import org.eclipse.xtext.nodemodel.impl.RootNode;
 import org.eclipse.xtext.resource.EObjectAtOffsetHelper;
@@ -41,9 +43,9 @@ import com.google.common.collect.Lists;
  * The NodeModelUtils are a collection of useful methods when dealing with the node model directly. They encapsulate the
  * default construction semantics of the node model as it is created by the parser.
  * 
- * This API is quite low level and internal functionality of the framework relies on the implemened contracts.
+ * This API is quite low level and internal functionality of the framework relies on the implemented contracts.
  * Clients should rather use the language specific APIs that provide almost the same functionality, e.g.
- * {@link ILocationInFileProvider} and {@link EObjectAtOffsetHelper} if they want to to access the region
+ * {@link ILocationInFileProvider} and {@link EObjectAtOffsetHelper} if they want to access the region
  * of a {@link EObject semantic object}.
  * 
  * @author Sebastian Zarnekow - Initial contribution and API
@@ -56,8 +58,8 @@ public class NodeModelUtils extends InternalNodeModelUtils {
 	 * 
 	 * A node matches the <code>leafNodeOffset</code> if it fulfills the following condition:
 	 * <pre>
-	 *  node.totalOffset <= leafNodeOffset &&
-	 *  node.totalEndOffset > leafNodeOffset 
+	 *  node.totalOffset &lt;= leafNodeOffset &amp;&amp;
+	 *  node.totalEndOffset &gt; leafNodeOffset 
 	 * </pre>
 	 * 
 	 * @param node the container node. May not be <code>null</code>.
@@ -108,8 +110,8 @@ public class NodeModelUtils extends InternalNodeModelUtils {
 	}
 	
 	/**
-	 * Compute the line and column information at the given offset from any node that belongs the the document. The line is one-based, e.g.
-	 * the first line has the line number '1'. The line break belongs the line that it breaks. In other words, the first line break in the
+	 * Compute the line and column information at the given offset from any node that belongs to the document. The line is one-based, e.g.
+	 * the first line has the line number '1'. The line break belongs to the line that it breaks. In other words, the first line break in the
 	 * document also has the line number '1'. The column number starts at '1', too. In effect, the document offset '0' will always return
 	 * line '1' and column '1'.
 	 * 
@@ -435,6 +437,9 @@ public class NodeModelUtils extends InternalNodeModelUtils {
 			return (ParserRule) ge1;
 		} else if (ge1 instanceof Action) {
 			INode firstChild = root.getFirstChild();
+			while (firstChild.getGrammarElement() instanceof Action && firstChild instanceof CompositeNode) {
+				firstChild = ((CompositeNode)firstChild).getFirstChild();
+			}
 			EObject ge2 = firstChild.getGrammarElement();
 			if (ge2 instanceof ParserRule) {
 				return (ParserRule) ge2;

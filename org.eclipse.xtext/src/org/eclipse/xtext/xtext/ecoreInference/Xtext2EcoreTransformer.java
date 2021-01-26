@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.ecoreInference;
 
@@ -28,6 +29,7 @@ import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -62,6 +64,7 @@ import org.eclipse.xtext.xtext.GrammarResource;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -79,6 +82,7 @@ public class Xtext2EcoreTransformer {
 	private Map<String, EPackage> generatedEPackages;
 	private EClassifierInfos eClassifierInfos;
 	private ErrorAcceptor errorAcceptor = new NullErrorAcceptor();
+	@SuppressWarnings("deprecation")
 	private IXtext2EcorePostProcessor postProcessor;
 
 	public Xtext2EcoreTransformer(Grammar grammar) {
@@ -100,6 +104,7 @@ public class Xtext2EcoreTransformer {
 		}
 	}
 
+	@Deprecated
 	public void setPostProcessor(IXtext2EcorePostProcessor postProcessor) {
 		this.postProcessor = postProcessor;
 	}
@@ -113,27 +118,25 @@ public class Xtext2EcoreTransformer {
 	}
 
 	public List<EPackage> getGeneratedPackages() {
-		final List<EPackage> result = new ArrayList<EPackage>();
-		final ResourceSet resourceSet = grammar.eResource().getResourceSet();
+		ResourceSet resourceSet = grammar.eResource().getResourceSet();
 		if (resourceSet == null)
 			throw new NullPointerException("resourceSet may not be null");
-		Iterables.addAll(result, Iterables.filter(Iterables.transform(
-				Iterables.filter(grammar.getMetamodelDeclarations(), GeneratedMetamodel.class),
-				new Function<AbstractMetamodelDeclaration, EPackage>() {
-					@Override
-					public EPackage apply(AbstractMetamodelDeclaration param) {
-						EPackage pack = (EPackage) param.eGet(XtextPackage.Literals.ABSTRACT_METAMODEL_DECLARATION__EPACKAGE, false);
-						if (pack != null && !pack.eIsProxy()) {
-							return pack;
-						}
-						return null;
-					}
-				}), Predicates.notNull()));
-		return getPackagesSortedByName(result);
+		
+		return FluentIterable.from(grammar.getMetamodelDeclarations())
+			.filter(GeneratedMetamodel.class)
+			.transform(mm->{
+				EPackage pack = (EPackage) mm.eGet(XtextPackage.Literals.ABSTRACT_METAMODEL_DECLARATION__EPACKAGE, false);
+				if (pack != null && !pack.eIsProxy()) {
+					return pack;
+				}
+				return null;
+			})
+			.filter(Predicates.notNull())
+			.toSortedList(Comparator.comparing(EPackage::getName));
 	}
 
 	/*
-	 * pre-conditions - ensure non-duplicate aliases - ensure all aliases have matching metamodel declarations
+	 * preconditions - ensure non-duplicate aliases - ensure all aliases have matching metamodel declarations
 	 */
 	public void transform() {
 		eClassifierInfos = new EClassifierInfos(grammar);
@@ -181,17 +184,6 @@ public class Xtext2EcoreTransformer {
 		for (Map.Entry<InternalEObject, URI> entry : uris.entrySet()) {
 			entry.getKey().eSetProxyURI(entry.getValue());
 		}
-	}
-
-	private static List<EPackage> getPackagesSortedByName(Collection<EPackage> packages) {
-		final ArrayList<EPackage> result = new ArrayList<EPackage>(packages);
-		Collections.sort(result, new Comparator<EPackage>() {
-			@Override
-			public int compare(EPackage o1, EPackage o2) {
-				return o1.getName().compareTo(o2.getName());
-			}
-		});
-		return result;
 	}
 
 	private boolean deriveTypes() {
@@ -351,7 +343,7 @@ public class Xtext2EcoreTransformer {
 						if (nodes.size() > 1)
 							throw new IllegalStateException("Unexpected nodes found: " + nodes);
 						INode node = nodes.get(0);
-						String text = node.getText();
+						String text = node.getText().trim().replace("^", "");
 						EEnumLiteral literal = null;
 						if (rule.getType().getMetamodel() instanceof ReferencedMetamodel) {
 							literal = returnType.getEEnumLiteral(text);
@@ -492,11 +484,9 @@ public class Xtext2EcoreTransformer {
 				try {
 					TypeRef actionTypeRef = object.getType();
 					EClassifierInfo actionType = findOrCreateEClassifierInfo(actionTypeRef, null, true);
-					EClassifierInfo currentCompatibleType = context.getCurrentCompatibleType();
 					Xtext2EcoreInterpretationContext ctx = context.spawnContextWithReferencedType(actionType, object);
 					if (object.getFeature() != null) {
-						ctx.addFeature(object.getFeature(), currentCompatibleType,
-								GrammarUtil.isMultipleAssignment(object), true, object);
+						ctx.addFeature(object.getFeature(), context, GrammarUtil.isMultipleAssignment(object), true, object);
 					}
 					return ctx;
 				}
@@ -978,7 +968,7 @@ public class Xtext2EcoreTransformer {
 					"Cannot find EPackage for type '" + typeRef.getClassifier().getName() + "'", typeRef);
 		EClassifierInfo info = eClassifierInfos.getInfo(typeRef);
 		if (info == null) {
-			// we assumend EString for terminal rules and datatype rules, so
+			// we assumed EString for terminal rules and data-type rules, so
 			// we have to do a look up in super grammar
 			EDataType dataType = GrammarUtil.findEString(GrammarUtil.getGrammar(typeRef));
 			if (dataType != null && typeRef.getClassifier() == dataType) {
@@ -1016,12 +1006,18 @@ public class Xtext2EcoreTransformer {
 
 		EClassifier classifier = generatedEPackage.getEClassifier(classifierName);
 		if (classifier == null) {
-			if (GrammarUtil.containingParserRule(typeRef) != null)
+			if (GrammarUtil.containingParserRule(typeRef) != null) {
 				classifier = EcoreFactory.eINSTANCE.createEClass();
-			else if (GrammarUtil.containingEnumRule(typeRef) != null)
+			} else if (GrammarUtil.containingEnumRule(typeRef) != null) {
 				classifier = EcoreFactory.eINSTANCE.createEEnum();
-			else
-				throw new TransformationException(TransformationErrorCode.NoSuchTypeAvailable, "Cannot create datatype " + classifierName, typeRef);
+			} else {
+				for (AbstractMetamodelDeclaration mmd : grammar.getMetamodelDeclarations()) {
+					if (mmd instanceof ReferencedMetamodel && mmd.getEPackage() != null && mmd.getEPackage().getNsURI().equals(EcorePackage.eNS_URI)) {
+						throw new TransformationException(TransformationErrorCode.NoSuchTypeAvailable, "Cannot create datatype " + classifierName, typeRef);
+					}
+				}
+				throw new TransformationException(TransformationErrorCode.NoSuchTypeAvailable, "Cannot create datatype " + classifierName + ". If this is supposed to return EString, make sure you have imported '"+EcorePackage.eNS_URI+"'", typeRef);
+			}
 			classifier.setName(classifierName);
 			generatedEPackage.getEClassifiers().add(classifier);
 			typeRef.setClassifier(classifier);
@@ -1029,7 +1025,7 @@ public class Xtext2EcoreTransformer {
 			EClassifierInfo result;
 			if (classifier instanceof EClass)
 				result = EClassifierInfo.createEClassInfo((EClass) classifier, true, getGeneratedEPackageURIs(), GrammarUtil.getGrammar(typeRef));
-			else // datatype or enum
+			else // data-type or enum
 				result = EClassifierInfo.createEDataTypeInfo((EDataType) classifier, true);
 
 			if (!eClassifierInfos.addInfo(typeRef, result))
@@ -1064,6 +1060,7 @@ public class Xtext2EcoreTransformer {
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	private void postProcessGeneratedPackages() {
 		if (postProcessor != null) {
 			final Iterable<GeneratedMetamodel> generatedMetamodels = Iterables.filter(grammar

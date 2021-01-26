@@ -4,6 +4,7 @@ import static java.lang.String.*;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.xtext.formatting2.AbstractFormatter2;
@@ -66,7 +67,7 @@ public class TextReplacerContext implements ITextReplacerContext {
 					public String apply(ITextReplacement input) {
 						return input.getReplacementText();
 					}
-				});
+				}, getDocument().getRequest().isEnableDebugTracing());
 	}
 
 	@Override
@@ -102,9 +103,9 @@ public class TextReplacerContext implements ITextReplacerContext {
 		ITextReplacerContext current = this;
 		int count = 0;
 		while (current != null) {
-			List<ITextReplacement> localReplacements = Lists.newArrayList(current.getLocalReplacements());
-			for (int i = localReplacements.size() - 1; i >= 0; i--) {
-				ITextReplacement rep = localReplacements.get(i);
+			Iterator<ITextReplacement> localReplacements = current.getLocalReplacementsReverse().iterator();
+			while (localReplacements.hasNext()) {
+				ITextReplacement rep = localReplacements.next();
 				int endOffset = rep.getEndOffset();
 				if (endOffset > lastOffset) {
 					// System.out.println("error");
@@ -136,6 +137,14 @@ public class TextReplacerContext implements ITextReplacerContext {
 	public Iterable<ITextReplacement> getLocalReplacements() {
 		if (replacements != null)
 			return replacements;
+		else
+			return Collections.<ITextReplacement>emptyList();
+	}
+
+	@Override
+	public Iterable<ITextReplacement> getLocalReplacementsReverse() {
+		if (replacements != null)
+			return replacements.reverseIterable();
 		else
 			return Collections.<ITextReplacement>emptyList();
 	}
@@ -223,7 +232,6 @@ public class TextReplacerContext implements ITextReplacerContext {
 			String frameTitle = replacer.getClass().getSimpleName();
 			ITextSegment frameRegion = replacer.getRegion();
 			String replacerTitle = replacement.getReplacementText();
-			@SuppressWarnings("unchecked")
 			RegionsOutsideFrameException exception = new RegionsOutsideFrameException(frameTitle, frameRegion,
 					Tuples.create(replacerTitle, (ITextSegment) replacement));
 			request.getExceptionHandler().accept(exception);
@@ -232,23 +240,30 @@ public class TextReplacerContext implements ITextReplacerContext {
 		if (!isInRequestedRange(replacement)) {
 			return;
 		}
-		if (!request.allowIdentityEdits() && isIdentityEdit(replacement)) {
-			return;
-		}
-		if (request.isFormatUndefinedHiddenRegionsOnly()) {
-			IHiddenRegion hidden = null;
-			if (replacerRegion instanceof IHiddenRegionPart)
-				hidden = ((IHiddenRegionPart) replacerRegion).getHiddenRegion();
-			else if (replacerRegion instanceof IHiddenRegion)
-				hidden = (IHiddenRegion) replacerRegion;
-			if (hidden == null || !hidden.isUndefined())
+		if (!isInUndefinedRegion(replacement)) {
+			if (request.isFormatUndefinedHiddenRegionsOnly()) {
 				return;
+			}
+			if (!request.allowIdentityEdits() && isIdentityEdit(replacement)) {
+				return;
+			}
 		}
 		try {
 			replacements.add(replacement);
 		} catch (ConflictingRegionsException e) {
 			request.getExceptionHandler().accept(e);
 		}
+	}
+	
+	protected boolean isInUndefinedRegion(ITextReplacement repl) {
+		ITextSegment replacerRegion = replacer.getRegion();
+		IHiddenRegion hidden = null;
+		if (replacerRegion instanceof IHiddenRegionPart) {
+			hidden = ((IHiddenRegionPart) replacerRegion).getHiddenRegion();
+		} else if (replacerRegion instanceof IHiddenRegion) {
+			hidden = (IHiddenRegion) replacerRegion;
+		}
+		return hidden == null || hidden.isUndefined();
 	}
 
 	protected boolean isIdentityEdit(ITextReplacement replacement) {

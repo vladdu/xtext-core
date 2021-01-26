@@ -1,14 +1,14 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.model;
 
 import com.google.common.base.Objects;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +27,10 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xtext.generator.CodeConfig;
-import org.eclipse.xtext.xtext.generator.model.TextFileAccess;
-import org.eclipse.xtext.xtext.generator.model.TypeReference;
 
+/**
+ * A utility class for generating Java files.
+ */
 @SuppressWarnings("all")
 public class JavaFileAccess extends TextFileAccess {
   protected static class JavaTypeAwareStringConcatenation extends StringConcatenation {
@@ -76,12 +77,12 @@ public class JavaFileAccess extends TextFileAccess {
   /**
    * A list of keywords in the Java language. Use this to avoid illegal variable names.
    */
-  public final static Set<String> JAVA_KEYWORDS = Collections.<String>unmodifiableSet(CollectionLiterals.<String>newHashSet("abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super", "while"));
+  public static final Set<String> JAVA_KEYWORDS = Collections.<String>unmodifiableSet(CollectionLiterals.<String>newHashSet("abstract", "continue", "for", "new", "switch", "assert", "default", "goto", "package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super", "while"));
   
   /**
    * Set this value for the 'importNestedTypeThreshold' property to disable importing of nested types
    */
-  public final static int DONT_IMPORT_NESTED_TYPES = Integer.MAX_VALUE;
+  public static final int DONT_IMPORT_NESTED_TYPES = Integer.MAX_VALUE;
   
   protected final Map<String, String> imports = CollectionLiterals.<String, String>newHashMap();
   
@@ -99,8 +100,7 @@ public class JavaFileAccess extends TextFileAccess {
   private ResourceSet resourceSet;
   
   protected JavaFileAccess(final TypeReference typeRef, final CodeConfig codeConfig) {
-    List<String> _simpleNames = typeRef.getSimpleNames();
-    int _length = ((Object[])Conversions.unwrapArray(_simpleNames, Object.class)).length;
+    int _length = ((Object[])Conversions.unwrapArray(typeRef.getSimpleNames(), Object.class)).length;
     boolean _greaterThan = (_length > 1);
     if (_greaterThan) {
       throw new IllegalArgumentException(("Nested type cannot be serialized: " + typeRef));
@@ -136,8 +136,7 @@ public class JavaFileAccess extends TextFileAccess {
           if (((!CodeGenUtil2.isJavaDefaultType(simpleName)) && (!((i > 0) && (simpleName.length() <= this.importNestedTypeThreshold))))) {
             String _packageName = typeRef.getPackageName();
             String _plus = (_packageName + ".");
-            List<String> _subList = simpleNames.subList(0, (i + 1));
-            String _join = IterableExtensions.join(_subList, ".");
+            String _join = IterableExtensions.join(simpleNames.subList(0, (i + 1)), ".");
             final String importable = (_plus + _join);
             final String imported = this.imports.get(usableName);
             if ((imported == null)) {
@@ -156,11 +155,10 @@ public class JavaFileAccess extends TextFileAccess {
         usableName = typeRef.getName();
       }
     }
-    List<TypeReference> _typeArguments = typeRef.getTypeArguments();
     final Function1<TypeReference, CharSequence> _function = (TypeReference it) -> {
       return this.importType(it);
     };
-    String _join = IterableExtensions.<TypeReference>join(_typeArguments, "<", ", ", ">", _function);
+    String _join = IterableExtensions.<TypeReference>join(typeRef.getTypeArguments(), "<", ", ", ">", _function);
     return (usableName + _join);
   }
   
@@ -193,9 +191,7 @@ public class JavaFileAccess extends TextFileAccess {
     _builder.newLineIfNotEmpty();
     _builder.newLine();
     {
-      Collection<String> _values = this.imports.values();
-      Set<String> _set = IterableExtensions.<String>toSet(_values);
-      List<String> _sort = IterableExtensions.<String>sort(_set);
+      List<String> _sort = IterableExtensions.<String>sort(IterableExtensions.<String>toSet(this.imports.values()));
       for(final String importName : _sort) {
         _builder.append("import ");
         _builder.append(importName);

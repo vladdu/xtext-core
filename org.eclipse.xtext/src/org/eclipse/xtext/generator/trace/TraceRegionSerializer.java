@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2012 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2012, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
@@ -17,6 +18,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
@@ -59,7 +61,7 @@ public class TraceRegionSerializer {
 		@Override
 		public AbstractTraceRegion createRegion(int offset, int length, int lineNumber, int endLineNumber, boolean useForDebugging, List<ILocationData> associations,
 				AbstractTraceRegion parent) {
-			return new TraceRegion(offset, length, lineNumber, endLineNumber, useForDebugging, associations, parent);
+			return new TraceRegion(offset, length, lineNumber, endLineNumber, useForDebugging, (Collection<ILocationData>) associations, parent);
 		}
 
 		@Override

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2013 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.generator.trace;
 
@@ -50,33 +51,35 @@ public class TraceRegionSerializerTest {
 	@Test
 	public void testRewriteV3TracesWithCompressedInt() throws IOException {
 		TraceRegionSerializer serializer = new TraceRegionSerializer();
-		InputStream in = getClass().getResourceAsStream("version3.trace");
-		byte[] v3bytes = ByteStreams.toByteArray(in);
-		in.close();
-		AbstractTraceRegion traceRegion = serializer.readTraceRegionFrom(new ByteArrayInputStream(v3bytes));
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		serializer.writeTraceRegionTo(traceRegion, outputStream);
-		byte[] currentBytes = outputStream.toByteArray();
-		Assert.assertTrue(v3bytes.length > currentBytes.length);
-		Assert.assertEquals(1213 /* magic number */, v3bytes.length); 
-		Assert.assertEquals(385 /* magic number */, currentBytes.length);
-		Assert.assertEquals(traceRegion, serializer.readTraceRegionFrom(new ByteArrayInputStream(currentBytes)));
+		try (InputStream in = getClass().getResourceAsStream("version3.trace")) {
+			byte[] v3bytes = ByteStreams.toByteArray(in);
+			in.close();
+			AbstractTraceRegion traceRegion = serializer.readTraceRegionFrom(new ByteArrayInputStream(v3bytes));
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			serializer.writeTraceRegionTo(traceRegion, outputStream);
+			byte[] currentBytes = outputStream.toByteArray();
+			Assert.assertTrue(v3bytes.length > currentBytes.length);
+			Assert.assertEquals(1213 /* magic number */, v3bytes.length); 
+			Assert.assertEquals(385 /* magic number */, currentBytes.length);
+			Assert.assertEquals(traceRegion, serializer.readTraceRegionFrom(new ByteArrayInputStream(currentBytes)));
+		}
 	}
 	
 	@Test
 	public void testRewriteV4TracesWithCompressedInt() throws IOException {
 		TraceRegionSerializer serializer = new TraceRegionSerializer();
-		InputStream in = getClass().getResourceAsStream("version4.trace");
-		byte[] v4bytes = ByteStreams.toByteArray(in);
-		in.close();
-		AbstractTraceRegion traceRegion = serializer.readTraceRegionFrom(new ByteArrayInputStream(v4bytes));
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		serializer.writeTraceRegionTo(traceRegion, outputStream);
-		byte[] currentBytes = outputStream.toByteArray();
-		Assert.assertTrue(v4bytes.length > currentBytes.length);
-		Assert.assertEquals(4610 /* magic number */, v4bytes.length); 
-		Assert.assertEquals(1655 /* magic number */, currentBytes.length);
-		Assert.assertEquals(traceRegion, serializer.readTraceRegionFrom(new ByteArrayInputStream(currentBytes)));
+		try (InputStream in = getClass().getResourceAsStream("version4.trace")) {
+			byte[] v4bytes = ByteStreams.toByteArray(in);
+			in.close();
+			AbstractTraceRegion traceRegion = serializer.readTraceRegionFrom(new ByteArrayInputStream(v4bytes));
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			serializer.writeTraceRegionTo(traceRegion, outputStream);
+			byte[] currentBytes = outputStream.toByteArray();
+			Assert.assertTrue(v4bytes.length > currentBytes.length);
+			Assert.assertEquals(4610 /* magic number */, v4bytes.length); 
+			Assert.assertEquals(1655 /* magic number */, currentBytes.length);
+			Assert.assertEquals(traceRegion, serializer.readTraceRegionFrom(new ByteArrayInputStream(currentBytes)));
+		}
 	}
 
 }

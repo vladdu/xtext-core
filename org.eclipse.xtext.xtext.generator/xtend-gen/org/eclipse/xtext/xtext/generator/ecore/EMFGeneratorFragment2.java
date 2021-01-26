@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.ecore;
 
@@ -46,7 +47,6 @@ import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.EObject;
@@ -73,7 +73,6 @@ import org.eclipse.xtend.lib.annotations.AccessorType;
 import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtend2.lib.StringConcatenationClient;
-import org.eclipse.xtext.AbstractMetamodelDeclaration;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.GeneratedMetamodel;
 import org.eclipse.xtext.Grammar;
@@ -81,7 +80,6 @@ import org.eclipse.xtext.GrammarUtil;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.util.Strings;
-import org.eclipse.xtext.util.internal.Log;
 import org.eclipse.xtext.xbase.lib.CollectionExtensions;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Exceptions;
@@ -90,20 +88,16 @@ import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.eclipse.xtext.xbase.lib.StringExtensions;
 import org.eclipse.xtext.xtext.generator.AbstractXtextGeneratorFragment;
 import org.eclipse.xtext.xtext.generator.CodeConfig;
-import org.eclipse.xtext.xtext.generator.IXtextGeneratorLanguage;
 import org.eclipse.xtext.xtext.generator.model.GuiceModuleAccess;
-import org.eclipse.xtext.xtext.generator.model.IXtextGeneratorFileSystemAccess;
 import org.eclipse.xtext.xtext.generator.model.ManifestAccess;
 import org.eclipse.xtext.xtext.generator.model.PluginXmlAccess;
-import org.eclipse.xtext.xtext.generator.model.StandaloneSetupAccess;
 import org.eclipse.xtext.xtext.generator.model.TypeReference;
-import org.eclipse.xtext.xtext.generator.model.project.IRuntimeProjectConfig;
-import org.eclipse.xtext.xtext.generator.model.project.IXtextProjectConfig;
 import org.eclipse.xtext.xtext.generator.util.GenModelUtil2;
 
-@Log
 @SuppressWarnings("all")
 public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
+  private static final Logger LOG = Logger.getLogger(EMFGeneratorFragment2.class);
+  
   @Inject
   private CodeConfig codeConfig;
   
@@ -197,12 +191,18 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   @Accessors(AccessorType.PUBLIC_SETTER)
   private boolean suppressLoadInitialization = false;
   
-  private GenRuntimeVersion emfRuntimeVersion;
+  /**
+   * Default to 2.20 if available, otherwise #get will return null
+   */
+  private GenRuntimeVersion emfRuntimeVersion = GenRuntimeVersion.get(GenRuntimeVersion.EMF220_VALUE);
   
-  private GenJDKLevel jdkLevel = GenJDKLevel.JDK60_LITERAL;
+  private GenJDKLevel jdkLevel = GenJDKLevel.JDK80_LITERAL;
+  
+  private String rootExtendsClass = "org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container";
   
   /**
    * Sets the target EMF runtime version to generate for to the specified value.
+   * Defaults to 2.20.
    */
   public void setEmfRuntimeVersion(final String emfRuntimeVersion) {
     this.emfRuntimeVersion = GenRuntimeVersion.get(emfRuntimeVersion);
@@ -220,13 +220,23 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
    *   <li>"JDK70"</li>
    *   <li>"JDK80"</li>
    * </ul>
-   * The default level is "JDK60".
+   * The default level is "JDK80".
    */
   public void setJdkLevel(final String jdkLevel) {
     this.jdkLevel = GenJDKLevel.getByName(jdkLevel);
     if ((this.jdkLevel == null)) {
       EMFGeneratorFragment2.LOG.warn(("Illegal JDK level: " + jdkLevel));
     }
+  }
+  
+  /**
+   * Sets the BaseClass for the EClasses in the inferred GenModel.
+   * Default value is {@link org.eclipse.emf.ecore.impl.MinimalEObjectImpl.Container}.
+   * 
+   * @since 2.16
+   */
+  public void setRootExtendsClass(final String rootExtendsClass) {
+    this.rootExtendsClass = rootExtendsClass;
   }
   
   private boolean bindEPackageAndEFactory = false;
@@ -244,9 +254,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     if (this.modelPluginID != null) {
       _elvis = this.modelPluginID;
     } else {
-      IXtextProjectConfig _projectConfig = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-      String _name = _runtime.getName();
+      String _name = this.getProjectConfig().getRuntime().getName();
       _elvis = _name;
     }
     return _elvis;
@@ -256,19 +264,12 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     if ((this.javaModelDirectory != null)) {
       return this.javaModelDirectory;
     }
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-    IXtextGeneratorFileSystemAccess _srcGen = _runtime.getSrcGen();
-    final String srcGenPath = _srcGen.getPath();
-    IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-    IRuntimeProjectConfig _runtime_1 = _projectConfig_1.getRuntime();
-    IXtextGeneratorFileSystemAccess _root = _runtime_1.getRoot();
-    final String rootPath = _root.getPath();
+    final String srcGenPath = this.getProjectConfig().getRuntime().getSrcGen().getPath();
+    final String rootPath = this.getProjectConfig().getRuntime().getRoot().getPath();
     if (((!StringExtensions.isNullOrEmpty(rootPath)) && srcGenPath.startsWith(rootPath))) {
       String _modelPluginID = this.getModelPluginID();
       String _plus = ("/" + _modelPluginID);
-      int _length = rootPath.length();
-      String _substring = srcGenPath.substring(_length);
+      String _substring = srcGenPath.substring(rootPath.length());
       return (_plus + _substring);
     }
     throw new RuntimeException(
@@ -278,8 +279,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   protected String getModelName(final Grammar grammar) {
     String _xifexpression = null;
     if (this.longFileNames) {
-      String _name = grammar.getName();
-      _xifexpression = _name.replace(".", "_");
+      _xifexpression = grammar.getName().replace(".", "_");
     } else {
       _xifexpression = GrammarUtil.getSimpleName(grammar);
     }
@@ -289,9 +289,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   protected String getEcoreFilePath(final Grammar grammar) {
     String _xblockexpression = null;
     {
-      IXtextProjectConfig _projectConfig = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-      final String ecoreModelFolder = _runtime.getEcoreModelFolder();
+      final String ecoreModelFolder = this.getProjectConfig().getRuntime().getEcoreModelFolder();
       String _modelPluginID = this.getModelPluginID();
       String _plus = ("/" + _modelPluginID);
       String _plus_1 = (_plus + "/");
@@ -305,8 +303,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   }
   
   protected URI getEcoreFileUri(final Grammar grammar) {
-    String _ecoreFilePath = this.getEcoreFilePath(grammar);
-    return URI.createPlatformResourceURI(_ecoreFilePath, true);
+    return URI.createPlatformResourceURI(this.getEcoreFilePath(grammar), true);
   }
   
   protected String getGenModelPath(final Grammar grammar) {
@@ -316,9 +313,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     } else {
       String _xblockexpression = null;
       {
-        IXtextProjectConfig _projectConfig = this.getProjectConfig();
-        IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-        final String ecoreModelFolder = _runtime.getEcoreModelFolder();
+        final String ecoreModelFolder = this.getProjectConfig().getRuntime().getEcoreModelFolder();
         String _modelPluginID = this.getModelPluginID();
         String _plus = ("/" + _modelPluginID);
         String _plus_1 = (_plus + "/");
@@ -334,16 +329,13 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   }
   
   protected URI getGenModelUri(final Grammar grammar) {
-    String _genModelPath = this.getGenModelPath(grammar);
-    return URI.createPlatformResourceURI(_genModelPath, true);
+    return URI.createPlatformResourceURI(this.getGenModelPath(grammar), true);
   }
   
   protected String getRelativePath(final String pathInRoot) {
     String _xblockexpression = null;
     {
-      IXtextProjectConfig _projectConfig = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-      String _name = _runtime.getName();
+      String _name = this.getProjectConfig().getRuntime().getName();
       final String projectPath = ("/" + _name);
       String _xifexpression = null;
       boolean _startsWith = pathInRoot.startsWith(projectPath);
@@ -422,37 +414,29 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   @Override
   public void initialize(final Injector injector) {
     super.initialize(injector);
-    Map<String, Object> _extensionToFactoryMap = Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap();
-    boolean _containsKey = _extensionToFactoryMap.containsKey("genmodel");
+    boolean _containsKey = Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().containsKey("genmodel");
     boolean _not = (!_containsKey);
     if (_not) {
-      Map<String, Object> _extensionToFactoryMap_1 = Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap();
+      Map<String, Object> _extensionToFactoryMap = Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap();
       EcoreResourceFactoryImpl _ecoreResourceFactoryImpl = new EcoreResourceFactoryImpl();
-      _extensionToFactoryMap_1.put("genmodel", _ecoreResourceFactoryImpl);
+      _extensionToFactoryMap.put("genmodel", _ecoreResourceFactoryImpl);
     }
     GenModelPackage.eINSTANCE.getGenAnnotation();
   }
   
   @Override
   public void generate() {
-    Grammar _grammar = this.getGrammar();
-    EList<AbstractMetamodelDeclaration> _metamodelDeclarations = _grammar.getMetamodelDeclarations();
-    Iterable<GeneratedMetamodel> _filter = Iterables.<GeneratedMetamodel>filter(_metamodelDeclarations, GeneratedMetamodel.class);
-    boolean _isEmpty = IterableExtensions.isEmpty(_filter);
+    boolean _isEmpty = IterableExtensions.isEmpty(Iterables.<GeneratedMetamodel>filter(this.getGrammar().getMetamodelDeclarations(), GeneratedMetamodel.class));
     if (_isEmpty) {
       return;
     }
     try {
       final Grammar clonedGrammar = this.cloneGrammarIntoNewResourceSet(this.getGrammar());
-      Resource _eResource = clonedGrammar.eResource();
-      final ResourceSet workingResourceSet = _eResource.getResourceSet();
-      EList<AbstractMetamodelDeclaration> _metamodelDeclarations_1 = clonedGrammar.getMetamodelDeclarations();
-      Iterable<GeneratedMetamodel> _filter_1 = Iterables.<GeneratedMetamodel>filter(_metamodelDeclarations_1, GeneratedMetamodel.class);
+      final ResourceSet workingResourceSet = clonedGrammar.eResource().getResourceSet();
       final Function1<GeneratedMetamodel, EPackage> _function = (GeneratedMetamodel it) -> {
         return it.getEPackage();
       };
-      Iterable<EPackage> _map = IterableExtensions.<GeneratedMetamodel, EPackage>map(_filter_1, _function);
-      final List<EPackage> generatedPackages = IterableExtensions.<EPackage>toList(_map);
+      final List<EPackage> generatedPackages = IterableExtensions.<EPackage>toList(IterableExtensions.<GeneratedMetamodel, EPackage>map(Iterables.<GeneratedMetamodel>filter(clonedGrammar.getMetamodelDeclarations(), GeneratedMetamodel.class), _function));
       if ((this.genModel != null)) {
         this.registerUsedGenModel(workingResourceSet.getURIConverter(), clonedGrammar);
       }
@@ -494,8 +478,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
               {
                 final GenPackage genPkg = GenModelUtil2.getGenPackage(pkg, genModel.eResource().getResourceSet());
                 GuiceModuleAccess.BindingFactory _bindingFactory = new GuiceModuleAccess.BindingFactory();
-                String _qualifiedPackageInterfaceName = genPkg.getQualifiedPackageInterfaceName();
-                TypeReference _typeRef = TypeReference.typeRef(_qualifiedPackageInterfaceName);
+                TypeReference _typeRef = TypeReference.typeRef(genPkg.getQualifiedPackageInterfaceName());
                 StringConcatenationClient _client = new StringConcatenationClient() {
                   @Override
                   protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
@@ -505,8 +488,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
                   }
                 };
                 GuiceModuleAccess.BindingFactory _addTypeToInstance = _bindingFactory.addTypeToInstance(_typeRef, _client);
-                String _qualifiedFactoryInterfaceName = genPkg.getQualifiedFactoryInterfaceName();
-                TypeReference _typeRef_1 = TypeReference.typeRef(_qualifiedFactoryInterfaceName);
+                TypeReference _typeRef_1 = TypeReference.typeRef(genPkg.getQualifiedFactoryInterfaceName());
                 StringConcatenationClient _client_1 = new StringConcatenationClient() {
                   @Override
                   protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
@@ -515,10 +497,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
                     _builder.append(".eINSTANCE");
                   }
                 };
-                GuiceModuleAccess.BindingFactory _addTypeToInstance_1 = _addTypeToInstance.addTypeToInstance(_typeRef_1, _client_1);
-                IXtextGeneratorLanguage _language = this.getLanguage();
-                GuiceModuleAccess _runtimeGenModule = _language.getRuntimeGenModule();
-                _addTypeToInstance_1.contributeTo(_runtimeGenModule);
+                _addTypeToInstance.addTypeToInstance(_typeRef_1, _client_1).contributeTo(this.getLanguage().getRuntimeGenModule());
               }
             }
           }
@@ -537,22 +516,17 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   }
   
   protected void addProjectContributions(final Grammar grammar, final List<EPackage> generatedPackages, final ResourceSet rs) {
-    IXtextProjectConfig _projectConfig = this.getProjectConfig();
-    IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-    PluginXmlAccess _pluginXml = _runtime.getPluginXml();
+    PluginXmlAccess _pluginXml = this.getProjectConfig().getRuntime().getPluginXml();
     boolean _tripleNotEquals = (_pluginXml != null);
     if (_tripleNotEquals) {
-      IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime_1 = _projectConfig_1.getRuntime();
-      PluginXmlAccess _pluginXml_1 = _runtime_1.getPluginXml();
-      List<CharSequence> _entries = _pluginXml_1.getEntries();
+      List<CharSequence> _entries = this.getProjectConfig().getRuntime().getPluginXml().getEntries();
       StringConcatenation _builder = new StringConcatenation();
       _builder.append("<extension point=\"org.eclipse.emf.ecore.generated_package\">");
       _builder.newLine();
       {
         for(final EPackage pack : generatedPackages) {
           _builder.append("\t");
-          _builder.append("<package ");
+          _builder.append("<package");
           _builder.newLine();
           _builder.append("\t");
           _builder.append("\t");
@@ -564,16 +538,14 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
           _builder.append("\t");
           _builder.append("\t");
           _builder.append("class = \"");
-          GenPackage _genPackage = GenModelUtil2.getGenPackage(pack, rs);
-          String _qualifiedPackageInterfaceName = _genPackage.getQualifiedPackageInterfaceName();
+          String _qualifiedPackageInterfaceName = GenModelUtil2.getGenPackage(pack, rs).getQualifiedPackageInterfaceName();
           _builder.append(_qualifiedPackageInterfaceName, "\t\t");
           _builder.append("\"");
           _builder.newLineIfNotEmpty();
           _builder.append("\t");
           _builder.append("\t");
           _builder.append("genModel = \"");
-          String _genModelPath = this.getGenModelPath(grammar);
-          String _relativePath = this.getRelativePath(_genModelPath);
+          String _relativePath = this.getRelativePath(this.getGenModelPath(grammar));
           _builder.append(_relativePath, "\t\t");
           _builder.append("\" />");
           _builder.newLineIfNotEmpty();
@@ -583,33 +555,21 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       _builder.newLine();
       _entries.add(_builder.toString());
     }
-    IXtextProjectConfig _projectConfig_2 = this.getProjectConfig();
-    IRuntimeProjectConfig _runtime_2 = _projectConfig_2.getRuntime();
-    ManifestAccess _manifest = _runtime_2.getManifest();
+    ManifestAccess _manifest = this.getProjectConfig().getRuntime().getManifest();
     boolean _tripleNotEquals_1 = (_manifest != null);
     if (_tripleNotEquals_1) {
-      IXtextProjectConfig _projectConfig_3 = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime_3 = _projectConfig_3.getRuntime();
-      ManifestAccess _manifest_1 = _runtime_3.getManifest();
-      Set<String> _requiredBundles = _manifest_1.getRequiredBundles();
-      CollectionExtensions.<String>addAll(_requiredBundles, "org.eclipse.emf.ecore", "org.eclipse.emf.common");
+      CollectionExtensions.<String>addAll(this.getProjectConfig().getRuntime().getManifest().getRequiredBundles(), "org.eclipse.emf.ecore", "org.eclipse.emf.common");
     }
     for (final EPackage pack_1 : generatedPackages) {
       {
         final GenPackage genPackage = GenModelUtil2.getGenPackage(pack_1, rs);
         if (((this.getProjectConfig().getRuntime().getManifest() != null) && (this.modelPluginID == null))) {
-          IXtextProjectConfig _projectConfig_4 = this.getProjectConfig();
-          IRuntimeProjectConfig _runtime_4 = _projectConfig_4.getRuntime();
-          ManifestAccess _manifest_2 = _runtime_4.getManifest();
-          Set<String> _exportedPackages = _manifest_2.getExportedPackages();
-          String _interfacePackageName = genPackage.getInterfacePackageName();
-          String _classPackageName = genPackage.getClassPackageName();
-          String _utilitiesPackageName = genPackage.getUtilitiesPackageName();
-          CollectionExtensions.<String>addAll(_exportedPackages, _interfacePackageName, _classPackageName, _utilitiesPackageName);
+          CollectionExtensions.<String>addAll(this.getProjectConfig().getRuntime().getManifest().getExportedPackages(), 
+            genPackage.getInterfacePackageName(), 
+            genPackage.getClassPackageName(), 
+            genPackage.getUtilitiesPackageName());
         }
-        IXtextGeneratorLanguage _language = this.getLanguage();
-        StandaloneSetupAccess _runtimeGenSetup = _language.getRuntimeGenSetup();
-        List<StringConcatenationClient> _registrations = _runtimeGenSetup.getRegistrations();
+        List<StringConcatenationClient> _registrations = this.getLanguage().getRuntimeGenSetup().getRegistrations();
         StringConcatenationClient _client = new StringConcatenationClient() {
           @Override
           protected void appendTo(StringConcatenationClient.TargetStringConcatenation _builder) {
@@ -646,12 +606,9 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   private Grammar cloneGrammarIntoNewResourceSet(final Grammar original) {
     final Resource originalResource = original.eResource();
     XtextResourceSet _xtextResourceSet = new XtextResourceSet();
-    ResourceSet _resourceSet = originalResource.getResourceSet();
-    final XtextResourceSet clonedResourceSet = EcoreUtil2.<XtextResourceSet>clone(_xtextResourceSet, _resourceSet);
-    URI _uRI = originalResource.getURI();
-    final Resource clonedResource = clonedResourceSet.getResource(_uRI, false);
-    EList<EObject> _contents = clonedResource.getContents();
-    EObject _head = IterableExtensions.<EObject>head(_contents);
+    final XtextResourceSet clonedResourceSet = EcoreUtil2.<XtextResourceSet>clone(_xtextResourceSet, originalResource.getResourceSet());
+    final Resource clonedResource = clonedResourceSet.getResource(originalResource.getURI(), false);
+    EObject _head = IterableExtensions.<EObject>head(clonedResource.getContents());
     return ((Grammar) _head);
   }
   
@@ -692,8 +649,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
               boolean _contains = generatedPackages.contains(referencedPackage);
               boolean _not = (!_contains);
               if (_not) {
-                String _nsURI = referencedPackage.getNsURI();
-                result.put(_nsURI, referencedPackage);
+                result.put(referencedPackage.getNsURI(), referencedPackage);
               }
             }
           }
@@ -709,13 +665,10 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       {
         final Resource resource = GenModelUtil2.getGenModelResource(null, nsURI, resourceSet);
         if ((resource != null)) {
-          EList<EObject> _contents = resource.getContents();
-          Iterable<GenModel> _filter = Iterables.<GenModel>filter(_contents, GenModel.class);
-          final GenModel loadedGenModel = IterableExtensions.<GenModel>head(_filter);
+          final GenModel loadedGenModel = IterableExtensions.<GenModel>head(Iterables.<GenModel>filter(resource.getContents(), GenModel.class));
           if ((loadedGenModel != null)) {
             final GenPackage genPackage = this.findGenPackageByNsURI(loadedGenModel, nsURI);
-            EPackage _ecorePackage = genPackage.getEcorePackage();
-            result.put(nsURI, _ecorePackage);
+            result.put(nsURI, genPackage.getEcorePackage());
           }
         }
       }
@@ -729,8 +682,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       {
         final EPackage ecorePackage = genPackage.getEcorePackage();
         if (((ecorePackage == null) || ecorePackage.eIsProxy())) {
-          Resource _eResource = genModel.eResource();
-          URI _uRI = _eResource.getURI();
+          URI _uRI = genModel.eResource().getURI();
           String _plus = ((("Unresolved proxy: " + ecorePackage) + " in ") + _uRI);
           throw new RuntimeException(_plus);
         }
@@ -741,8 +693,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
         }
       }
     }
-    Resource _eResource = genModel.eResource();
-    URI _uRI = _eResource.getURI();
+    URI _uRI = genModel.eResource().getURI();
     String _plus = ((("No GenPackage for NsURI " + nsURI) + " found in ") + _uRI);
     throw new RuntimeException(_plus);
   }
@@ -762,14 +713,12 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       EList<EClassifier> _eClassifiers = usedEPackage.getEClassifiers();
       for (final EClassifier usedClassifier : _eClassifiers) {
         {
-          String _name = usedClassifier.getName();
-          final EClassifier loadedClassifier = loadedEPackage.getEClassifier(_name);
+          final EClassifier loadedClassifier = loadedEPackage.getEClassifier(usedClassifier.getName());
           if ((loadedClassifier == null)) {
-            String _name_1 = usedClassifier.getName();
-            String _plus = ("Cannot find classifier \'" + _name_1);
+            String _name = usedClassifier.getName();
+            String _plus = ("Cannot find classifier \'" + _name);
             String _plus_1 = (_plus + "\' in loaded EPackage from ");
-            Resource _eResource = loadedEPackage.eResource();
-            URI _uRI = _eResource.getURI();
+            URI _uRI = loadedEPackage.eResource().getURI();
             String _plus_2 = (_plus_1 + _uRI);
             throw new RuntimeException(_plus_2);
           }
@@ -779,13 +728,12 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       EList<EPackage> _eSubpackages = usedEPackage.getESubpackages();
       for (final EPackage usedNestedPackage : _eSubpackages) {
         {
-          EList<EPackage> _eSubpackages_1 = loadedEPackage.getESubpackages();
           final Function1<EPackage, Boolean> _function = (EPackage it) -> {
             String _name = it.getName();
             String _name_1 = usedNestedPackage.getName();
             return Boolean.valueOf(Objects.equal(_name, _name_1));
           };
-          final EPackage loadedNestedPackage = IterableExtensions.<EPackage>findFirst(_eSubpackages_1, _function);
+          final EPackage loadedNestedPackage = IterableExtensions.<EPackage>findFirst(loadedEPackage.getESubpackages(), _function);
           if ((loadedNestedPackage != null)) {
             this.putMappingData(result, usedNestedPackage, loadedNestedPackage);
           }
@@ -799,8 +747,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     while (packageContentIterator.hasNext()) {
       {
         final EObject current = packageContentIterator.next();
-        EClass _eClass = current.eClass();
-        EList<EStructuralFeature> _eAllStructuralFeatures = _eClass.getEAllStructuralFeatures();
+        EList<EStructuralFeature> _eAllStructuralFeatures = current.eClass().getEAllStructuralFeatures();
         final EStructuralFeature[] crossReferenceFeatures = ((EClassImpl.FeatureSubsetSupplier) _eAllStructuralFeatures).crossReferences();
         if ((crossReferenceFeatures != null)) {
           for (final EStructuralFeature crossReferenceFeature : crossReferenceFeatures) {
@@ -814,8 +761,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
                 for (final EObject value : values) {
                   boolean _containsKey = eNamedElementMapping.containsKey(value);
                   if (_containsKey) {
-                    EObject _get = eNamedElementMapping.get(value);
-                    EcoreUtil.replace(current, reference, value, _get);
+                    EcoreUtil.replace(current, reference, value, eNamedElementMapping.get(value));
                   }
                 }
               } else {
@@ -823,8 +769,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
                 final EObject value_1 = ((EObject) _eGet_1);
                 boolean _containsKey_1 = eNamedElementMapping.containsKey(value_1);
                 if (_containsKey_1) {
-                  EObject _get_1 = eNamedElementMapping.get(value_1);
-                  EcoreUtil.replace(current, reference, value_1, _get_1);
+                  EcoreUtil.replace(current, reference, value_1, eNamedElementMapping.get(value_1));
                 }
               }
             }
@@ -839,12 +784,10 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     final Resource existing = rs.getResource(ecoreFileUri, false);
     if ((existing != null)) {
       existing.unload();
-      EList<Resource> _resources = rs.getResources();
-      _resources.remove(existing);
+      rs.getResources().remove(existing);
     }
     final Resource ecoreFile = rs.createResource(ecoreFileUri, ContentHandler.UNSPECIFIED_CONTENT_TYPE);
-    EList<EObject> _contents = ecoreFile.getContents();
-    _contents.addAll(packs);
+    ecoreFile.getContents().addAll(packs);
     return ecoreFile;
   }
   
@@ -866,17 +809,17 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
     final Set<EPackage> referencedEPackages = this.getReferencedEPackages(packs);
     final List<GenPackage> usedGenPackages = this.getGenPackagesForPackages(genModel, referencedEPackages);
     this.reconcileMissingGenPackagesInUsedModels(usedGenPackages);
-    EList<GenPackage> _usedGenPackages = genModel.getUsedGenPackages();
-    _usedGenPackages.addAll(usedGenPackages);
+    genModel.getUsedGenPackages().addAll(usedGenPackages);
     this.saveResource(genModel.eResource());
-    GenModelHelper _genModelHelper = new GenModelHelper();
-    _genModelHelper.registerGenModel(genModel);
+    new GenModelHelper().registerGenModel(genModel);
     return genModel;
   }
   
-  private void reconcileMissingGenPackagesInUsedModels(final List<GenPackage> usedGenPackages) {
-    int _size = usedGenPackages.size();
-    final HashSet<GenModel> processedModels = Sets.<GenModel>newHashSetWithExpectedSize(_size);
+  /**
+   * @since 2.14
+   */
+  protected void reconcileMissingGenPackagesInUsedModels(final List<GenPackage> usedGenPackages) {
+    final HashSet<GenModel> processedModels = Sets.<GenModel>newHashSetWithExpectedSize(usedGenPackages.size());
     for (final GenPackage usedGenPackage : usedGenPackages) {
       {
         final GenModel genModel = usedGenPackage.getGenModel();
@@ -884,8 +827,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
         if (_add) {
           final List<EPackage> missingPackages = genModel.getMissingPackages();
           final List<GenPackage> missingGenPackages = this.getGenPackagesForPackages(genModel, missingPackages);
-          EList<GenPackage> _usedGenPackages = genModel.getUsedGenPackages();
-          _usedGenPackages.addAll(missingGenPackages);
+          genModel.getUsedGenPackages().addAll(missingGenPackages);
         }
       }
     }
@@ -897,23 +839,19 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       final Resource resource = rs.getResource(genModelUri, false);
       if ((resource != null)) {
         resource.unload();
-        EList<Resource> _resources = rs.getResources();
-        _resources.remove(resource);
+        rs.getResources().remove(resource);
       }
       final Resource genModelFile = rs.createResource(genModelUri, ContentHandler.UNSPECIFIED_CONTENT_TYPE);
       GenModel genModel = null;
-      URIConverter _uRIConverter = rs.getURIConverter();
-      boolean _exists = _uRIConverter.exists(genModelUri, null);
+      boolean _exists = rs.getURIConverter().exists(genModelUri, null);
       if (_exists) {
         genModelFile.load(null);
         boolean _hasFragment = genModelUri.hasFragment();
         if (_hasFragment) {
-          String _fragment = genModelUri.fragment();
-          EObject _eObject = genModelFile.getEObject(_fragment);
+          EObject _eObject = genModelFile.getEObject(genModelUri.fragment());
           genModel = ((GenModel) _eObject);
         } else {
-          EList<EObject> _contents = genModelFile.getContents();
-          EObject _head = IterableExtensions.<EObject>head(_contents);
+          EObject _head = IterableExtensions.<EObject>head(genModelFile.getContents());
           genModel = ((GenModel) _head);
         }
       } else {
@@ -947,27 +885,23 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
         genModel.setUpdateClasspath(false);
         genModel.setComplianceLevel(this.jdkLevel);
         genModel.setRuntimeVersion(this.emfRuntimeVersion);
-        genModel.setRootExtendsClass("org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container");
+        genModel.setRootExtendsClass(this.rootExtendsClass);
         genModel.setLineDelimiter(this.codeConfig.getLineDelimiter());
         String _fileHeader = this.codeConfig.getFileHeader();
         boolean _tripleNotEquals = (_fileHeader != null);
         if (_tripleNotEquals) {
-          genModel.setCopyrightText(EMFGeneratorFragment2.trimMultiLineComment(this.codeConfig.getFileHeader()));
+          genModel.setCopyrightText(this.trimMultiLineComment(this.codeConfig.getFileHeader()));
         }
       }
-      EList<EObject> _contents_1 = genModelFile.getContents();
-      _contents_1.add(genModel);
+      genModelFile.getContents().add(genModel);
       return genModel;
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
   }
   
-  public static String trimMultiLineComment(final String string) {
-    String _replace = string.replace("*/", "");
-    String _replace_1 = _replace.replace("/*", "");
-    String _replace_2 = _replace_1.replace(" * ", "");
-    return _replace_2.trim();
+  public String trimMultiLineComment(final String string) {
+    return string.replace(" * ", "").replaceAll("/\\*+\\s*|\\s*\\*+/", "").replaceAll("(?m)^ \\*$", "").trim();
   }
   
   protected Set<EPackage> getReferencedEPackages(final List<EPackage> packs) {
@@ -1007,7 +941,6 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
   protected List<GenPackage> getGenPackagesForPackages(final GenModel existingGenModel, final Collection<EPackage> packs) {
     final ArrayList<GenPackage> result = CollectionLiterals.<GenPackage>newArrayList();
     for (final EPackage pkg : packs) {
-      EList<GenPackage> _genPackages = existingGenModel.getGenPackages();
       final Function1<GenPackage, Boolean> _function = (GenPackage it) -> {
         EPackage _ecorePackage = it.getEcorePackage();
         String _nsURI = null;
@@ -1017,25 +950,23 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
         String _nsURI_1 = pkg.getNsURI();
         return Boolean.valueOf(Objects.equal(_nsURI, _nsURI_1));
       };
-      boolean _exists = IterableExtensions.<GenPackage>exists(_genPackages, _function);
+      boolean _exists = IterableExtensions.<GenPackage>exists(existingGenModel.getGenPackages(), _function);
       boolean _not = (!_exists);
       if (_not) {
-        GenPackage _genPackage = GenModelUtil2.getGenPackage(pkg, existingGenModel.eResource().getResourceSet());
-        result.add(_genPackage);
+        result.add(GenModelUtil2.getGenPackage(pkg, existingGenModel.eResource().getResourceSet()));
       }
     }
     final Comparator<GenPackage> _function_1 = (GenPackage o1, GenPackage o2) -> {
-      URI _uRI = EcoreUtil.getURI(o1);
-      String _string = _uRI.toString();
-      URI _uRI_1 = EcoreUtil.getURI(o2);
-      String _string_1 = _uRI_1.toString();
-      return _string.compareTo(_string_1);
+      return EcoreUtil.getURI(o1).toString().compareTo(EcoreUtil.getURI(o2).toString());
     };
     Collections.<GenPackage>sort(result, _function_1);
     return result;
   }
   
-  private void saveResource(final Resource resource) {
+  /**
+   * @since 2.14
+   */
+  protected void saveResource(final Resource resource) {
     try {
       final HashMap<String, Object> saveOptions = CollectionLiterals.<String, Object>newHashMap();
       saveOptions.put(XMLResource.OPTION_URI_HANDLER, new URIHandlerImpl.AbsoluteCrossBundleAware() {
@@ -1044,16 +975,14 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
           boolean _isPlatform = uri.isPlatform();
           boolean _not = (!_isPlatform);
           if (_not) {
-            Map<String, URI> _platformResourceMap = EcorePlugin.getPlatformResourceMap();
-            Set<Map.Entry<String, URI>> _entrySet = _platformResourceMap.entrySet();
+            Set<Map.Entry<String, URI>> _entrySet = EcorePlugin.getPlatformResourceMap().entrySet();
             for (final Map.Entry<String, URI> entry : _entrySet) {
               {
                 String _key = entry.getKey();
                 String _plus = ("platform:/resource/" + _key);
                 String _plus_1 = (_plus + "/");
                 final URI newPrefix = URI.createURI(_plus_1);
-                URI _value = entry.getValue();
-                final URI uri2 = uri.replacePrefix(_value, newPrefix);
+                final URI uri2 = uri.replacePrefix(entry.getValue(), newPrefix);
                 if ((uri2 != null)) {
                   return super.deresolve(uri2);
                 }
@@ -1063,8 +992,7 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
           return super.deresolve(uri);
         }
       });
-      String _lineDelimiter = this.codeConfig.getLineDelimiter();
-      saveOptions.put(Resource.OPTION_LINE_DELIMITER, _lineDelimiter);
+      saveOptions.put(Resource.OPTION_LINE_DELIMITER, this.codeConfig.getLineDelimiter());
       resource.save(saveOptions);
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
@@ -1121,22 +1049,23 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
       if ((((!this.updateBuildProperties) || (this.modelPluginID != null)) || (this.getProjectConfig().getRuntime().getManifest() == null))) {
         return;
       }
-      IXtextProjectConfig _projectConfig = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime = _projectConfig.getRuntime();
-      final IXtextGeneratorFileSystemAccess rootOutlet = _runtime.getRoot();
-      String _path = rootOutlet.getPath();
+      String _path = this.getProjectConfig().getRuntime().getRoot().getPath();
       final String buildPropertiesPath = (_path + "/build.properties");
-      IXtextProjectConfig _projectConfig_1 = this.getProjectConfig();
-      IRuntimeProjectConfig _runtime_1 = _projectConfig_1.getRuntime();
-      final String modelContainer = _runtime_1.getEcoreModelFolder();
-      final Properties buildProperties = new Properties();
-      File _file = new File(buildPropertiesPath);
-      FileInputStream _fileInputStream = new FileInputStream(_file);
-      String _encoding = this.codeConfig.getEncoding();
-      Charset _forName = Charset.forName(_encoding);
-      final InputStreamReader reader = new InputStreamReader(_fileInputStream, _forName);
-      try {
-        String existingContent = CharStreams.toString(reader);
+      final File buildPropertiesFile = new File(buildPropertiesPath);
+      boolean _exists = buildPropertiesFile.exists();
+      if (_exists) {
+        final String modelContainer = this.getProjectConfig().getRuntime().getEcoreModelFolder();
+        final Properties buildProperties = new Properties();
+        final Charset charset = Charset.forName(this.codeConfig.getEncoding());
+        FileInputStream _fileInputStream = new FileInputStream(buildPropertiesFile);
+        final InputStreamReader reader = new InputStreamReader(_fileInputStream, charset);
+        String _xtrycatchfinallyexpression = null;
+        try {
+          _xtrycatchfinallyexpression = CharStreams.toString(reader);
+        } finally {
+          reader.close();
+        }
+        String existingContent = _xtrycatchfinallyexpression;
         StringInputStream _stringInputStream = new StringInputStream(existingContent, "ISO-8859-1");
         buildProperties.load(_stringInputStream);
         final String binIncludes = buildProperties.getProperty("bin.includes");
@@ -1152,29 +1081,27 @@ public class EMFGeneratorFragment2 extends AbstractXtextGeneratorFragment {
           boolean _contains = binIncludes.contains(modelContainer);
           boolean _not = (!_contains);
           if (_not) {
-            existingContent = existingContent.replace("bin.includes = ", 
-              (((("bin.includes = " + modelContainer) + "/,\\") + Strings.newLine()) + "               "));
+            String _newLine_1 = Strings.newLine();
+            String _plus_2 = ((("bin.includes = " + modelContainer) + "/,\\") + _newLine_1);
+            String _plus_3 = (_plus_2 + "               ");
+            existingContent = existingContent.replace("bin.includes = ", _plus_3);
             changed = true;
           }
         }
         if (changed) {
-          File _file_1 = new File(buildPropertiesPath);
-          FileOutputStream _fileOutputStream = new FileOutputStream(_file_1);
-          String _encoding_1 = this.codeConfig.getEncoding();
-          Charset _forName_1 = Charset.forName(_encoding_1);
-          final OutputStreamWriter writer = new OutputStreamWriter(_fileOutputStream, _forName_1);
-          writer.write(existingContent);
-          writer.close();
+          FileOutputStream _fileOutputStream = new FileOutputStream(buildPropertiesFile);
+          final OutputStreamWriter writer = new OutputStreamWriter(_fileOutputStream, charset);
+          try {
+            writer.write(existingContent);
+          } finally {
+            writer.close();
+          }
         }
-      } finally {
-        reader.close();
       }
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
   }
-  
-  private final static Logger LOG = Logger.getLogger(EMFGeneratorFragment2.class);
   
   public void setBasePackage(final String basePackage) {
     this.basePackage = basePackage;

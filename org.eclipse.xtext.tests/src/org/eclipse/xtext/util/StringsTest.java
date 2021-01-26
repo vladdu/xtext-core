@@ -1,15 +1,17 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  *******************************************************************************/
 package org.eclipse.xtext.util;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntPredicate;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -216,6 +218,71 @@ public class StringsTest extends Assert {
 		assertEquals(1, Strings.countLineBreaks("a\rc", 0, 3));
 		assertEquals(1, Strings.countLineBreaks("a\r\n", 0, 3));
 		assertEquals(2, Strings.countLineBreaks("\r\n\n", 0, 3));
+	}
+	
+	@Test public void testConvertBackAndForthWithUnicode() throws Exception {
+		for(int i = Character.MIN_VALUE; i <= Character.MAX_VALUE; i++) {
+			String originalString = String.valueOf((char)i);
+			String converted = Strings.convertToJavaString(originalString, true);
+			assertEquals(originalString, Strings.convertFromJavaString(converted, true));
+		}
+	}
+	
+	@Test public void testConvertBackAndForthWithoutUnicode() throws Exception {
+		for(int i = Character.MIN_VALUE; i <= Character.MAX_VALUE; i++) {
+			String originalString = String.valueOf((char)i);
+			String converted = Strings.convertToJavaString(originalString, false);
+			assertEquals(originalString, Strings.convertFromJavaString(converted, false));
+		}
+	}
+
+	@Test public void testConvertSpecialChars() throws Exception {
+		String input = "\b\f\n\r\"\'\\\u4444";
+		String expected = "\\b\\f\\n\\r\\\"\\'\\\\\\u4444";
+		assertEquals(expected, Strings.convertToJavaString(input, true));
+		assertEquals(input, Strings.convertFromJavaString(expected, true));
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testConvertIllegalEscapeSequence() throws Exception {
+		String input = "\\/";
+		Strings.convertFromJavaString(input, true);
+	}
+	
+	@Test
+	public void testIsHex() {
+		IntPredicate ref = (c) -> {
+					switch (c) {
+					case '0':
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+					case '8':
+					case '9':
+					case 'a':
+					case 'b':
+					case 'c':
+					case 'd':
+					case 'e':
+					case 'f':
+					case 'A':
+					case 'B':
+					case 'C':
+					case 'D':
+					case 'E':
+					case 'F':
+						return true;
+					default:
+						return false;
+				}
+		};
+		for(int c = Character.MIN_VALUE; c <= Character.MAX_VALUE; c++) {
+			Assert.assertTrue((char)c +  " \\u" + Integer.toString(c, 16), ref.test(c) == JavaStringConverter.isHex((char) c));
+		}
 	}
 	
 }

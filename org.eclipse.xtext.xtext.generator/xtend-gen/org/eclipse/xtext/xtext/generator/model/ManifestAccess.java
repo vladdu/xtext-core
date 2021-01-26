@@ -1,9 +1,10 @@
 /**
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
  */
 package org.eclipse.xtext.xtext.generator.model;
 
@@ -18,9 +19,8 @@ import org.eclipse.xtend.lib.annotations.Accessors;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtend2.lib.StringConcatenationClient;
 import org.eclipse.xtext.generator.IFileSystemAccess2;
-import org.eclipse.xtext.util.MergeableManifest;
+import org.eclipse.xtext.util.MergeableManifest2;
 import org.eclipse.xtext.util.Strings;
-import org.eclipse.xtext.util.internal.Log;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
@@ -28,13 +28,15 @@ import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.StringExtensions;
 import org.eclipse.xtext.xtext.generator.IGuiceAwareGeneratorComponent;
-import org.eclipse.xtext.xtext.generator.model.TextFileAccess;
-import org.eclipse.xtext.xtext.generator.model.TypeReference;
 
-@Log
+/**
+ * Configuration object for MANIFEST.MF files for use in Eclipse.
+ */
 @Accessors
 @SuppressWarnings("all")
 public class ManifestAccess extends TextFileAccess implements IGuiceAwareGeneratorComponent {
+  private static final Logger LOG = Logger.getLogger(ManifestAccess.class);
+  
   private String bundleName;
   
   private String symbolicName;
@@ -114,8 +116,7 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
       this.exportedPackages.addAll(other.exportedPackages);
       this.requiredBundles.addAll(other.requiredBundles);
       if ((this.symbolicName != null)) {
-        String _effectiveSymbolicName = this.getEffectiveSymbolicName();
-        this.requiredBundles.remove(_effectiveSymbolicName);
+        this.requiredBundles.remove(this.getEffectiveSymbolicName());
       }
       _xblockexpression = this.importedPackages.addAll(other.importedPackages);
     }
@@ -197,12 +198,11 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
       if (_not_2) {
         _builder.append("Require-Bundle: ");
         {
-          List<String> _sort_1 = IterableExtensions.<String>sort(this.requiredBundles);
           final Function1<String, Boolean> _function = (String it) -> {
             String _effectiveSymbolicName = this.getEffectiveSymbolicName();
             return Boolean.valueOf((!Objects.equal(it, _effectiveSymbolicName)));
           };
-          Iterable<String> _filter = IterableExtensions.<String>filter(_sort_1, _function);
+          Iterable<String> _filter = IterableExtensions.<String>filter(IterableExtensions.<String>sort(this.requiredBundles), _function);
           boolean _hasElements_1 = false;
           for(final String bundle : _filter) {
             if (!_hasElements_1) {
@@ -222,9 +222,9 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
       if (_not_3) {
         _builder.append("Import-Package: ");
         {
-          List<String> _sort_2 = IterableExtensions.<String>sort(this.importedPackages);
+          List<String> _sort_1 = IterableExtensions.<String>sort(this.importedPackages);
           boolean _hasElements_2 = false;
-          for(final String pack_1 : _sort_2) {
+          for(final String pack_1 : _sort_1) {
             if (!_hasElements_2) {
               _hasElements_2 = true;
             } else {
@@ -243,6 +243,15 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
         _builder.newLineIfNotEmpty();
       }
     }
+    _builder.append("Automatic-Module-Name: ");
+    String _elvis_1 = null;
+    if (this.symbolicName != null) {
+      _elvis_1 = this.symbolicName;
+    } else {
+      _elvis_1 = this.bundleName;
+    }
+    _builder.append(_elvis_1);
+    _builder.newLineIfNotEmpty();
     return _builder;
   }
   
@@ -252,13 +261,13 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
       if ((fileSystemAccess != null)) {
         CharSequence _content = this.getContent();
         StringBuffer _stringBuffer = new StringBuffer(_content);
-        final String contentToWrite = MergeableManifest.make512Safe(_stringBuffer, this.lineDelimiter);
+        final String contentToWrite = MergeableManifest2.make512Safe(_stringBuffer, this.lineDelimiter);
         byte[] _bytes = contentToWrite.getBytes("UTF-8");
         ByteArrayInputStream _byteArrayInputStream = new ByteArrayInputStream(_bytes);
-        final MergeableManifest mergableManifest = new MergeableManifest(_byteArrayInputStream);
-        mergableManifest.setLineDelimiter(this.lineDelimiter);
+        final MergeableManifest2 mergeableManifest = new MergeableManifest2(_byteArrayInputStream);
+        mergeableManifest.setLineDelimiter(this.lineDelimiter);
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        mergableManifest.write(bout);
+        mergeableManifest.write(bout);
         String _path = this.getPath();
         byte[] _byteArray = bout.toByteArray();
         ByteArrayInputStream _byteArrayInputStream_1 = new ByteArrayInputStream(_byteArray);
@@ -273,8 +282,6 @@ public class ManifestAccess extends TextFileAccess implements IGuiceAwareGenerat
   public void initialize(final Injector injector) {
     injector.injectMembers(this);
   }
-  
-  private final static Logger LOG = Logger.getLogger(ManifestAccess.class);
   
   @Pure
   public String getBundleName() {

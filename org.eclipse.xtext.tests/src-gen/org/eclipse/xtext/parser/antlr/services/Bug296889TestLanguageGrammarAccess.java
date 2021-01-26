@@ -17,11 +17,11 @@ import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.TerminalRule;
 import org.eclipse.xtext.common.services.TerminalsGrammarAccess;
-import org.eclipse.xtext.service.AbstractElementFinder.AbstractGrammarElementFinder;
+import org.eclipse.xtext.service.AbstractElementFinder;
 import org.eclipse.xtext.service.GrammarProvider;
 
 @Singleton
-public class Bug296889TestLanguageGrammarAccess extends AbstractGrammarElementFinder {
+public class Bug296889TestLanguageGrammarAccess extends AbstractElementFinder.AbstractGrammarElementFinder {
 	
 	public class ModelElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "org.eclipse.xtext.parser.antlr.Bug296889TestLanguage.Model");
@@ -35,7 +35,8 @@ public class Bug296889TestLanguageGrammarAccess extends AbstractGrammarElementFi
 		private final Assignment cValuesAssignment_1_1 = (Assignment)cGroup_1.eContents().get(1);
 		private final RuleCall cValuesDataTypeExpressionParserRuleCall_1_1_0 = (RuleCall)cValuesAssignment_1_1.eContents().get(0);
 		
-		///* SuppressWarnings[noInstantiation] */ Model:
+		///* SuppressWarnings[noInstantiation] */
+		//Model:
 		//	"Model" expressions+=Expression* | "DataType" values+=DataTypeExpression*;
 		@Override public ParserRule getRule() { return rule; }
 		
@@ -297,7 +298,8 @@ public class Bug296889TestLanguageGrammarAccess extends AbstractGrammarElementFi
 	}
 
 	
-	///* SuppressWarnings[noInstantiation] */ Model:
+	///* SuppressWarnings[noInstantiation] */
+	//Model:
 	//	"Model" expressions+=Expression* | "DataType" values+=DataTypeExpression*;
 	public ModelElements getModelAccess() {
 		return pModel;

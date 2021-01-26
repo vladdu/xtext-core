@@ -1,19 +1,20 @@
 /*******************************************************************************
  * Copyright (c) 2014 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.tests;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 
 import org.junit.rules.ExternalResource;
 
-import com.google.common.io.Files;
 import com.google.inject.Singleton;
 
 /**
@@ -74,7 +75,7 @@ public class TemporaryFolder extends ExternalResource {
 	 * for testing purposes only.  Do not use.
 	 */
 	public void create() throws IOException {
-		folder = Files.createTempDir();
+		folder = Files.createTempDirectory("junit").toFile();
 	}
 	
 	/**
@@ -90,7 +91,7 @@ public class TemporaryFolder extends ExternalResource {
 	 * Same signature as {@link java.io.File#createTempFile(String, String)}.
 	 */
 	public File createTempFile(String prefix, String suffix) throws IOException {
-		return File.createTempFile(prefix, prefix, getRoot());
+		return File.createTempFile(prefix, suffix, getRoot());
 	}
 
 	/**

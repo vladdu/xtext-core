@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008-2010 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2008, 2016 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.tests;
 
@@ -11,12 +12,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.List;
 
+import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.xtext.Constants;
+import org.eclipse.xtext.Grammar;
 import org.eclipse.xtext.IGrammarAccess;
 import org.eclipse.xtext.ISetup;
 import org.eclipse.xtext.conversion.IValueConverterService;
@@ -25,6 +31,7 @@ import org.eclipse.xtext.formatting.INodeModelFormatter;
 import org.eclipse.xtext.linking.ILinkingService;
 import org.eclipse.xtext.linking.lazy.LazyLinkingResource;
 import org.eclipse.xtext.nodemodel.ICompositeNode;
+import org.eclipse.xtext.nodemodel.LookAheadInfo;
 import org.eclipse.xtext.nodemodel.impl.InvariantChecker;
 import org.eclipse.xtext.parser.IAstFactory;
 import org.eclipse.xtext.parser.IParseResult;
@@ -38,12 +45,15 @@ import org.eclipse.xtext.testing.GlobalRegistries;
 import org.eclipse.xtext.testing.GlobalRegistries.GlobalStateMemento;
 import org.eclipse.xtext.testing.serializer.SerializerTestHelper;
 import org.eclipse.xtext.util.CancelIndicator;
-import org.eclipse.xtext.util.StringInputStream;
+import org.eclipse.xtext.util.LazyStringInputStream;
+import org.eclipse.xtext.util.Pair;
+import org.eclipse.xtext.util.Tuples;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -95,7 +105,7 @@ public abstract class AbstractXtextTests extends Assert implements ResourceLoadH
 
 	protected void with(Class<? extends ISetup> setupClazz) throws Exception {
 		assertTrue("super.setUp() has to be called before any injector is instantiated", canCreateInjector);
-		ISetup instance = setupClazz.newInstance();
+		ISetup instance = setupClazz.getDeclaredConstructor().newInstance();
 		setInjector(instance.createInjectorAndDoEMFRegistration());
 	}
 
@@ -172,8 +182,19 @@ public abstract class AbstractXtextTests extends Assert implements ResourceLoadH
 		return getInjector().getInstance(InvariantChecker.class);
 	}
 
+	/**
+	 * Equivalent to <code>getAsStream(model, Charset.defaultCharset())</code>.
+	 */
 	protected InputStream getAsStream(String model) {
-		return new StringInputStream(model);
+		return getAsStream(model, Charset.defaultCharset());
+	}
+	
+	/**
+	 * Gets the string as input stream with specified encoding.
+	 * @since 2.16
+	 */
+	protected InputStream getAsStream(String model, Charset encoding) {
+		return new LazyStringInputStream(model, encoding.name());
 	}
 	
 	// parse methods
@@ -276,8 +297,11 @@ public abstract class AbstractXtextTests extends Assert implements ResourceLoadH
 
 	protected void checkNodeModel(XtextResource resource) {
 		IParseResult parseResult = resource.getParseResult();
-		if(parseResult != null)
-			getInvariantChecker().checkInvariant(parseResult.getRootNode());
+		if(parseResult != null) {
+			ICompositeNode rootNode = parseResult.getRootNode();
+			getInvariantChecker().checkInvariant(rootNode);
+			new LookAheadInfo(rootNode).checkConsistency();
+		}
 	}
 
 	protected boolean shouldTestSerializer(XtextResource resource) {
@@ -287,10 +311,14 @@ public abstract class AbstractXtextTests extends Assert implements ResourceLoadH
 	protected void disableSerializerTest() {
 		isSerializerTestDisabled = true;
 	}
+	
+	protected Object getClasspathURIContext() {
+		return getClass();
+	}
 
 	protected XtextResource doGetResource(InputStream in, URI uri) throws Exception {
 		XtextResourceSet rs = get(XtextResourceSet.class);
-		rs.setClasspathURIContext(getClass());
+		rs.setClasspathURIContext(getClasspathURIContext());
 		XtextResource resource = (XtextResource) getResourceFactory().createResource(uri);
 		rs.getResources().add(resource);
 		resource.load(in, null);
@@ -367,6 +395,30 @@ public abstract class AbstractXtextTests extends Assert implements ResourceLoadH
 			}
 		}
 		throw new IllegalStateException("May not happen, but helps to suppress false positives in eclipse' control flow analysis.");
+	}
+
+	protected Grammar load(URI uri) {
+		XtextResourceSet rs = new XtextResourceSet();
+		return (Grammar) rs.getResource(uri, true).getContents().get(0);
+	}
+
+	protected List<Pair<EObject, ICompositeNode>> detachNodeModel(EObject eObject) {
+		EcoreUtil.resolveAll(eObject);
+		List<Pair<EObject, ICompositeNode>> result = Lists.newArrayList();
+		Iterator<Object> iterator = EcoreUtil.getAllContents(eObject.eResource(), false);
+		while (iterator.hasNext()) {
+			EObject object = (EObject) iterator.next();
+			Iterator<Adapter> adapters = object.eAdapters().iterator();
+			while (adapters.hasNext()) {
+				Adapter adapter = adapters.next();
+				if (adapter instanceof ICompositeNode) {
+					adapters.remove();
+					result.add(Tuples.create(object, (ICompositeNode) adapter));
+					break;
+				}
+			}
+		}
+		return result;
 	}
 
 	public static final class Keys {

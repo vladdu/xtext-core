@@ -1,22 +1,29 @@
 /*******************************************************************************
- * Copyright (c) 2015 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2015, 2017 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext.generator.parser.antlr
 
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Lists
 import com.google.inject.Inject
+import com.google.inject.Singleton
 import com.google.inject.name.Names
 import java.io.InputStream
-import java.util.HashMap
+import java.util.List
 import java.util.Map
+import java.util.Set
 import org.antlr.runtime.CharStream
 import org.antlr.runtime.Token
 import org.antlr.runtime.TokenSource
 import org.eclipse.xtend.lib.annotations.Accessors
+import org.eclipse.xtend2.lib.StringConcatenationClient
 import org.eclipse.xtext.AbstractElement
+import org.eclipse.xtext.Grammar
 import org.eclipse.xtext.Group
 import org.eclipse.xtext.conversion.impl.AbstractIDValueConverter
 import org.eclipse.xtext.conversion.impl.IgnoreCaseIDValueConverter
@@ -37,6 +44,9 @@ import org.eclipse.xtext.parser.antlr.XtextTokenStream
 import org.eclipse.xtext.parsetree.reconstr.ITokenSerializer
 import org.eclipse.xtext.parsetree.reconstr.impl.IgnoreCaseKeywordSerializer
 import org.eclipse.xtext.serializer.tokens.IKeywordSerializer
+import org.eclipse.xtext.xtext.FlattenedGrammarAccess
+import org.eclipse.xtext.xtext.RuleFilter
+import org.eclipse.xtext.xtext.RuleNames
 import org.eclipse.xtext.xtext.generator.Issues
 import org.eclipse.xtext.xtext.generator.grammarAccess.GrammarAccessExtensions
 import org.eclipse.xtext.xtext.generator.model.FileAccessFactory
@@ -86,7 +96,7 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 		if (combinedGrammar.isSet)
 			combinedGrammar.get
 		else
-			!options.backtrackLexer && !options.ignoreCase && !grammar.allTerminalRules.exists[isSyntheticTerminalRule]
+			!options.backtrackLexer && !options.ignoreCase && !hasSyntheticTerminalRule
 	}
 
 	override protected doGenerate() {
@@ -103,13 +113,17 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 		generateProductionParser().writeTo(projectConfig.runtime.srcGen)
 		generateAntlrTokenFileProvider().writeTo(projectConfig.runtime.srcGen)
 		generateContentAssistParser().writeTo(projectConfig.genericIde.srcGen)
-		if (grammar.allTerminalRules.exists[ isSyntheticTerminalRule ]) {
+		if (hasSyntheticTerminalRule()) {
 			generateProductionTokenSource().writeTo(projectConfig.runtime.src)
 			generateContentAssistTokenSource().writeTo(projectConfig.genericIde.src)
 		}
 		addRuntimeBindingsAndImports()
 		addIdeBindingsAndImports()
 		addUiBindingsAndImports()
+	}
+	
+	protected def boolean hasSyntheticTerminalRule() {
+		grammar.allTerminalRules.exists[ isSyntheticTerminalRule ]
 	}
 	
 	def void setLookaheadThreshold(String lookaheadThreshold) {
@@ -194,7 +208,7 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 					tokenStream.setInitialHiddenTokens(«FOR hidden : grammar.initialHiddenTokens SEPARATOR ", "»"«hidden»"«ENDFOR»);
 				}
 				
-				«IF grammar.allTerminalRules.exists[isSyntheticTerminalRule]»
+				«IF hasSyntheticTerminalRule»
 					@Override
 					protected «TokenSource» createLexer(«CharStream» stream) {
 						return new «grammar.tokenSourceClass»(super.createLexer(stream));
@@ -304,10 +318,10 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 		file.content = '''
 			public class «grammar.parserClass.simpleName» extends «grammar.getParserSuperClass(partialParsing)» {
 			
+				«grammar.initNameMappings()»
+			
 				@«Inject»
 				private «grammar.grammarAccess» grammarAccess;
-			
-				private «Map»<«AbstractElement», String> nameMappings;
 			
 				@Override
 				protected «grammar.internalParserClass» createParser() {
@@ -316,7 +330,7 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 					return result;
 				}
 			
-				«IF grammar.allTerminalRules.exists[isSyntheticTerminalRule]»
+				«IF hasSyntheticTerminalRule»
 					@Override
 					protected «TokenSource» createLexer(«CharStream» stream) {
 						return new «grammar.tokenSourceClass»(super.createLexer(stream));
@@ -325,19 +339,9 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 				«ENDIF»
 				@Override
 				protected String getRuleName(«AbstractElement» element) {
-					if (nameMappings == null) {
-						nameMappings = new «HashMap»<«AbstractElement», String>() {
-							private static final long serialVersionUID = 1L;
-							{
-								«FOR element : (grammar.allAlternatives + grammar.allGroups + grammar.allAssignments + grammar.allUnorderedGroups).filter(AbstractElement)»
-									put(grammarAccess.«element.grammarElementAccess», "«element.containingRule.contentAssistRuleName»__«element.gaElementIdentifier»«IF element instanceof Group»__0«ENDIF»");
-								«ENDFOR»
-							}
-						};
-					}
-					return nameMappings.get(element);
+					return nameMappings.getRuleName(element);
 				}
-						
+			
 				@Override
 				protected String[] getInitialHiddenTokens() {
 					return new String[] { «FOR hidden : grammar.initialHiddenTokens SEPARATOR ", "»"«hidden»"«ENDFOR» };
@@ -350,9 +354,82 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 				public void setGrammarAccess(«grammar.grammarAccess» grammarAccess) {
 					this.grammarAccess = grammarAccess;
 				}
+				
+				public NameMappings getNameMappings() {
+					return nameMappings;
+				}
+				
+				public void setNameMappings(NameMappings nameMappings) {
+					this.nameMappings = nameMappings;
+				}
 			}
 		'''
-		file
+		return file
+	}
+	
+	/**
+	 * @since 2.14
+	 */
+	protected def StringConcatenationClient initNameMappings(List<AbstractElement> partition) '''
+		«FOR element : partition»
+			builder.put(grammarAccess.«element.originalElement.grammarElementAccess», "«element.originalElement.containingRule.contentAssistRuleName»__«element.originalElement.gaElementIdentifier»«IF element instanceof Group»__0«ENDIF»");
+		«ENDFOR»
+	'''
+	
+	/**
+	 * @since 2.14
+	 */
+	protected def StringConcatenationClient initNameMappings(Grammar it) {
+		val RuleFilter filter = new RuleFilter();
+		filter.discardUnreachableRules = options.skipUnusedRules
+		val RuleNames ruleNames = RuleNames.getRuleNames(it, true);
+		val Grammar flattened = new FlattenedGrammarAccess(ruleNames, filter).getFlattenedGrammar();
+		val Set<AbstractElement> seenElements = newHashSet
+		val elements = (flattened.allAlternatives + flattened.allGroups + flattened.allAssignments + flattened.allUnorderedGroups).filter(AbstractElement).filter[seenElements.add(originalElement)].toList
+		val partitions = Lists.partition(elements, 2500)
+		'''
+			@«Singleton»
+			public static final class NameMappings {
+				
+				«IF partitions.size > 1»
+					«FOR partition : partitions.indexed»
+						private static final class Init«partition.key» {
+							private static void doInit(«ImmutableMap».Builder<«AbstractElement», «String»> builder, «grammar.grammarAccess» grammarAccess) {
+								«partition.value.initNameMappings»
+							}
+						}
+						
+					«ENDFOR»
+				«ENDIF»
+				private final «Map»<«AbstractElement», «String»> mappings;
+				
+				@«Inject»
+				public NameMappings(«grammar.grammarAccess» grammarAccess) {
+					«ImmutableMap».Builder<«AbstractElement», «String»> builder = «ImmutableMap».builder();
+					init(builder, grammarAccess);
+					this.mappings = builder.build();
+				}
+				
+				public «String» getRuleName(«AbstractElement» element) {
+					return mappings.get(element);
+				}
+				
+				private static void init(«ImmutableMap».Builder<«AbstractElement», «String»> builder, «grammar.grammarAccess» grammarAccess) {
+					«IF partitions.size > 1»
+						«FOR partition : partitions.indexed»
+							Init«partition.key».doInit(builder, grammarAccess);
+						«ENDFOR»
+					«ELSE»
+						«FOR partition : partitions»
+							«partition.initNameMappings»
+						«ENDFOR»
+					«ENDIF»
+				}
+			}
+			
+			@«Inject»
+			private NameMappings nameMappings;
+		'''
 	}
 	
 	def JavaFileAccess generateContentAssistTokenSource() {
@@ -428,7 +505,7 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 					grammar.parserClass.packageName,
 					grammar.internalParserClass.packageName
 				]
-				requiredBundles += "org.antlr.runtime"
+				requiredBundles += "org.antlr.runtime;bundle-version=\"[3.2.0,3.2.1)\""
 			]
 		}
 		val rtBindings = new GuiceModuleAccess.BindingFactory()
@@ -465,7 +542,7 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 					grammar.parserClass.packageName,
 					grammar.internalParserClass.packageName
 				]
-				requiredBundles += "org.antlr.runtime"
+				requiredBundles += "org.antlr.runtime;bundle-version=\"[3.2.0,3.2.1)\""
 			]
 		}
 		val ideBindings = new GuiceModuleAccess.BindingFactory()
@@ -483,6 +560,12 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 			ideBindings.addTypeToType(
 				"org.eclipse.xtext.ide.editor.contentassist.antlr.ContentAssistContextFactory".typeRef, 
 				"org.eclipse.xtext.ide.editor.contentassist.antlr.PartialContentAssistContextFactory".typeRef
+			)
+		}
+		if (hasSyntheticTerminalRule) {
+			ideBindings.addTypeToType(
+				"org.eclipse.xtext.ide.editor.contentassist.CompletionPrefixProvider".typeRef, 
+				"org.eclipse.xtext.ide.editor.contentassist.IndentationAwareCompletionPrefixProvider".typeRef
 			)
 		}
 		ideBindings.contributeTo(language.ideGenModule)
@@ -535,6 +618,13 @@ class XtextAntlrGeneratorFragment2 extends AbstractAntlrGeneratorFragment2 {
 			.addConfiguredBinding("ContentAssistLexerProvider", '''
 				binder.bind(«caLexerClass».class).toProvider(«LexerProvider».create(«caLexerClass».class));
 			''')
+			
+		if (hasSyntheticTerminalRule) {
+			uiBindings.addTypeToType(
+				"org.eclipse.xtext.ide.editor.contentassist.CompletionPrefixProvider".typeRef, 
+				"org.eclipse.xtext.ide.editor.contentassist.IndentationAwareCompletionPrefixProvider".typeRef
+			)
+		}
 		uiBindings.contributeTo(language.eclipsePluginGenModule)
 	}
 

@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * Copyright (c) 2009, 2020 itemis AG (http://www.itemis.eu) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.xtext;
 
@@ -44,6 +45,7 @@ import org.eclipse.xtext.Action;
 import org.eclipse.xtext.Alternatives;
 import org.eclipse.xtext.Assignment;
 import org.eclipse.xtext.CrossReference;
+import org.eclipse.xtext.EOF;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.EnumLiteralDeclaration;
 import org.eclipse.xtext.EnumRule;
@@ -53,6 +55,7 @@ import org.eclipse.xtext.GrammarUtil;
 import org.eclipse.xtext.Group;
 import org.eclipse.xtext.Keyword;
 import org.eclipse.xtext.NamedArgument;
+import org.eclipse.xtext.NegatedToken;
 import org.eclipse.xtext.Parameter;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.ReferencedMetamodel;
@@ -72,6 +75,7 @@ import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.resource.IResourceDescriptions;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
+import org.eclipse.xtext.util.IResourceScopeCache;
 import org.eclipse.xtext.util.Strings;
 import org.eclipse.xtext.util.Triple;
 import org.eclipse.xtext.util.Tuples;
@@ -96,6 +100,7 @@ import com.google.inject.Inject;
 /**
  * @author Sebastian Zarnekow - Initial contribution and API
  * @author Michael Clay
+ * @author Holger Schill
  */
 public class XtextValidator extends AbstractDeclarativeValidator {
 
@@ -104,6 +109,9 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 	
 	@Inject
 	private ResourceDescriptionsProvider resourceDescriptionsProvider;
+	
+	@Inject
+	private IResourceScopeCache cache;
 	
 	private KeywordInspector keywordHidesTerminalInspector;
 	
@@ -246,8 +254,7 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 					firstRule, 
 					XtextPackage.Literals.ABSTRACT_RULE__NAME,
 					ValidationMessageAcceptor.INSIGNIFICANT_INDEX);
-		}
-		else if (GrammarUtil.isDatatypeRule((ParserRule) firstRule)) {
+		} else if (GrammarUtil.isDatatypeRule((ParserRule) firstRule)) {
 			if (!containsAnyParserRule(g, new HashSet<Grammar>()))
 				return;
 			error(
@@ -255,6 +262,12 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 					firstRule,
 					XtextPackage.Literals.ABSTRACT_RULE__NAME, 
 					ValidationMessageAcceptor.INSIGNIFICANT_INDEX);
+		} else if (((ParserRule) firstRule).isFragment()) {
+			addIssue(
+					"The first rule must not be a fragment",
+					firstRule,
+					XtextPackage.Literals.PARSER_RULE__FRAGMENT,
+					INVALID_FRAGMENT_AS_FIRST_RULE);
 		}
 	}
 
@@ -797,7 +810,7 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 							call, 
 							XtextPackage.Literals.RULE_CALL__RULE,
 							ValidationMessageAcceptor.INSIGNIFICANT_INDEX,
-							null);
+							INVALID_TERMINAL_FRAGMENT_RULE_REFERENCE);
 				}
 			}
 		}
@@ -882,13 +895,12 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 
 			@Override
 			public Boolean caseParserRule(ParserRule object) {
-				isNull = GrammarUtil.isDatatypeRule(object);
+				isNull &= GrammarUtil.isDatatypeRule(object);
 				return isNull;
 			}
 
 			@Override
 			public Boolean caseTerminalRule(TerminalRule object) {
-				isNull = true;
 				return isNull;
 			}
 
@@ -964,7 +976,7 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 				public Boolean caseAction(Action object) {
 					if (object == action) {
 						if (!assignedActionAllowed) {
-							error("An action is not allowed in fragments and when the current may still be unassigned.", null);
+							error("An action is not allowed in fragments and when the current may still be unassigned.", object, null);
 							checkDone();
 						}
 					}
@@ -1050,9 +1062,13 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 	}
 
 	@Check
-	public void checkForOverriddenValue(final ParserRule rule) {
+	public void checkForOverriddenValue(final Grammar grammar) {
 		OverriddenValueInspector inspector = new OverriddenValueInspector(this);
-		inspector.inspect(rule);
+		for(AbstractRule rule: grammar.getRules()) {
+			if (rule instanceof ParserRule) {
+				inspector.inspect((ParserRule) rule);
+			}
+		}
 	}
 	
 	@Check
@@ -1082,7 +1098,7 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 		if (keyword.getValue() != null && !(keyword.eContainer() instanceof EnumLiteralDeclaration) 
 				&& !(GrammarUtil.containingRule(keyword) instanceof TerminalRule)) {
 			if (keyword.getValue().contains(" ") || keyword.getValue().contains("\t")) {
-				addIssue("A keyword should non contain spaces.", 
+				addIssue("A keyword should not contain spaces.", 
 						keyword, 
 						null,
 						SPACES_IN_KEYWORD);
@@ -1093,7 +1109,7 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 	@Check
 	public void checkKeywordHidesTerminalRule(final Keyword keyword) {
 		if (keywordHidesTerminalInspector == null)
-			keywordHidesTerminalInspector = new KeywordInspector(this);
+			keywordHidesTerminalInspector = new KeywordInspector(this, cache);
 		keywordHidesTerminalInspector.inspectKeywordHidesTerminalRule(keyword);
 	}
 
@@ -1208,10 +1224,36 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 	}
 	
 	@Check
+	public void checkJavaPackageNamingConventions(GeneratedMetamodel metamodel){
+		Severity severity = getIssueSeverities(getContext(), getCurrentObject()).getSeverity(INVALID_JAVAPACKAGE_NAME);
+		if (severity == null || severity == Severity.IGNORE) {
+			// Don't perform any check if the result is ignored
+			return;
+		}
+		final String metamodelName = Strings.emptyIfNull(metamodel.getName());
+		if (!Strings.equal(metamodelName, metamodelName.toLowerCase())) {
+			addIssue("The generated metamodel name must not contain uppercase characters", metamodel, XtextPackage.eINSTANCE.getGeneratedMetamodel_Name(),
+				INVALID_JAVAPACKAGE_NAME, metamodel.getName());
+		}
+	}
+
+	@Check
 	public void checkTerminalRuleNamingConventions(TerminalRule terminalRule){
 		if(!terminalRule.getName().equals(terminalRule.getName().toUpperCase()))
 			addIssue("TerminalRule must be written in uppercase.", terminalRule, XtextPackage.eINSTANCE.getAbstractRule_Name(),
 					INVALID_TERMINALRULE_NAME, terminalRule.getName());
+	}
+	
+	@Check
+	public void checkTerminalRuleAnnotations(AbstractRule rule){
+		if(rule instanceof TerminalRule || rule instanceof EnumRule) {
+			if(hasAnnotation(rule, AnnotationNames.EXPORTED)) {
+				error("Rule cannot be exported!",rule, XtextPackage.eINSTANCE.getAbstractRule_Name(), INVALID_ANNOTAION);
+			} 
+			if(hasAnnotation(rule, AnnotationNames.DEPRECATED)) {
+				error("Rule cannot be deprecated!",rule, XtextPackage.eINSTANCE.getAbstractRule_Name(), INVALID_ANNOTAION);
+			}
+		}
 	}
 	
 	@Check
@@ -1246,23 +1288,41 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 //		}
 //	}
 	
+	
+	@Check
+	public void checkCallToDeprecatedParserRule(RuleCall ruleCall) {
+		AbstractRule calledRule = ruleCall.getRule();
+		if(hasAnnotation(calledRule, AnnotationNames.DEPRECATED)) {
+			addIssue("The called rule is marked as deprecated.", ruleCall, XtextPackage.eINSTANCE.getRuleCall_Rule(), XtextConfigurableIssueCodes.USAGE_OF_DEPRECATED_RULE);
+		}
+	}
+	
 	@Check
 	public void checkOverridingRule(AbstractRule rule) {
 		final String name = rule.getName();
+		final List<Grammar> superGrammars = GrammarUtil.getGrammar(rule).getUsedGrammars();
+		boolean isOverride = hasAnnotation(rule, AnnotationNames.OVERRIDE);
+		if (isOverride && superGrammars.isEmpty()) {
+			error("This grammar has no super grammar and therefore cannot override any rules.", rule,
+					XtextPackage.Literals.ABSTRACT_RULE__NAME, XtextConfigurableIssueCodes.EXPLICIT_OVERRIDE_INVALID);
+		}
 		
-		final boolean isOverride =
-				rule.getAnnotations().stream().anyMatch(e -> AnnotationNames.OVERRIDE.equals(e.getName()));
-		
-		for (Grammar g : GrammarUtil.getGrammar(rule).getUsedGrammars()) {
+		for (Grammar g : superGrammars) {
 			final AbstractRule r = GrammarUtil.findRuleForName(g, rule.getName());
-			
 			if (r != null) {
-				if (!isOverride) {
+				if(hasAnnotation(r, AnnotationNames.DEPRECATED)) {
+					warning("This rule overrides " + name + " in " + GrammarUtil.getGrammar(r).getName() + " which is deprecated.", rule, 
+							XtextPackage.Literals.ABSTRACT_RULE__NAME, XtextConfigurableIssueCodes.USAGE_OF_DEPRECATED_RULE);
+				}
+				if(hasAnnotation(r, AnnotationNames.FINAL)) {
+					error("This rule illegally overrides " + name + " in " + GrammarUtil.getGrammar(r).getName() + " which is final.", rule, 
+							XtextPackage.Literals.ABSTRACT_RULE__NAME, XtextConfigurableIssueCodes.EXPLICIT_OVERRIDE_INVALID);
+					break;
+				} else if (!isOverride) {
 					warning("This rule overrides " + name + " in " + GrammarUtil.getGrammar(r).getName() + 
 								" and thus should be annotated with @Override.", rule,
 							XtextPackage.Literals.ABSTRACT_RULE__NAME, XtextConfigurableIssueCodes.EXPLICIT_OVERRIDE_MISSING);
 					break;
-					
 				} else {
 					// type compatibility checking is currently done in 'Xtext2EcoreTransformer' being called during linking
 					//  so it's omitted here
@@ -1277,4 +1337,23 @@ public class XtextValidator extends AbstractDeclarativeValidator {
 			}
 		}
 	}
+	
+	@Check
+	public void checkNegatedTokenNotEOF(NegatedToken token) {
+		for (EOF eof : EcoreUtil2.getAllContentsOfType(token, EOF.class)) {
+			error("It is not possible to negate EOF", eof, null);
+		}
+	}
+	
+	/**
+	 * @since 2.14
+	 */
+	protected boolean hasAnnotation(AbstractRule rule, String annotationName) {
+		if (rule == null) {
+			return false;
+		}
+		return rule.getAnnotations().stream().anyMatch(e -> annotationName.equals(e.getName()));
+	}
+	
+
 }

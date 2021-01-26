@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2013 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.resource.impl;
 
@@ -38,7 +39,7 @@ import com.google.inject.Inject;
  * @since 2.4
  */
 public class EagerResourceSetBasedResourceDescriptions extends AbstractCompoundSelectable implements
-		IResourceDescriptions.IContextAware {
+		IResourceDescriptions.IContextAware, IResourceDescriptions.IResourceSetAware {
 	
 	static class Descriptions extends AdapterImpl {
 		Map<URI, IResourceDescription> map = newHashMap();

@@ -1,9 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2008 itemis AG (http://www.itemis.eu) and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
 package org.eclipse.xtext.util;
 
@@ -22,7 +23,7 @@ import com.google.common.base.Function;
  * Attention: The algorithm may not depend on itself in a circular manner. E.g. the following will lead 
  * to a stack overflow:
  * <pre>
- * SimpleCache<K, V> cache = new SimpleCache<K, V>(new Function<K, V>() {
+ * SimpleCache&lt;K, V&gt; cache = new SimpleCache&lt;K, V&gt;(new Function&lt;K, V&gt;() {
  *   public V apply(K k) {
  *     // DON'T DO THIS
  *     if (k == k1) {
